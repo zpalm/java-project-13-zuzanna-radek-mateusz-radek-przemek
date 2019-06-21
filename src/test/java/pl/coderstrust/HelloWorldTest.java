@@ -9,6 +9,5 @@ class HelloWorldTest {
     @Test
     public void shouldReturnTrueForPalindromeWord() {
         assertTrue(HelloWorld.isPalindrome("abba"));
-
     }
 }
