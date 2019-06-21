@@ -2,7 +2,7 @@ package pl.coderstrust;
 
 public class HelloWorld {
 
-    public static boolean isPalindrome(String str) {
+    public static boolean shouldMethodDoSomething(String str) {
         return str.equals(new StringBuilder(str).reverse().toString());
     }
 
