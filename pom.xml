@@ -66,6 +66,11 @@
         <groupId>org.jacoco</groupId>
         <artifactId>jacoco-maven-plugin</artifactId>
         <version>0.8.4</version>
+        <configuration>
+          <excludes>
+            <exclude>/pl/coderstrust//HelloWorld.class</exclude>
+          </excludes>
+        </configuration>
         <executions>
           <execution>
             <id>jacoco-report</id>
@@ -86,9 +91,6 @@
               <goal>check</goal>
             </goals>
             <configuration>
-              <excludes>
-                <exclude>/pl/coderstrust//HelloWorld.class</exclude>
-              </excludes>
               <rules>
                 <rule>
                   <element>BUNDLE</element>
