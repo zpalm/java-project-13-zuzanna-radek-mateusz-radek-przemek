@@ -47,4 +47,31 @@ public final class Company {
     public String getEmail() {
         return email;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Company)) return false;
+        Company company = (Company) o;
+        if (!id.equals(company.id)) return false;
+        if (!name.equals(company.name)) return false;
+        if (!address.equals(company.address)) return false;
+        if (!taxId.equals(company.taxId)) return false;
+        if (accountNumber != null ? !accountNumber.equals(company.accountNumber) : company.accountNumber != null)
+            return false;
+        if (phoneNumber != null ? !phoneNumber.equals(company.phoneNumber) : company.phoneNumber != null) return false;
+        return email != null ? email.equals(company.email) : company.email == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + name.hashCode();
+        result = 31 * result + address.hashCode();
+        result = 31 * result + taxId.hashCode();
+        result = 31 * result + (accountNumber != null ? accountNumber.hashCode() : 0);
+        result = 31 * result + (phoneNumber != null ? phoneNumber.hashCode() : 0);
+        result = 31 * result + (email != null ? email.hashCode() : 0);
+        return result;
+    }
 }

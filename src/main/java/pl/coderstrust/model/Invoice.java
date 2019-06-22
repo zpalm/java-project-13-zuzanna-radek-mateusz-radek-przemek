@@ -51,4 +51,30 @@ public final class Invoice {
     public List<InvoiceEntry> getInvoiceEntries() {
         return new ArrayList<>(invoiceEntries);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Invoice)) return false;
+        Invoice invoice = (Invoice) o;
+        if (!id.equals(invoice.id)) return false;
+        if (!number.equals(invoice.number)) return false;
+        if (!issuedDate.equals(invoice.issuedDate)) return false;
+        if (!dueDate.equals(invoice.dueDate)) return false;
+        if (!companyFrom.equals(invoice.companyFrom)) return false;
+        if (!companyTo.equals(invoice.companyTo)) return false;
+        return invoiceEntries.equals(invoice.invoiceEntries);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id.hashCode();
+        result = 31 * result + number.hashCode();
+        result = 31 * result + issuedDate.hashCode();
+        result = 31 * result + dueDate.hashCode();
+        result = 31 * result + companyFrom.hashCode();
+        result = 31 * result + companyTo.hashCode();
+        result = 31 * result + invoiceEntries.hashCode();
+        return result;
+    }
 }
