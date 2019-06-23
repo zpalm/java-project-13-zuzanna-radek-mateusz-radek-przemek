@@ -106,9 +106,6 @@
                       <minimum>0.50</minimum>
                     </limit>
                   </limits>
-                  <excludes>
-                    <exclude>database.impl.ConfigurationProvider</exclude>
-                  </excludes>
                 </rule>
               </rules>
             </configuration>
