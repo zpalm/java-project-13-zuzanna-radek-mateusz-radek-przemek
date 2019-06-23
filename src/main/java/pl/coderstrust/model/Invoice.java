@@ -11,18 +11,18 @@ public final class Invoice {
     private final String number;
     private final LocalDate issuedDate;
     private final LocalDate dueDate;
-    private final Company companyFrom;
-    private final Company companyTo;
+    private final Company seller;
+    private final Company buyer;
     private final List<InvoiceEntry> entries;
 
     public Invoice(Long id, String number, LocalDate issuedDate, LocalDate dueDate,
-                   Company companyFrom, Company companyTo, List<InvoiceEntry> entries) {
+                   Company seller, Company buyer, List<InvoiceEntry> entries) {
         this.id = id;
         this.number = number;
         this.issuedDate = issuedDate;
         this.dueDate = dueDate;
-        this.companyFrom = companyFrom;
-        this.companyTo = companyTo;
+        this.seller = seller;
+        this.buyer = buyer;
         this.entries = entries != null ? new ArrayList(entries) : new ArrayList();
     }
 
@@ -42,12 +42,12 @@ public final class Invoice {
         return dueDate;
     }
 
-    public Company getCompanyFrom() {
-        return companyFrom;
+    public Company getSeller() {
+        return seller;
     }
 
-    public Company getCompanyTo() {
-        return companyTo;
+    public Company getBuyer() {
+        return buyer;
     }
 
     public List<InvoiceEntry> getEntries() {
@@ -63,14 +63,14 @@ public final class Invoice {
                 number.equals(invoice.number) &&
                 issuedDate.equals(invoice.issuedDate) &&
                 dueDate.equals(invoice.dueDate) &&
-                companyFrom.equals(invoice.companyFrom) &&
-                companyTo.equals(invoice.companyTo) &&
+                seller.equals(invoice.seller) &&
+                buyer.equals(invoice.buyer) &&
                 entries.equals(invoice.entries);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, number, issuedDate, dueDate, companyFrom, companyTo, entries);
+        return Objects.hash(id, number, issuedDate, dueDate, seller, buyer, entries);
     }
 
     @Override
@@ -80,8 +80,8 @@ public final class Invoice {
                 ", number='" + number + '\'' +
                 ", issuedDate=" + issuedDate +
                 ", dueDate=" + dueDate +
-                ", companyFrom=" + companyFrom +
-                ", companyTo=" + companyTo +
+                ", seller=" + seller +
+                ", buyer=" + buyer +
                 ", entries=" + entries +
                 '}';
     }
