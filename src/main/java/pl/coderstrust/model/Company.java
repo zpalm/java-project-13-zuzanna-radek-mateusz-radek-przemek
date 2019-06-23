@@ -52,16 +52,20 @@ public final class Company {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Company)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Company)) {
+            return false;
+        }
         Company company = (Company) o;
-        return id.equals(company.id) &&
-                name.equals(company.name) &&
-                address.equals(company.address) &&
-                taxId.equals(company.taxId) &&
-                accountNumber.equals(company.accountNumber) &&
-                phoneNumber.equals(company.phoneNumber) &&
-                email.equals(company.email);
+        return id.equals(company.id)
+                && name.equals(company.name)
+                && address.equals(company.address)
+                && taxId.equals(company.taxId)
+                && accountNumber.equals(company.accountNumber)
+                && phoneNumber.equals(company.phoneNumber)
+                && email.equals(company.email);
     }
 
     @Override
@@ -71,14 +75,14 @@ public final class Company {
 
     @Override
     public String toString() {
-        return "Company{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", address='" + address + '\'' +
-                ", taxId='" + taxId + '\'' +
-                ", accountNumber='" + accountNumber + '\'' +
-                ", phoneNumber='" + phoneNumber + '\'' +
-                ", email='" + email + '\'' +
-                '}';
+        return "Company{"
+                + "id=" + id
+                + ", name='" + name + '\''
+                + ", address='" + address + '\''
+                + ", taxId='" + taxId + '\''
+                + ", accountNumber='" + accountNumber + '\''
+                + ", phoneNumber='" + phoneNumber + '\''
+                + ", email='" + email + '\''
+                + '}';
     }
 }

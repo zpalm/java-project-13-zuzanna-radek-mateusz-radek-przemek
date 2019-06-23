@@ -53,16 +53,20 @@ public final class InvoiceEntry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof InvoiceEntry)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof InvoiceEntry)) {
+            return false;
+        }
         InvoiceEntry that = (InvoiceEntry) o;
-        return id.equals(that.id) &&
-                description.equals(that.description) &&
-                quantity.equals(that.quantity) &&
-                price.equals(that.price) &&
-                netValue.equals(that.netValue) &&
-                grossValue.equals(that.grossValue) &&
-                vatRate == that.vatRate;
+        return id.equals(that.id)
+                && description.equals(that.description)
+                && quantity.equals(that.quantity)
+                && price.equals(that.price)
+                && netValue.equals(that.netValue)
+                && grossValue.equals(that.grossValue)
+                && vatRate == that.vatRate;
     }
 
     @Override
@@ -72,14 +76,14 @@ public final class InvoiceEntry {
 
     @Override
     public String toString() {
-        return "InvoiceEntry{" +
-                "id=" + id +
-                ", description='" + description + '\'' +
-                ", quantity=" + quantity +
-                ", price=" + price +
-                ", netValue=" + netValue +
-                ", grossValue=" + grossValue +
-                ", vatRate=" + vatRate +
-                '}';
+        return "InvoiceEntry{"
+                + "id=" + id
+                + ", description='" + description + '\''
+                + ", quantity=" + quantity
+                + ", price=" + price
+                + ", netValue=" + netValue
+                + ", grossValue=" + grossValue
+                + ", vatRate=" + vatRate
+                + '}';
     }
 }

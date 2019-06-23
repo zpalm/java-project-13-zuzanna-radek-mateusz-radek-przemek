@@ -56,16 +56,20 @@ public final class Invoice {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Invoice)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Invoice)) {
+            return false;
+        }
         Invoice invoice = (Invoice) o;
-        return id.equals(invoice.id) &&
-                number.equals(invoice.number) &&
-                issuedDate.equals(invoice.issuedDate) &&
-                dueDate.equals(invoice.dueDate) &&
-                seller.equals(invoice.seller) &&
-                buyer.equals(invoice.buyer) &&
-                entries.equals(invoice.entries);
+        return id.equals(invoice.id)
+                && number.equals(invoice.number)
+                && issuedDate.equals(invoice.issuedDate)
+                && dueDate.equals(invoice.dueDate)
+                && seller.equals(invoice.seller)
+                && buyer.equals(invoice.buyer)
+                && entries.equals(invoice.entries);
     }
 
     @Override
@@ -75,14 +79,14 @@ public final class Invoice {
 
     @Override
     public String toString() {
-        return "Invoice{" +
-                "id=" + id +
-                ", number='" + number + '\'' +
-                ", issuedDate=" + issuedDate +
-                ", dueDate=" + dueDate +
-                ", seller=" + seller +
-                ", buyer=" + buyer +
-                ", entries=" + entries +
-                '}';
+        return "Invoice{"
+                + "id=" + id
+                + ", number='" + number + '\''
+                + ", issuedDate=" + issuedDate
+                + ", dueDate=" + dueDate
+                + ", seller=" + seller
+                + ", buyer=" + buyer
+                + ", entries=" + entries
+                + '}';
     }
 }

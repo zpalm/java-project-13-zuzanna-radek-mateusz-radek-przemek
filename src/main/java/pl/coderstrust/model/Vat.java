@@ -19,8 +19,8 @@ public enum Vat {
 
     @Override
     public String toString() {
-        return "Vat{" +
-                "value=" + value +
-                '}';
+        return "Vat{"
+                + "value=" + value
+                + '}';
     }
 }
