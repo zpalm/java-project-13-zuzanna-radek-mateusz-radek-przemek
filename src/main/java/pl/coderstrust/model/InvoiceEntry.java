@@ -1,18 +1,19 @@
 package pl.coderstrust.model;
 
 import java.math.BigDecimal;
+import java.util.Objects;
 
 public final class InvoiceEntry {
 
     private final Long id;
     private final String description;
-    private final BigDecimal quantity;
+    private final Long quantity;
     private final BigDecimal price;
     private final BigDecimal netValue;
     private final BigDecimal grossValue;
     private final Vat vatRate;
 
-    public InvoiceEntry(Long id, String description, BigDecimal quantity, BigDecimal price, BigDecimal netValue, BigDecimal grossValue, Vat vatRate) {
+    public InvoiceEntry(Long id, String description, Long quantity, BigDecimal price, BigDecimal netValue, BigDecimal grossValue, Vat vatRate) {
         this.id = id;
         this.description = description;
         this.quantity = quantity;
@@ -30,7 +31,7 @@ public final class InvoiceEntry {
         return description;
     }
 
-    public BigDecimal getQuantity() {
+    public Long getQuantity() {
         return quantity;
     }
 
@@ -55,24 +56,30 @@ public final class InvoiceEntry {
         if (this == o) return true;
         if (!(o instanceof InvoiceEntry)) return false;
         InvoiceEntry that = (InvoiceEntry) o;
-        if (!id.equals(that.id)) return false;
-        if (!description.equals(that.description)) return false;
-        if (!quantity.equals(that.quantity)) return false;
-        if (!price.equals(that.price)) return false;
-        if (!netValue.equals(that.netValue)) return false;
-        if (!grossValue.equals(that.grossValue)) return false;
-        return vatRate == that.vatRate;
+        return id.equals(that.id) &&
+                description.equals(that.description) &&
+                quantity.equals(that.quantity) &&
+                price.equals(that.price) &&
+                netValue.equals(that.netValue) &&
+                grossValue.equals(that.grossValue) &&
+                vatRate == that.vatRate;
     }
 
     @Override
     public int hashCode() {
-        int result = id.hashCode();
-        result = 31 * result + description.hashCode();
-        result = 31 * result + quantity.hashCode();
-        result = 31 * result + price.hashCode();
-        result = 31 * result + netValue.hashCode();
-        result = 31 * result + grossValue.hashCode();
-        result = 31 * result + vatRate.hashCode();
-        return result;
+        return Objects.hash(id, description, quantity, price, netValue, grossValue, vatRate);
+    }
+
+    @Override
+    public String toString() {
+        return "InvoiceEntry{" +
+                "id=" + id +
+                ", description='" + description + '\'' +
+                ", quantity=" + quantity +
+                ", price=" + price +
+                ", netValue=" + netValue +
+                ", grossValue=" + grossValue +
+                ", vatRate=" + vatRate +
+                '}';
     }
 }
