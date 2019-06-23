@@ -70,6 +70,8 @@
                     <excludes>
                         <exclude>/pl/coderstrust//HelloWorld.class</exclude>
                         <exclude>/pl/coderstrust/model/*.class</exclude>
+                        <exclude>/pl/coderstrust/database/Database.class</exclude>
+                        <exclude>/pl/coderstrust/database/DatabaseOperationException.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
