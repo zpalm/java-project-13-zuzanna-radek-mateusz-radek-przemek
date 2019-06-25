@@ -1,14 +1,16 @@
 package pl.coderstrust.database;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 
 import pl.coderstrust.model.Invoice;
 
 public class InMemoryDatabase implements Database {
 
-    private Collection<Invoice> invoiceCollection = new HashSet<>();
+    private Map<Long, Invoice> invoiceCollection = new HashMap<>();
     private Long id = 0L;
 
     @Override
@@ -21,13 +23,12 @@ public class InMemoryDatabase implements Database {
             id++;
             Invoice invoiceToSave = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
                     invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
-            invoiceCollection.add(invoiceToSave);
+            invoiceCollection.put(id, invoiceToSave);
             return invoiceToSave;
         } else {
-            for (Invoice invoiceForUpdate : invoiceCollection) {
-                if (checkedId.equals(invoiceForUpdate.getId())) {
-                    invoiceCollection.remove(invoiceForUpdate);
-                    invoiceCollection.add(invoice);
+            for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
+                if (checkedId.equals(entry.getKey())) {
+                    invoiceCollection.replace(id, entry.getValue(), invoice);
                     return invoice;
                 }
             }
@@ -35,7 +36,7 @@ public class InMemoryDatabase implements Database {
         id++;
         Invoice invoiceToSave = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
                 invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
-        invoiceCollection.add(invoiceToSave);
+        invoiceCollection.put(id, invoiceToSave);
         return invoiceToSave;
     }
 
@@ -44,15 +45,7 @@ public class InMemoryDatabase implements Database {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        Invoice invoiceToRemove = null;
-        for (Invoice searchedInvoice : invoiceCollection) {
-            if (id.equals(searchedInvoice.getId())) {
-                invoiceToRemove = searchedInvoice;
-            }
-        }
-        if (invoiceToRemove != null) {
-            invoiceCollection.remove(invoiceToRemove);
-        }
+        invoiceCollection.remove(id);
     }
 
     @Override
@@ -60,10 +53,8 @@ public class InMemoryDatabase implements Database {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        for (Invoice searchedInvoice : invoiceCollection) {
-            if (id.equals(searchedInvoice.getId())) {
-                return Optional.of(searchedInvoice);
-            }
+        if (invoiceCollection.containsKey(id)) {
+            return Optional.of(invoiceCollection.get(id));
         }
         return Optional.empty();
     }
@@ -73,9 +64,9 @@ public class InMemoryDatabase implements Database {
         if (number == null) {
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
-        for (Invoice searchedInvoice : invoiceCollection) {
-            if (number.equals(searchedInvoice.getNumber())) {
-                return Optional.of(searchedInvoice);
+        for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
+            if (number.equals(entry.getValue().getNumber())) {
+                return Optional.of(entry.getValue());
             }
         }
         return Optional.empty();
@@ -83,7 +74,13 @@ public class InMemoryDatabase implements Database {
 
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
-        return invoiceCollection;
+        Collection<Invoice> collection = new HashSet<>();
+        if (invoiceCollection.size() > 0) {
+            for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
+                collection.add(entry.getValue());
+            }
+        }
+        return collection;
     }
 
     @Override
@@ -97,12 +94,7 @@ public class InMemoryDatabase implements Database {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        for (Invoice searchedInvoice : invoiceCollection) {
-            if (id.equals(searchedInvoice.getId())) {
-                return true;
-            }
-        }
-        return false;
+        return invoiceCollection.containsKey(id);
     }
 
     @Override
