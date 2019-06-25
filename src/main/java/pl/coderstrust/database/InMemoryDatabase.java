@@ -28,11 +28,15 @@ public class InMemoryDatabase implements Database {
                 if (checkedId.equals(invoiceForUpdate.getId())) {
                     invoiceCollection.remove(invoiceForUpdate);
                     invoiceCollection.add(invoice);
-                    return invoiceForUpdate;
+                    return invoice;
                 }
             }
         }
-        return null;
+        id++;
+        Invoice invoiceToSave = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
+                invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
+        invoiceCollection.add(invoiceToSave);
+        return invoiceToSave;
     }
 
     @Override

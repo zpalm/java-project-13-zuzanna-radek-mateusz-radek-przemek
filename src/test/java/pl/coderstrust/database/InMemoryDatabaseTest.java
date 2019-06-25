@@ -51,19 +51,6 @@ class InMemoryDatabaseTest {
     }
 
     @Test
-    void shouldReturnNullWhileSavingInvoiceWithInvalidIdNumber() throws DatabaseOperationException {
-        // given
-        Invoice invoice = new Invoice(111L, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-
-        //when
-        Invoice resultInvoice = database.save(invoice);
-
-        // then
-        assertThat(resultInvoice).isEqualTo(null);
-    }
-
-    @Test
     void shouldSaveInvoiceToNonEmptyInMemoryDatabase() throws DatabaseOperationException {
         // given
         Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
@@ -79,6 +66,47 @@ class InMemoryDatabaseTest {
 
         // then
         assertThat(resultInvoice).isEqualTo(existingInvoice);
+    }
+
+    @Test
+    void shouldSaveInvoiceToInMemoryDatabaseWithProvidedButNonExistingId() throws DatabaseOperationException {
+        // given
+        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        database.save(firstInvoice);
+        database.save(secondInvoice);
+        Invoice nonExistingInvoice = new Invoice(5L, "5/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice expectingInvoice = new Invoice(3L, "5/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+
+        // when
+        Invoice resultInvoice = database.save(nonExistingInvoice);
+
+        // then
+        assertThat(resultInvoice).isEqualTo(expectingInvoice);
+    }
+
+    @Test
+    void shouldUpdateExistingInvoice() throws DatabaseOperationException {
+        // given
+        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
+                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        database.save(firstInvoice);
+        database.save(secondInvoice);
+        Invoice newSecondInvoice = new Invoice(2L, "2/2019", LocalDate.of(2020, 1, 10),
+                LocalDate.of(2020, 1, 10), seller, buyer, entries);
+
+        // when
+        Invoice resultInvoice = database.save(newSecondInvoice);
+
+        // then
+        assertThat(resultInvoice).isEqualTo(newSecondInvoice);
+        assertThat(database.getById(2L)).isEqualTo(Optional.of(newSecondInvoice));
     }
 
     @Test
