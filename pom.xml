@@ -72,6 +72,7 @@
                         <exclude>/pl/coderstrust/model/*.class</exclude>
                         <exclude>/pl/coderstrust/database/Database.class</exclude>
                         <exclude>/pl/coderstrust/database/DatabaseOperationException.class</exclude>
+                        <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
