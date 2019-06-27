@@ -1,43 +1,46 @@
 package pl.coderstrust.database;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicLong;
 
 import pl.coderstrust.model.Invoice;
 
 public class InMemoryDatabase implements Database {
 
-    private Map<Long, Invoice> invoiceCollection = new HashMap<>();
-    private Long id = 0L;
+    private Map<Long, Invoice> storage;
+    private AtomicLong nextId = new AtomicLong(0);
+
+    public InMemoryDatabase(Map<Long, Invoice> storage) {
+        if (storage == null) {
+            throw new IllegalArgumentException("Storage cannot be null.");
+        }
+        this.storage = storage;
+    }
 
     @Override
-    public Invoice save(Invoice invoice) throws DatabaseOperationException {
+    public Invoice save(Invoice invoice) {
         if (invoice == null) {
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
-        Long checkedId = invoice.getId();
-        if (checkedId == null) {
-            id++;
-            Invoice invoiceToSave = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
-                    invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
-            invoiceCollection.put(id, invoiceToSave);
-            return invoiceToSave;
-        } else {
-            for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
-                if (checkedId.equals(entry.getKey())) {
-                    invoiceCollection.replace(id, entry.getValue(), invoice);
-                    return invoice;
-                }
-            }
+        if (invoice.getId() == null || !storage.containsKey(invoice.getId())) {
+            return insertInvoice(invoice);
         }
-        id++;
-        Invoice invoiceToSave = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
+        return updateInvoice(invoice);
+    }
+
+    private Invoice insertInvoice(Invoice invoice) {
+        Long id = nextId.incrementAndGet();
+        Invoice insertedInvoice = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
                 invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
-        invoiceCollection.put(id, invoiceToSave);
-        return invoiceToSave;
+        storage.put(id, insertedInvoice);
+        return insertedInvoice;
+    }
+
+    private Invoice updateInvoice(Invoice invoice) {
+        storage.replace(invoice.getId(), invoice);
+        return invoice;
     }
 
     @Override
@@ -45,60 +48,51 @@ public class InMemoryDatabase implements Database {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        invoiceCollection.remove(id);
+        if (!storage.containsKey(id)) {
+            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+        }
+        storage.remove(id);
     }
 
     @Override
-    public Optional<Invoice> getById(Long id) throws DatabaseOperationException {
+    public Optional<Invoice> getById(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        if (invoiceCollection.containsKey(id)) {
-            return Optional.of(invoiceCollection.get(id));
-        }
-        return Optional.empty();
+        return Optional.ofNullable(storage.get(id));
     }
 
     @Override
-    public Optional<Invoice> getByNumber(String number) throws DatabaseOperationException {
+    public Optional<Invoice> getByNumber(String number) {
         if (number == null) {
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
-        for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
-            if (number.equals(entry.getValue().getNumber())) {
-                return Optional.of(entry.getValue());
-            }
-        }
-        return Optional.empty();
+        return storage.values()
+                .stream()
+                .filter(invoice -> invoice.getNumber() == number)
+                .findFirst();
     }
 
     @Override
-    public Collection<Invoice> getAll() throws DatabaseOperationException {
-        Collection<Invoice> collection = new HashSet<>();
-        if (invoiceCollection.size() > 0) {
-            for (Map.Entry<Long, Invoice> entry : invoiceCollection.entrySet()) {
-                collection.add(entry.getValue());
-            }
-        }
-        return collection;
+    public Collection<Invoice> getAll() {
+        return storage.values();
     }
 
     @Override
-    public void deleteAll() throws DatabaseOperationException {
-        invoiceCollection.clear();
-        id = 0L;
+    public void deleteAll() {
+        storage.clear();
     }
 
     @Override
-    public boolean exists(Long id) throws DatabaseOperationException {
+    public boolean exists(Long id) {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        return invoiceCollection.containsKey(id);
+        return storage.containsKey(id);
     }
 
     @Override
-    public long count() throws DatabaseOperationException {
-        return (long) invoiceCollection.size();
+    public long count() {
+        return storage.size();
     }
 }

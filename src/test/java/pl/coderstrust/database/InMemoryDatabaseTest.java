@@ -1,128 +1,109 @@
 package pl.coderstrust.database;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import pl.coderstrust.model.Company;
+import pl.coderstrust.generators.InvoiceGenerator;
+import pl.coderstrust.generators.WordGenerator;
 import pl.coderstrust.model.Invoice;
-import pl.coderstrust.model.InvoiceEntry;
 
 class InMemoryDatabaseTest {
 
     private InMemoryDatabase database;
-    private Company seller;
-    private Company buyer;
-    private List<InvoiceEntry> entries;
 
     @BeforeEach
     void setup() {
-        database = new InMemoryDatabase();
-        seller = new Company(0L, "Seller", "Seller address", "000-000-00-00",
-                "00-00-00", "0048600600600", "office@seller.com");
-        buyer = new Company(0L, "Buyer", "Buyer address", "111-111-11-11",
-                "11-11-11", "0048100100100", "office@buyer.com");
-        entries = new ArrayList<>();
+        Map<Long, Invoice> storage = new HashMap<>();
+        database = new InMemoryDatabase(storage);
     }
 
     @Test
-    void shouldSaveInvoiceToEmptyInMemoryDatabase() throws DatabaseOperationException {
+    void shouldSaveInvoiceToEmptyInMemoryDatabase() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice existingInvoice = new Invoice(1L, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice existingInvoice = new Invoice(1L, firstInvoice.getNumber(), firstInvoice.getIssuedDate(),
+                firstInvoice.getDueDate(), firstInvoice.getSeller(), firstInvoice.getBuyer(), firstInvoice.getEntries());
 
         // when
         Invoice resultInvoice = database.save(firstInvoice);
 
         // then
-        assertThat(resultInvoice).isEqualTo(existingInvoice);
+        assertEquals(existingInvoice, resultInvoice);
     }
 
     @Test
-    void shouldSaveInvoiceToNonEmptyInMemoryDatabase() throws DatabaseOperationException {
+    void shouldSaveInvoiceToNonEmptyInMemoryDatabase() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice existingInvoice = new Invoice(2L, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
+                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
         database.save(firstInvoice);
 
         // when
         Invoice resultInvoice = database.save(secondInvoice);
 
         // then
-        assertThat(resultInvoice).isEqualTo(existingInvoice);
+        assertEquals(existingInvoice, resultInvoice);
     }
 
     @Test
-    void shouldSaveInvoiceToInMemoryDatabaseWithProvidedButNonExistingId() throws DatabaseOperationException {
+    void shouldSaveInvoiceToInMemoryDatabaseWithProvidedButNonExistingId() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
-        Invoice nonExistingInvoice = new Invoice(5L, "5/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice expectingInvoice = new Invoice(3L, "5/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice nonExistingInvoice = InvoiceGenerator.getRandomInvoice();
+        Invoice expectingInvoice = new Invoice(3L, nonExistingInvoice.getNumber(), nonExistingInvoice.getIssuedDate(),
+                nonExistingInvoice.getDueDate(), nonExistingInvoice.getSeller(), nonExistingInvoice.getBuyer(), nonExistingInvoice.getEntries());
 
         // when
         Invoice resultInvoice = database.save(nonExistingInvoice);
 
         // then
-        assertThat(resultInvoice).isEqualTo(expectingInvoice);
+        assertEquals(expectingInvoice, resultInvoice);
     }
 
     @Test
-    void shouldUpdateExistingInvoice() throws DatabaseOperationException {
+    void shouldUpdateExistingInvoice() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
-        Invoice newSecondInvoice = new Invoice(2L, "2/2019", LocalDate.of(2020, 1, 10),
-                LocalDate.of(2020, 1, 10), seller, buyer, entries);
+        Invoice newSecondInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
+                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
 
         // when
         Invoice resultInvoice = database.save(newSecondInvoice);
 
         // then
-        assertThat(resultInvoice).isEqualTo(newSecondInvoice);
-        assertThat(database.getById(2L)).isEqualTo(Optional.of(newSecondInvoice));
+        assertEquals(newSecondInvoice, resultInvoice);
+        assertEquals(Optional.of(newSecondInvoice), database.getById(2L));
     }
 
     @Test
     void shouldThrowExceptionWhileSaveNullAsPassedInvoice() {
-        assertThatThrownBy(() -> database.save(null)).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> database.save(null));
     }
 
     @Test
     void shouldDeleteExistingInvoice() throws DatabaseOperationException {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -131,45 +112,27 @@ class InMemoryDatabaseTest {
         database.delete(2L);
 
         // then
-        assertThat(database.count()).isEqualTo(2);
-    }
-
-    @Test
-    void shouldDoNothingWhileDeleteNonExistingInvoice() throws DatabaseOperationException {
-        // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-
-        // when
-        database.delete(10L);
-
-        // then
-        assertThat(database.count()).isEqualTo(3);
+        assertEquals(2, database.count());
     }
 
     @Test
     void shouldThrowExceptionForNullAsIdForDeleteInvoice() {
-        assertThatThrownBy(() -> database.delete(null)).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> database.delete(null));
     }
 
     @Test
-    void shouldGetExistingInvoiceById() throws DatabaseOperationException {
+    void shouldThrowExceptionWhileDeleteNonExistingInvoice() {
+        assertThrows(DatabaseOperationException.class, () -> database.delete(10L));
+    }
+
+    @Test
+    void shouldGetExistingInvoiceById() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice existingInvoice = new Invoice(2L, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
+                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -179,18 +142,15 @@ class InMemoryDatabaseTest {
         Optional optionalResultInvoice = database.getById(2L);
 
         // then
-        assertThat(optionalResultInvoice).isEqualTo(optionalInvoice);
+        assertEquals(optionalInvoice, optionalResultInvoice);
     }
 
     @Test
-    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceById() throws DatabaseOperationException {
+    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceById() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -200,102 +160,90 @@ class InMemoryDatabaseTest {
         Optional optionalResultInvoice = database.getById(5L);
 
         // then
-        assertThat(optionalResultInvoice).isEqualTo(expectedEmptyObject);
+        assertEquals(expectedEmptyObject, optionalResultInvoice);
     }
 
     @Test
     void shouldThrowExceptionForNullAsIdWhileGetInvoiceById() {
-        assertThatThrownBy(() -> database.getById(null)).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> database.getById(null));
     }
 
     @Test
-    void shouldGetExistingInvoiceByNumber() throws DatabaseOperationException {
+    void shouldGetExistingInvoiceByNumber() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice existingInvoice = new Invoice(2L, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
+                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
         Optional<Invoice> optionalInvoice = Optional.of(existingInvoice);
 
         // when
-        Optional optionalResultInvoice = database.getByNumber("2/2019");
+        Optional optionalResultInvoice = database.getByNumber(secondInvoice.getNumber());
 
         // then
-        assertThat(optionalResultInvoice).isEqualTo(optionalInvoice);
+        assertEquals(optionalInvoice, optionalResultInvoice);
     }
 
     @Test
-    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceByNumber() throws DatabaseOperationException {
+    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceByNumber() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
         Optional expectedEmptyObject = Optional.empty();
 
         // when
-        Optional optionalResultInvoice = database.getByNumber("5/2019");
+        Optional optionalResultInvoice = database.getByNumber(WordGenerator.getRandomWord());
 
         // then
-        assertThat(optionalResultInvoice).isEqualTo(expectedEmptyObject);
+        assertEquals(expectedEmptyObject, optionalResultInvoice);
     }
 
     @Test
     void shouldThrowExceptionForNullAsNumberWhileGetInvoiceByNumber() {
-        assertThatThrownBy(() -> database.getByNumber(null)).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> database.getByNumber(null));
     }
 
     @Test
-    void shouldReturnCorrectCollection() throws DatabaseOperationException {
+    void shouldReturnCorrectCollection() {
         // given
-        Collection<Invoice> expectedCollection = new HashSet<>();
-        Invoice expectedFirstInvoice = new Invoice(1L, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice expectedSecondInvoice = new Invoice(2L, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice expectedThirdInvoice = new Invoice(3L, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        expectedCollection.add(expectedFirstInvoice);
-        expectedCollection.add(expectedSecondInvoice);
-        expectedCollection.add(expectedThirdInvoice);
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
+        Collection<Invoice> expectedCollection = new HashSet<>();
+        Invoice expectedFirstInvoice = new Invoice(1L, firstInvoice.getNumber(), firstInvoice.getIssuedDate(),
+                firstInvoice.getDueDate(), firstInvoice.getSeller(), firstInvoice.getBuyer(), firstInvoice.getEntries());
+        Invoice expectedSecondInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
+                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
+        Invoice expectedThirdInvoice = new Invoice(3L, thirdInvoice.getNumber(), thirdInvoice.getIssuedDate(),
+                thirdInvoice.getDueDate(), thirdInvoice.getSeller(), thirdInvoice.getBuyer(), thirdInvoice.getEntries());
+        expectedCollection.add(expectedFirstInvoice);
+        expectedCollection.add(expectedSecondInvoice);
+        expectedCollection.add(expectedThirdInvoice);
 
         // when
-        Collection<Invoice> resultCollection = database.getAll();
+        Collection<Invoice> resultCollection = new HashSet<>(database.getAll());
 
         // then
-        assertThat(resultCollection).isEqualTo(expectedCollection);
+        assertEquals(resultCollection, expectedCollection);
     }
 
     @Test
-    void shouldDeleteAllInvoicesInDatabase() throws DatabaseOperationException {
+    void shouldDeleteAllInvoicesInDatabase() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -304,19 +252,16 @@ class InMemoryDatabaseTest {
         database.deleteAll();
 
         // then
-        assertThat(database.count()).isEqualTo(0);
-        assertThat(database.getAll().size()).isEqualTo(0);
+        assertEquals(0, database.count());
+        assertEquals(0, database.getAll().size());
     }
 
     @Test
-    void shouldReturnTrueForExistingInvoice() throws DatabaseOperationException {
+    void shouldReturnTrueForExistingInvoice() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -329,14 +274,11 @@ class InMemoryDatabaseTest {
     }
 
     @Test
-    void shouldReturnFalseForNonExistingInvoice() throws DatabaseOperationException {
+    void shouldReturnFalseForNonExistingInvoice() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -350,18 +292,15 @@ class InMemoryDatabaseTest {
 
     @Test
     void shouldThrowExceptionForNullAsIdWhileCheckInvoiceExistsInDatabase() {
-        assertThatThrownBy(() -> database.exists(null)).isExactlyInstanceOf(IllegalArgumentException.class);
+        assertThrows(IllegalArgumentException.class, () -> database.exists(null));
     }
 
     @Test
-    void shouldReturnCorrectDatabaseSize() throws DatabaseOperationException {
+    void shouldReturnCorrectDatabaseSize() {
         // given
-        Invoice firstInvoice = new Invoice(null, "1/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice secondInvoice = new Invoice(null, "2/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
-        Invoice thirdInvoice = new Invoice(null, "3/2019", LocalDate.of(2019, 6, 24),
-                LocalDate.of(2019, 7, 1), seller, buyer, entries);
+        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
+        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
         database.save(firstInvoice);
         database.save(secondInvoice);
         database.save(thirdInvoice);
@@ -370,6 +309,6 @@ class InMemoryDatabaseTest {
         long result = database.count();
 
         // then
-        assertThat(result).isEqualTo(3L);
+        assertEquals(3L, result);
     }
 }
