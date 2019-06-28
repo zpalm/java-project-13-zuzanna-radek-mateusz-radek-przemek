@@ -93,4 +93,23 @@ public class InvoiceService {
             throw new ServiceOperationException("An error occurred during checking if invoice exists.", e);
         }
     }
+
+    public Optional<Invoice> getInvoiceByNumber(String number) throws ServiceOperationException {
+        if (number == null) {
+            throw new IllegalArgumentException("Number cannot be null.");
+        }
+        try {
+            return database.getByNumber(number);
+        } catch (DatabaseOperationException e) {
+            throw new ServiceOperationException("An error occurred during getting invoice by number.", e);
+        }
+    }
+
+    public long invoicesCount() throws ServiceOperationException {
+        try {
+            return database.count();
+        } catch (DatabaseOperationException e) {
+            throw new ServiceOperationException("An error occurred during getting invoice count.", e);
+        }
+    }
 }

@@ -68,6 +68,7 @@ class InvoiceServiceTest {
         Optional<Invoice> result = invoiceService.getInvoiceById(1L);
 
         //then
+        assertTrue(result.isPresent());
         assertEquals(invoice, result.get());
         verify(database).getById(1L);
     }
@@ -118,6 +119,7 @@ class InvoiceServiceTest {
         //then
         assertEquals(addedInvoice, result);
         verify(database).save(invoiceToAdd);
+        verify(database, never()).exists(invoiceToAdd.getId());
     }
 
     @Test
@@ -302,5 +304,59 @@ class InvoiceServiceTest {
         //then
         assertThrows(ServiceOperationException.class, () -> invoiceService.invoiceExists(1L));
         verify(database).exists(1L);
+    }
+
+    @Test
+    void shouldReturnInvoiceByGivenNumber() throws DatabaseOperationException, ServiceOperationException {
+        //given
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(database.getByNumber("1/1/1")).thenReturn(Optional.of(invoice));
+
+        //when
+        Optional<Invoice> result = invoiceService.getInvoiceByNumber("1/1/1");
+
+        //then
+        assertTrue(result.isPresent());
+        assertEquals(invoice, result.get());
+        verify(database).getByNumber("1/1/1");
+    }
+
+    @Test
+    void getInvoiceByNumberMethodShouldThrowIllegalArgumentExceptionForNullInvoiceNumber() throws DatabaseOperationException {
+        assertThrows(IllegalArgumentException.class, () -> invoiceService.getInvoiceByNumber(null));
+        verify(database, never()).getByNumber(any());
+    }
+
+    @Test
+    void getInvoiceByNumberMethodShouldThrowExceptionWhenAnErrorOccurDuringGettingInvoiceByNumber() throws DatabaseOperationException {
+        //given
+        doThrow(new DatabaseOperationException()).when(database).getByNumber("1/1/1");
+
+        //then
+        assertThrows(ServiceOperationException.class, () -> invoiceService.getInvoiceByNumber("1/1/1"));
+        verify(database).getByNumber("1/1/1");
+    }
+
+    @Test
+    void shouldReturnInvoicesCount() throws DatabaseOperationException, ServiceOperationException {
+        //given
+        when(database.count()).thenReturn(10L);
+
+        //when
+        Long result = invoiceService.invoicesCount();
+
+        //then
+        assertEquals(10L, result);
+        verify(database).count();
+    }
+
+    @Test
+    void invoicesCountMethodShouldThrowExceptionWhenAnErrorOccurDuringGettingInvoiceCount() throws DatabaseOperationException {
+        //given
+        doThrow(new DatabaseOperationException()).when(database).count();
+
+        //then
+        assertThrows(ServiceOperationException.class, () -> invoiceService.invoicesCount());
+        verify(database).count();
     }
 }
