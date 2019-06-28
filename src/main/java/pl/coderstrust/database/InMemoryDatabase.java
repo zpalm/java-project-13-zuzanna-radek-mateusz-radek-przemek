@@ -71,7 +71,7 @@ public class InMemoryDatabase implements Database {
         }
         return storage.values()
                 .stream()
-                .filter(invoice -> invoice.getNumber() == number)
+                .filter(invoice -> invoice.getNumber().equals(number))
                 .findFirst();
     }
 
