@@ -39,8 +39,10 @@ public class InMemoryDatabase implements Database {
     }
 
     private Invoice updateInvoice(Invoice invoice) {
-        storage.replace(invoice.getId(), invoice);
-        return invoice;
+        Invoice updatedInvoice = new Invoice(invoice.getId(), invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
+                invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
+        storage.put(invoice.getId(), updatedInvoice);
+        return updatedInvoice;
     }
 
     @Override

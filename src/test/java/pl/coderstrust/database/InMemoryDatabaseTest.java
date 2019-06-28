@@ -2,313 +2,211 @@ package pl.coderstrust.database;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import pl.coderstrust.generators.InvoiceGenerator;
-import pl.coderstrust.generators.WordGenerator;
 import pl.coderstrust.model.Invoice;
 
 class InMemoryDatabaseTest {
 
+    private Map<Long, Invoice> storage;
     private InMemoryDatabase database;
 
     @BeforeEach
     void setup() {
-        Map<Long, Invoice> storage = new HashMap<>();
+        storage = new HashMap<>();
         database = new InMemoryDatabase(storage);
     }
 
     @Test
-    void shouldSaveInvoiceToEmptyInMemoryDatabase() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice existingInvoice = new Invoice(1L, firstInvoice.getNumber(), firstInvoice.getIssuedDate(),
-                firstInvoice.getDueDate(), firstInvoice.getSeller(), firstInvoice.getBuyer(), firstInvoice.getEntries());
-
-        // when
-        Invoice resultInvoice = database.save(firstInvoice);
-
-        // then
-        assertEquals(existingInvoice, resultInvoice);
+    void constructorClassShouldThrowExceptionForNullStorage() {
+        assertThrows(IllegalArgumentException.class, () -> new InMemoryDatabase(null));
     }
 
     @Test
-    void shouldSaveInvoiceToNonEmptyInMemoryDatabase() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
-                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
-        database.save(firstInvoice);
+    void shouldAddInvoice() {
+        Invoice addedInvoice = database.save(InvoiceGenerator.getRandomInvoice());
 
-        // when
-        Invoice resultInvoice = database.save(secondInvoice);
-
-        // then
-        assertEquals(existingInvoice, resultInvoice);
+        assertNotNull(addedInvoice.getId());
+        assertEquals(1, (long) addedInvoice.getId());
+        assertEquals(storage.get(addedInvoice.getId()), addedInvoice);
     }
 
     @Test
-    void shouldSaveInvoiceToInMemoryDatabaseWithProvidedButNonExistingId() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        Invoice nonExistingInvoice = InvoiceGenerator.getRandomInvoice();
-        Invoice expectingInvoice = new Invoice(3L, nonExistingInvoice.getNumber(), nonExistingInvoice.getIssuedDate(),
-                nonExistingInvoice.getDueDate(), nonExistingInvoice.getSeller(), nonExistingInvoice.getBuyer(), nonExistingInvoice.getEntries());
+    void shouldAddInvoiceWithNullId() {
+        Invoice addedInvoice = database.save(InvoiceGenerator.getRandomInvoiceWithNullId());
 
-        // when
-        Invoice resultInvoice = database.save(nonExistingInvoice);
-
-        // then
-        assertEquals(expectingInvoice, resultInvoice);
+        assertNotNull(addedInvoice.getId());
+        assertEquals(1, (long) addedInvoice.getId());
+        assertEquals(storage.get(addedInvoice.getId()), addedInvoice);
     }
 
     @Test
-    void shouldUpdateExistingInvoice() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        Invoice newSecondInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
-                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
+    void shouldUpdate() {
+        Invoice invoiceInDatabase = InvoiceGenerator.getRandomInvoice();
+        Invoice invoiceToUpdate = InvoiceGenerator.getRandomInvoiceWithSpecificId(invoiceInDatabase.getId());
+        storage.put(invoiceInDatabase.getId(), invoiceInDatabase);
 
-        // when
-        Invoice resultInvoice = database.save(newSecondInvoice);
+        Invoice updatedInvoice = database.save(invoiceToUpdate);
 
-        // then
-        assertEquals(newSecondInvoice, resultInvoice);
-        assertEquals(Optional.of(newSecondInvoice), database.getById(2L));
+        assertEquals(storage.get(invoiceInDatabase.getId()), updatedInvoice);
     }
 
     @Test
-    void shouldThrowExceptionWhileSaveNullAsPassedInvoice() {
+    void saveInvoiceMethodShouldThrowExceptionForNullInvoice() {
         assertThrows(IllegalArgumentException.class, () -> database.save(null));
     }
 
     @Test
-    void shouldDeleteExistingInvoice() throws DatabaseOperationException {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
+    void shouldDeleteInvoice() throws DatabaseOperationException {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
+        Map<Long, Invoice> expected = ImmutableMap.of(invoice2.getId(), invoice2);
 
-        // when
-        database.delete(2L);
+        database.delete(invoice1.getId());
 
-        // then
-        assertEquals(2, database.count());
+        assertEquals(expected, storage);
     }
 
     @Test
-    void shouldThrowExceptionForNullAsIdForDeleteInvoice() {
+    void deleteInvoiceMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.delete(null));
     }
 
     @Test
-    void shouldThrowExceptionWhileDeleteNonExistingInvoice() {
+    void deleteInvoiceMethodShouldThrowExceptionDuringDeletingNotExistingInvoice() {
         assertThrows(DatabaseOperationException.class, () -> database.delete(10L));
     }
 
     @Test
-    void shouldGetExistingInvoiceById() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
-                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-        Optional<Invoice> optionalInvoice = Optional.of(existingInvoice);
+    void shouldReturnInvoiceById() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
 
-        // when
-        Optional optionalResultInvoice = database.getById(2L);
+        Optional<Invoice> optionalInvoice = database.getById(invoice1.getId());
 
-        // then
-        assertEquals(optionalInvoice, optionalResultInvoice);
+        assertTrue(optionalInvoice.isPresent());
+        assertEquals(invoice1, optionalInvoice.get());
     }
 
     @Test
-    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceById() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-        Optional expectedEmptyObject = Optional.empty();
+    void shouldReturnEmptyOptionalWhileGetNonExistingInvoiceById() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
 
-        // when
-        Optional optionalResultInvoice = database.getById(5L);
+        Optional<Invoice> optionalInvoice = database.getById(invoice2.getId());
 
-        // then
-        assertEquals(expectedEmptyObject, optionalResultInvoice);
+        assertTrue(optionalInvoice.isEmpty());
     }
 
     @Test
-    void shouldThrowExceptionForNullAsIdWhileGetInvoiceById() {
+    void getByIdMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.getById(null));
     }
 
     @Test
-    void shouldGetExistingInvoiceByNumber() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice existingInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
-                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-        Optional<Invoice> optionalInvoice = Optional.of(existingInvoice);
+    void shouldReturnInvoiceByNumber() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
 
-        // when
-        Optional optionalResultInvoice = database.getByNumber(secondInvoice.getNumber());
+        Optional<Invoice> optionalInvoice = database.getByNumber(invoice1.getNumber());
 
-        // then
-        assertEquals(optionalInvoice, optionalResultInvoice);
+        assertTrue(optionalInvoice.isPresent());
+        assertEquals(invoice1, optionalInvoice.get());
     }
 
     @Test
-    void shouldReturnEmptyObjectWhileGetNonExistingInvoiceByNumber() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-        Optional expectedEmptyObject = Optional.empty();
+    void shouldReturnEmptyOptionalWhileGetNonExistingInvoiceByNumber() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
 
-        // when
-        Optional optionalResultInvoice = database.getByNumber(WordGenerator.getRandomWord());
+        Optional<Invoice> optionalInvoice = database.getByNumber(invoice2.getNumber());
 
-        // then
-        assertEquals(expectedEmptyObject, optionalResultInvoice);
+        assertTrue(optionalInvoice.isEmpty());
     }
 
     @Test
-    void shouldThrowExceptionForNullAsNumberWhileGetInvoiceByNumber() {
+    void getByNumberMethodShouldThrowExceptionForNullNumber() {
         assertThrows(IllegalArgumentException.class, () -> database.getByNumber(null));
     }
 
     @Test
-    void shouldReturnCorrectCollection() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
-        Collection<Invoice> expectedCollection = new HashSet<>();
-        Invoice expectedFirstInvoice = new Invoice(1L, firstInvoice.getNumber(), firstInvoice.getIssuedDate(),
-                firstInvoice.getDueDate(), firstInvoice.getSeller(), firstInvoice.getBuyer(), firstInvoice.getEntries());
-        Invoice expectedSecondInvoice = new Invoice(2L, secondInvoice.getNumber(), secondInvoice.getIssuedDate(),
-                secondInvoice.getDueDate(), secondInvoice.getSeller(), secondInvoice.getBuyer(), secondInvoice.getEntries());
-        Invoice expectedThirdInvoice = new Invoice(3L, thirdInvoice.getNumber(), thirdInvoice.getIssuedDate(),
-                thirdInvoice.getDueDate(), thirdInvoice.getSeller(), thirdInvoice.getBuyer(), thirdInvoice.getEntries());
-        expectedCollection.add(expectedFirstInvoice);
-        expectedCollection.add(expectedSecondInvoice);
-        expectedCollection.add(expectedThirdInvoice);
+    void shouldReturnAllInvoices() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
 
-        // when
-        Collection<Invoice> resultCollection = new HashSet<>(database.getAll());
+        Collection<Invoice> invoices = database.getAll();
 
-        // then
-        assertEquals(resultCollection, expectedCollection);
+        assertEquals(storage.values(), invoices);
     }
 
     @Test
-    void shouldDeleteAllInvoicesInDatabase() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
+    void shouldDeleteAllInvoices() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
 
-        // when
         database.deleteAll();
 
-        // then
-        assertEquals(0, database.count());
-        assertEquals(0, database.getAll().size());
+        assertEquals(new HashMap<>(), storage);
     }
 
     @Test
     void shouldReturnTrueForExistingInvoice() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice.getId(), invoice);
 
-        // when
-        boolean result = database.exists(2L);
-
-        // then
-        assertTrue(result);
+        assertTrue(database.exists(invoice.getId()));
     }
 
     @Test
     void shouldReturnFalseForNonExistingInvoice() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice.getId(), invoice);
 
-        // when
-        boolean result = database.exists(5L);
-
-        // then
-        assertFalse(result);
+        assertFalse(database.exists(invoice.getId() + 1L));
     }
 
     @Test
-    void shouldThrowExceptionForNullAsIdWhileCheckInvoiceExistsInDatabase() {
+    void existsMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.exists(null));
     }
 
     @Test
-    void shouldReturnCorrectDatabaseSize() {
-        // given
-        Invoice firstInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice secondInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice thirdInvoice = InvoiceGenerator.getRandomInvoiceWithNullId();
-        database.save(firstInvoice);
-        database.save(secondInvoice);
-        database.save(thirdInvoice);
+    void shouldReturnNumberOfInvoices() {
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice3 = InvoiceGenerator.getRandomInvoice();
+        Invoice invoice4 = InvoiceGenerator.getRandomInvoice();
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
+        storage.put(invoice3.getId(), invoice3);
+        storage.put(invoice4.getId(), invoice4);
 
-        // when
         long result = database.count();
 
-        // then
-        assertEquals(3L, result);
+        assertEquals(4, result);
     }
 }
