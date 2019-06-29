@@ -15,15 +15,18 @@ public final class Invoice {
     private final Company buyer;
     private final List<InvoiceEntry> entries;
 
-    public Invoice(Long id, String number, LocalDate issuedDate, LocalDate dueDate,
-                   Company seller, Company buyer, List<InvoiceEntry> entries) {
-        this.id = id;
-        this.number = number;
-        this.issuedDate = issuedDate;
-        this.dueDate = dueDate;
-        this.seller = seller;
-        this.buyer = buyer;
-        this.entries = entries != null ? new ArrayList(entries) : new ArrayList();
+    private Invoice(Builder builder) {
+        this.id = builder.id;
+        this.number = builder.number;
+        this.issuedDate = builder.issuedDate;
+        this.dueDate = builder.dueDate;
+        this.seller = builder.seller;
+        this.buyer = builder.buyer;
+        this.entries = builder.entries;
+    }
+
+    public static Invoice.Builder builder() {
+        return new Invoice.Builder();
     }
 
     public Long getId() {
@@ -64,12 +67,12 @@ public final class Invoice {
         }
         Invoice invoice = (Invoice) o;
         return id.equals(invoice.id)
-                && number.equals(invoice.number)
-                && issuedDate.equals(invoice.issuedDate)
-                && dueDate.equals(invoice.dueDate)
-                && seller.equals(invoice.seller)
-                && buyer.equals(invoice.buyer)
-                && entries.equals(invoice.entries);
+            && number.equals(invoice.number)
+            && issuedDate.equals(invoice.issuedDate)
+            && dueDate.equals(invoice.dueDate)
+            && seller.equals(invoice.seller)
+            && buyer.equals(invoice.buyer)
+            && entries.equals(invoice.entries);
     }
 
     @Override
@@ -80,13 +83,63 @@ public final class Invoice {
     @Override
     public String toString() {
         return "Invoice{"
-                + "id=" + id
-                + ", number='" + number + '\''
-                + ", issuedDate=" + issuedDate
-                + ", dueDate=" + dueDate
-                + ", seller=" + seller
-                + ", buyer=" + buyer
-                + ", entries=" + entries
-                + '}';
+            + "id=" + id
+            + ", number='" + number + '\''
+            + ", issuedDate=" + issuedDate
+            + ", dueDate=" + dueDate
+            + ", seller=" + seller
+            + ", buyer=" + buyer
+            + ", entries=" + entries
+            + '}';
+    }
+
+    public static class Builder {
+
+        private Long id;
+        private String number;
+        private LocalDate issuedDate;
+        private LocalDate dueDate;
+        private Company seller;
+        private Company buyer;
+        private List<InvoiceEntry> entries;
+
+        public Builder withId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withNumber(String number) {
+            this.number = number;
+            return this;
+        }
+
+        public Builder withIssuedDate(LocalDate issuedDate) {
+            this.issuedDate = issuedDate;
+            return this;
+        }
+
+        public Builder withDueDate(LocalDate dueDate) {
+            this.dueDate = dueDate;
+            return this;
+        }
+
+        public Builder withSeller(Company seller) {
+            this.seller = seller;
+            return this;
+        }
+
+        public Builder withBuyer(Company buyer) {
+            this.buyer = buyer;
+            return this;
+        }
+
+        public Builder withEntries(List<InvoiceEntry> entries) {
+            this.entries = entries != null ? new ArrayList(entries) : new ArrayList();
+            return this;
+        }
+
+        public Invoice build() {
+            return new Invoice(this);
+        }
     }
 }

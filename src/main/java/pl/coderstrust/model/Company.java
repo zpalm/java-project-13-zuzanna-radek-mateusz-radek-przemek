@@ -12,14 +12,18 @@ public final class Company {
     private final String phoneNumber;
     private final String email;
 
-    public Company(Long id, String name, String address, String taxId, String accountNumber, String phoneNumber, String email) {
-        this.id = id;
-        this.name = name;
-        this.address = address;
-        this.taxId = taxId;
-        this.accountNumber = accountNumber;
-        this.phoneNumber = phoneNumber;
-        this.email = email;
+    private Company(Builder builder) {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.address = builder.address;
+        this.taxId = builder.taxId;
+        this.accountNumber = builder.accountNumber;
+        this.phoneNumber = builder.phoneNumber;
+        this.email = builder.email;
+    }
+
+    public static Company.Builder builder() {
+        return new Company.Builder();
     }
 
     public Long getId() {
@@ -60,12 +64,12 @@ public final class Company {
         }
         Company company = (Company) o;
         return id.equals(company.id)
-                && name.equals(company.name)
-                && address.equals(company.address)
-                && taxId.equals(company.taxId)
-                && accountNumber.equals(company.accountNumber)
-                && phoneNumber.equals(company.phoneNumber)
-                && email.equals(company.email);
+            && name.equals(company.name)
+            && address.equals(company.address)
+            && taxId.equals(company.taxId)
+            && accountNumber.equals(company.accountNumber)
+            && phoneNumber.equals(company.phoneNumber)
+            && email.equals(company.email);
     }
 
     @Override
@@ -76,13 +80,63 @@ public final class Company {
     @Override
     public String toString() {
         return "Company{"
-                + "id=" + id
-                + ", name='" + name + '\''
-                + ", address='" + address + '\''
-                + ", taxId='" + taxId + '\''
-                + ", accountNumber='" + accountNumber + '\''
-                + ", phoneNumber='" + phoneNumber + '\''
-                + ", email='" + email + '\''
-                + '}';
+            + "id=" + id
+            + ", name='" + name + '\''
+            + ", address='" + address + '\''
+            + ", taxId='" + taxId + '\''
+            + ", accountNumber='" + accountNumber + '\''
+            + ", phoneNumber='" + phoneNumber + '\''
+            + ", email='" + email + '\''
+            + '}';
+    }
+
+    public static class Builder {
+
+        private Long id;
+        private String name;
+        private String address;
+        private String taxId;
+        private String accountNumber;
+        private String phoneNumber;
+        private String email;
+
+        public Builder withId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder withAddress(String address) {
+            this.address = address;
+            return this;
+        }
+
+        public Builder withTaxId(String taxId) {
+            this.taxId = taxId;
+            return this;
+        }
+
+        public Builder withAccountNumber(String accountNumber) {
+            this.accountNumber = accountNumber;
+            return this;
+        }
+
+        public Builder withPhoneNumber(String phoneNumber) {
+            this.phoneNumber = phoneNumber;
+            return this;
+        }
+
+        public Builder withEmail(String email) {
+            this.email = email;
+            return this;
+        }
+
+        public Company build() {
+            return new Company(this);
+        }
     }
 }

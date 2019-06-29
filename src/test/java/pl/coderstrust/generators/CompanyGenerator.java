@@ -13,6 +13,14 @@ public class CompanyGenerator {
         String phoneNumber = WordGenerator.getRandomWord();
         String email = WordGenerator.getRandomWord();
 
-        return new Company(id, name, address, taxId, accountNumber, phoneNumber, email);
+        return Company.builder()
+            .withId(id)
+            .withName(name)
+            .withAddress(address)
+            .withTaxId(taxId)
+            .withAccountNumber(accountNumber)
+            .withPhoneNumber(phoneNumber)
+            .withEmail(email)
+            .build();
     }
 }

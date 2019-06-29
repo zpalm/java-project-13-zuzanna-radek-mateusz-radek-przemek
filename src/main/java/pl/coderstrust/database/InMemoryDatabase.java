@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-
 import pl.coderstrust.model.Invoice;
 
 public class InMemoryDatabase implements Database {
@@ -32,15 +31,31 @@ public class InMemoryDatabase implements Database {
 
     private Invoice insertInvoice(Invoice invoice) {
         Long id = nextId.incrementAndGet();
-        Invoice insertedInvoice = new Invoice(id, invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
-                invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
+        Invoice insertedInvoice = Invoice.builder()
+            .withId(id)
+            .withNumber(invoice.getNumber())
+            .withIssuedDate(invoice.getIssuedDate())
+            .withDueDate(invoice.getDueDate())
+            .withSeller(invoice.getSeller())
+            .withBuyer(invoice.getBuyer())
+            .withEntries(invoice.getEntries())
+            .build();
+
         storage.put(id, insertedInvoice);
         return insertedInvoice;
     }
 
     private Invoice updateInvoice(Invoice invoice) {
-        Invoice updatedInvoice = new Invoice(invoice.getId(), invoice.getNumber(), invoice.getIssuedDate(), invoice.getDueDate(),
-                invoice.getSeller(), invoice.getBuyer(), invoice.getEntries());
+        Invoice updatedInvoice = Invoice.builder()
+            .withId(invoice.getId())
+            .withNumber(invoice.getNumber())
+            .withIssuedDate(invoice.getIssuedDate())
+            .withDueDate(invoice.getDueDate())
+            .withSeller(invoice.getSeller())
+            .withBuyer(invoice.getBuyer())
+            .withEntries(invoice.getEntries())
+            .build();
+
         storage.put(invoice.getId(), updatedInvoice);
         return updatedInvoice;
     }
@@ -70,9 +85,9 @@ public class InMemoryDatabase implements Database {
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
         return storage.values()
-                .stream()
-                .filter(invoice -> invoice.getNumber().equals(number))
-                .findFirst();
+            .stream()
+            .filter(invoice -> invoice.getNumber().equals(number))
+            .findFirst();
     }
 
     @Override

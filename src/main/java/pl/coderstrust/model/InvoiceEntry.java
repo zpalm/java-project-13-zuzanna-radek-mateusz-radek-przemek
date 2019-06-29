@@ -13,14 +13,18 @@ public final class InvoiceEntry {
     private final BigDecimal grossValue;
     private final Vat vatRate;
 
-    public InvoiceEntry(Long id, String description, Long quantity, BigDecimal price, BigDecimal netValue, BigDecimal grossValue, Vat vatRate) {
-        this.id = id;
-        this.description = description;
-        this.quantity = quantity;
-        this.price = price;
-        this.netValue = netValue;
-        this.grossValue = grossValue;
-        this.vatRate = vatRate;
+    private InvoiceEntry(Builder builder) {
+        this.id = builder.id;
+        this.description = builder.description;
+        this.quantity = builder.quantity;
+        this.price = builder.price;
+        this.netValue = builder.netValue;
+        this.grossValue = builder.grossValue;
+        this.vatRate = builder.vatRate;
+    }
+
+    public static InvoiceEntry.Builder builder() {
+        return new InvoiceEntry.Builder();
     }
 
     public Long getId() {
@@ -61,12 +65,12 @@ public final class InvoiceEntry {
         }
         InvoiceEntry that = (InvoiceEntry) o;
         return id.equals(that.id)
-                && description.equals(that.description)
-                && quantity.equals(that.quantity)
-                && price.equals(that.price)
-                && netValue.equals(that.netValue)
-                && grossValue.equals(that.grossValue)
-                && vatRate == that.vatRate;
+            && description.equals(that.description)
+            && quantity.equals(that.quantity)
+            && price.equals(that.price)
+            && netValue.equals(that.netValue)
+            && grossValue.equals(that.grossValue)
+            && vatRate == that.vatRate;
     }
 
     @Override
@@ -77,13 +81,63 @@ public final class InvoiceEntry {
     @Override
     public String toString() {
         return "InvoiceEntry{"
-                + "id=" + id
-                + ", description='" + description + '\''
-                + ", quantity=" + quantity
-                + ", price=" + price
-                + ", netValue=" + netValue
-                + ", grossValue=" + grossValue
-                + ", vatRate=" + vatRate
-                + '}';
+            + "id=" + id
+            + ", description='" + description + '\''
+            + ", quantity=" + quantity
+            + ", price=" + price
+            + ", netValue=" + netValue
+            + ", grossValue=" + grossValue
+            + ", vatRate=" + vatRate
+            + '}';
+    }
+
+    public static class Builder {
+
+        private Long id;
+        private String description;
+        private Long quantity;
+        private BigDecimal price;
+        private BigDecimal netValue;
+        private BigDecimal grossValue;
+        private Vat vatRate;
+
+        public Builder withId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public Builder withDescription(String description) {
+            this.description = description;
+            return this;
+        }
+
+        public Builder withQuantity(Long quantity) {
+            this.quantity = quantity;
+            return this;
+        }
+
+        public Builder withPrice(BigDecimal price) {
+            this.price = price;
+            return this;
+        }
+
+        public Builder withNetValue(BigDecimal netValue) {
+            this.netValue = netValue;
+            return this;
+        }
+
+        public Builder withGrossValue(BigDecimal grossValue) {
+            this.grossValue = grossValue;
+            return this;
+        }
+
+        public Builder withVatRate(Vat vatRate) {
+            this.vatRate = vatRate;
+            return this;
+        }
+
+        public InvoiceEntry build() {
+            return new InvoiceEntry(this);
+        }
     }
 }
