@@ -109,8 +109,7 @@ public class InvoiceService {
         try {
             return database.count();
         } catch (DatabaseOperationException e) {
-            throw new ServiceOperationException(
-                "An error occurred during getting number of invoices.", e);
+            throw new ServiceOperationException("An error occurred during getting number of invoices.", e);
         }
     }
 }

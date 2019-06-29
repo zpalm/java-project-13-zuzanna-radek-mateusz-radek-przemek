@@ -338,8 +338,7 @@ class InvoiceServiceTest {
     }
 
     @Test
-    void shouldReturnNumberOfInvoices()
-        throws DatabaseOperationException, ServiceOperationException {
+    void shouldReturnNumberOfInvoices() throws DatabaseOperationException, ServiceOperationException {
         //given
         when(database.count()).thenReturn(10L);
 
@@ -352,8 +351,7 @@ class InvoiceServiceTest {
     }
 
     @Test
-    void invoicesCountMethodShouldThrowExceptionWhenAnErrorOccurDuringGettingNumberOfInvoices()
-        throws DatabaseOperationException {
+    void invoicesCountMethodShouldThrowExceptionWhenAnErrorOccurDuringGettingNumberOfInvoices() throws DatabaseOperationException {
         //given
         doThrow(new DatabaseOperationException()).when(database).count();
 
