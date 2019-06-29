@@ -123,73 +123,73 @@ class FileHelperIT {
     }
 
     @Test
-    public void createMethodShouldThrowExceptionForNullArgument() {
+    void createMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.create(null));
     }
 
     @Test
-    public void deleteMethodShouldThrowExceptionForNullArgument() {
+    void deleteMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.delete(null));
     }
 
     @Test
-    public void existsMethodShouldThrowExceptionForNullArgument() {
+    void existsMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.exists(null));
     }
 
     @Test
-    public void isEmptyMethodShouldThrowExceptionForNullArgument() {
+    void isEmptyMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.isEmpty(null));
     }
 
     @Test
-    public void clearMethodShouldThrowExceptionForNullArgument() {
+    void clearMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.clear(null));
     }
 
     @Test
-    public void writeLineMethodShouldThrowExceptionForNullFilePathArgument() {
+    void writeLineMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.writeLine(null, "test"));
     }
 
     @Test
-    public void writeLineMethodShouldThrowExceptionForNullLineArgument() {
+    void writeLineMethodShouldThrowExceptionForNullLineArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.writeLine(INPUT_FILE, null));
     }
 
     @Test
-    public void readLinesMethodShouldThrowExceptionForNullArgument() {
+    void readLinesMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.readLines(null));
     }
 
     @Test
-    public void readLastLineMethodShouldThrowExceptionForNullArgument() {
+    void readLastLineMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.readLastLine(null));
     }
 
     @Test
-    public void removeLineMethodShouldThrowExceptionForNullArgument() {
+    void removeLineMethodShouldThrowExceptionForNullFilePathArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.removeLine(null, 1));
     }
 
     @Test
-    public void removeLineMethodShouldThrowExceptionForLineNumberSmallerThaOneArgument() {
+    void removeLineMethodShouldThrowExceptionForLineNumberSmallerThaOneArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.removeLine(INPUT_FILE, 0));
     }
 
     @Test
-    public void createMethodShouldThrowExceptionForExistingFile() throws IOException {
+    void createMethodShouldThrowExceptionForExistingFile() throws IOException {
         inputFile.createNewFile();
         assertThrows(FileAlreadyExistsException.class, () -> fileHelper.create(INPUT_FILE));
     }
 
     @Test
-    public void deleteMethodShouldThrowExceptionForNonExistingFile() {
+    void deleteMethodShouldThrowExceptionForNonExistingFile() {
         assertThrows(NoSuchFileException.class, () -> fileHelper.delete(INPUT_FILE));
     }
 
     @Test
-    public void isEmptyMethodShouldThrowExceptionForNonExistingFile() {
+    void isEmptyMethodShouldThrowExceptionForNonExistingFile() {
         assertThrows(FileNotFoundException.class, () -> fileHelper.isEmpty(INPUT_FILE));
     }
 }

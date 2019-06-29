@@ -13,6 +13,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 public class FileHelper {
+    private static final String ENCODING = "UTF-8";
 
     public void create(String filePath) throws IOException {
         if (filePath == null) {
@@ -49,21 +50,24 @@ public class FileHelper {
         if (filePath == null) {
             throw new IllegalArgumentException("File's path cannot be null.");
         }
-        FileUtils.write(new File(filePath), "", "UTF-8");
+        FileUtils.write(new File(filePath), "", ENCODING);
     }
 
     public void writeLine(String filePath, String line) throws IOException {
-        if (filePath == null || line == null) {
+        if (filePath == null) {
             throw new IllegalArgumentException("File's path cannot be null.");
         }
-        FileUtils.writeLines(new File(filePath), "UTF-8", Collections.singleton(line), true);
+        if (line == null) {
+            throw new IllegalArgumentException("Line cannot be null.");
+        }
+        FileUtils.writeLines(new File(filePath), ENCODING, Collections.singleton(line), true);
     }
 
     public List<String> readLines(String filePath) throws IOException {
         if (filePath == null) {
             throw new IllegalArgumentException("File's path cannot be null.");
         }
-        return FileUtils.readLines(new File(filePath), "UTF-8");
+        return FileUtils.readLines(new File(filePath), ENCODING);
     }
 
     public String readLastLine(String filePath) throws IOException {
@@ -83,8 +87,8 @@ public class FileHelper {
             throw new IllegalArgumentException("Line number cannot be lower than one.");
         }
         File file = new File(filePath);
-        List<String> lines = FileUtils.readLines(file, "UTF-8");
+        List<String> lines = FileUtils.readLines(file, ENCODING);
         lines.remove(lineNumber - 1);
-        FileUtils.writeLines(file, "UTF-8", lines, false);
+        FileUtils.writeLines(file, ENCODING, lines, false);
     }
 }
