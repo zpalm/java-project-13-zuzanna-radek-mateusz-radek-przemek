@@ -56,7 +56,7 @@ public class InvoiceService {
         try {
             Long invoiceId = invoice.getId();
             if (invoiceId == null || !database.exists(invoiceId)) {
-                throw new ServiceOperationException("Given invoice do not exists in database.");
+                throw new ServiceOperationException("Given invoice does not exist in database.");
             }
             return database.save(invoice);
         } catch (DatabaseOperationException e) {
@@ -109,7 +109,8 @@ public class InvoiceService {
         try {
             return database.count();
         } catch (DatabaseOperationException e) {
-            throw new ServiceOperationException("An error occurred during getting invoice count.", e);
+            throw new ServiceOperationException(
+                "An error occurred during getting number of invoices.", e);
         }
     }
 }
