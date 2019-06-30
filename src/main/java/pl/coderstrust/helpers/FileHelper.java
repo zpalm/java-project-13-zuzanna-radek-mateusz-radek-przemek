@@ -41,7 +41,7 @@ public class FileHelper {
             throw new IllegalArgumentException("File's path cannot be null.");
         }
         if (!Files.exists(Paths.get(filePath))) {
-            throw new FileNotFoundException("File doesn't exist.");
+            throw new FileNotFoundException("File does not exist.");
         }
         return (new File(filePath).length() == 0);
     }
