@@ -20,7 +20,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public Invoice save(Invoice invoice) {
+    public synchronized Invoice save(Invoice invoice) {
         if (invoice == null) {
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
@@ -46,7 +46,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void delete(Long id) throws DatabaseOperationException {
+    public synchronized void delete(Long id) throws DatabaseOperationException {
         if (id == null) {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
@@ -81,7 +81,7 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public void deleteAll() {
+    public synchronized void deleteAll() {
         storage.clear();
     }
 
