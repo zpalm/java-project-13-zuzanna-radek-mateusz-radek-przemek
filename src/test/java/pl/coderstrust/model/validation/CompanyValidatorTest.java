@@ -160,12 +160,12 @@ class CompanyValidatorTest {
             Arguments.of("+48 511-346-789", Arrays.asList("Phone number does not match correct phone number pattern")),
             Arguments.of("+08 057 921 345", Arrays.asList("Phone number does not match correct phone number pattern")),
             Arguments.of("050821990", Arrays.asList("Phone number does not match correct phone number pattern")),
-            Arguments.of("+48 357 921 345", Arrays.asList("Phone number does not match correct phone number pattern")),
-            Arguments.of("259821990", Arrays.asList("Phone number does not match correct phone number pattern")),
+            Arguments.of("+357 921 345", Arrays.asList("Phone number does not match correct phone number pattern")),
+            Arguments.of("+61 514 0507", Arrays.asList("Phone number does not match correct phone number pattern")),
+            Arguments.of("259821990", Arrays.asList()),
             Arguments.of("+48 657 921 345", Arrays.asList()),
             Arguments.of("256821990", Arrays.asList()),
             Arguments.of("607923521", Arrays.asList()),
-            Arguments.of("+61 514 0507", Arrays.asList()),
             Arguments.of("48510424373", Arrays.asList())
         );
     }

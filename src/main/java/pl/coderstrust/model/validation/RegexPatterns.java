@@ -6,8 +6,8 @@ class RegexPatterns {
 
     private static Pattern taxIdPattern = Pattern.compile("[0-9]{3}-?[0-9]{2}-?[0-9]{2}-?[0-9]{3}");
     private static Pattern accountNumberPattern = Pattern.compile("[0-9]{2}( ?[0-9]{4}){6}");
-    private static Pattern mobilePhoneNumberPattern = Pattern.compile("\\+?48?[4-8][0-9]{8}");
-    private static Pattern landlinePhoneNumberPattern = Pattern.compile("\\+?([1-9][0-9])?[4-8][0-9]{6}");
+    private static Pattern mobilePhoneNumberPattern = Pattern.compile("(\\+48|48)?[4-8][0-9]{8}");
+    private static Pattern landlinePhoneNumberPattern = Pattern.compile("(\\+48|48)?([1-9][1-9])?[1-9][0-9]{6}");
     private static Pattern emailPattern = Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}");
     private static Pattern invoiceNumberPattern = Pattern.compile("^(?=.*[0-9]).*$");
 

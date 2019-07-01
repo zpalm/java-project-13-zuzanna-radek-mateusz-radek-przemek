@@ -227,7 +227,7 @@ class InvoiceValidatorTest {
     private static Stream<Arguments> setOfBuyersAndValidationResults() {
         Company.Builder buyer = new Company.Builder().withName("abc")
             .withAddress("ul. Warszawska 32/1, 02-786 Wrocław")
-            .withAccountNumber("47191010482944033582500001").withPhoneNumber("+256123456")
+            .withAccountNumber("47191010482944033582500001").withPhoneNumber("256123456")
             .withTaxId("523-02-44324").withEmail("abc@gmail.com");
 
         return Stream.of(
