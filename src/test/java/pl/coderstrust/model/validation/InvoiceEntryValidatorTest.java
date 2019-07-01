@@ -15,71 +15,6 @@ import pl.coderstrust.model.Vat;
 
 class InvoiceEntryValidatorTest {
 
-    private static Stream<Arguments> setOfDescriptionsAndValidationResults() {
-        return Stream.of(
-            Arguments.of(null, Arrays.asList("Description cannot be null")),
-            Arguments.of("       ", Arrays.asList("Description must contain at least 1 character various from whitespace")),
-            Arguments.of("Pencils and scissors", Arrays.asList()),
-            Arguments.of("FKZ/1573/N/Department", Arrays.asList()),
-            Arguments.of("24812^#@#!", Arrays.asList())
-        );
-    }
-
-    private static Stream<Arguments> setOfQuantitiesAndValidationResults() {
-        return Stream.of(
-            Arguments.of(null, Arrays.asList("Quantity cannot be null")),
-            Arguments.of(-85L, Arrays.asList("Quantity must be greater than zero")),
-            Arguments.of(-5L, Arrays.asList("Quantity must be greater than zero")),
-            Arguments.of(0L, Arrays.asList("Quantity must be greater than zero")),
-            Arguments.of(-219L, Arrays.asList("Quantity must be greater than zero"))
-        );
-    }
-
-    private static Stream<Arguments> setOfPricesAndValidationResults() {
-        return Stream.of(
-            Arguments.of(null, Arrays.asList("Price cannot be null")),
-            Arguments.of(BigDecimal.valueOf(-12.50), Arrays.asList("Price cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Price cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(-0.01), Arrays.asList("Price cannot be lower than or equal to zero"))
-        );
-    }
-
-    private static Stream<Arguments> setOfNetValuesAndValidationResults() {
-        return Stream.of(
-            Arguments.of(null, Arrays.asList("Net value cannot be null")),
-            Arguments.of(BigDecimal.valueOf(-20L), Arrays.asList("Net value cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Net value cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(-14.99), Arrays.asList("Net value cannot be lower than or equal to zero"))
-        );
-    }
-
-    private static Stream<Arguments> setOfGrossValuesAndValidationResults() {
-        return Stream.of(
-            Arguments.of(null, Arrays.asList("Gross value cannot be null")),
-            Arguments.of(BigDecimal.valueOf(-123L), Arrays.asList("Gross value cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Gross value cannot be lower than or equal to zero")),
-            Arguments.of(BigDecimal.valueOf(-2333.45), Arrays.asList("Gross value cannot be lower than or equal to zero"))
-        );
-    }
-
-    private static Stream<Arguments> setOfRelationsBetweenQuantityPriceNetValueAndValidationResults() {
-        return Stream.of(
-            Arguments.of(5L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.05), Arrays.asList()),
-            Arguments.of(4L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.05), Arrays.asList("Quantity must be a quotient of net value and price")),
-            Arguments.of(5L, BigDecimal.valueOf(31.70), BigDecimal.valueOf(161.05), Arrays.asList("Quantity must be a quotient of net value and price")),
-            Arguments.of(5L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.65), Arrays.asList("Quantity must be a quotient of net value and price", "Gross value does not match net value and vat rate"))
-        );
-    }
-
-    private static Stream<Arguments> setOfRelationsBetweenNetValueGrossValueVatRateAndValidationResults() {
-        return Stream.of(
-            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.09), Vat.VAT_23, Arrays.asList()),
-            Arguments.of(BigDecimal.valueOf(161.65), BigDecimal.valueOf(198.09), Vat.VAT_23, Arrays.asList("Quantity must be a quotient of net value and price", "Gross value does not match net value and vat rate")),
-            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.08), Vat.VAT_23, Arrays.asList("Gross value does not match net value and vat rate")),
-            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.09), Vat.VAT_5, Arrays.asList("Gross value does not match net value and vat rate"))
-        );
-    }
-
     @ParameterizedTest
     @MethodSource("setOfDescriptionsAndValidationResults")
     void shouldValidateDescription(String description, List<String> expected) {
@@ -95,6 +30,16 @@ class InvoiceEntryValidatorTest {
         List<String> resultOfValidation = InvoiceEntryValidator.validate(invoiceEntryWithDescriptionVariable);
 
         assertEquals(expected, resultOfValidation);
+    }
+
+    private static Stream<Arguments> setOfDescriptionsAndValidationResults() {
+        return Stream.of(
+            Arguments.of(null, Arrays.asList("Description cannot be null")),
+            Arguments.of("       ", Arrays.asList("Description must contain at least 1 character various from whitespace")),
+            Arguments.of("Pencils and scissors", Arrays.asList()),
+            Arguments.of("FKZ/1573/N/Department", Arrays.asList()),
+            Arguments.of("24812^#@#!", Arrays.asList())
+        );
     }
 
     @ParameterizedTest
@@ -114,6 +59,16 @@ class InvoiceEntryValidatorTest {
         assertEquals(expected, resultOfValidation);
     }
 
+    private static Stream<Arguments> setOfQuantitiesAndValidationResults() {
+        return Stream.of(
+            Arguments.of(null, Arrays.asList("Quantity cannot be null")),
+            Arguments.of(-85L, Arrays.asList("Quantity must be greater than zero")),
+            Arguments.of(-5L, Arrays.asList("Quantity must be greater than zero")),
+            Arguments.of(0L, Arrays.asList("Quantity must be greater than zero")),
+            Arguments.of(-219L, Arrays.asList("Quantity must be greater than zero"))
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("setOfPricesAndValidationResults")
     void shouldValidatePrice(BigDecimal price, List<String> expected) {
@@ -129,6 +84,15 @@ class InvoiceEntryValidatorTest {
         List<String> resultOfValidation = InvoiceEntryValidator.validate(invoiceEntryWithPriceVariable);
 
         assertEquals(expected, resultOfValidation);
+    }
+
+    private static Stream<Arguments> setOfPricesAndValidationResults() {
+        return Stream.of(
+            Arguments.of(null, Arrays.asList("Price cannot be null")),
+            Arguments.of(BigDecimal.valueOf(-12.50), Arrays.asList("Price cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Price cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(-0.01), Arrays.asList("Price cannot be lower than or equal to zero"))
+        );
     }
 
     @ParameterizedTest
@@ -148,6 +112,15 @@ class InvoiceEntryValidatorTest {
         assertEquals(expected, resultOfValidation);
     }
 
+    private static Stream<Arguments> setOfNetValuesAndValidationResults() {
+        return Stream.of(
+            Arguments.of(null, Arrays.asList("Net value cannot be null")),
+            Arguments.of(BigDecimal.valueOf(-20L), Arrays.asList("Net value cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Net value cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(-14.99), Arrays.asList("Net value cannot be lower than or equal to zero"))
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("setOfGrossValuesAndValidationResults")
     void shouldValidateGrossValue(BigDecimal grossValue, List<String> expected) {
@@ -163,6 +136,15 @@ class InvoiceEntryValidatorTest {
         List<String> resultOfValidation = InvoiceEntryValidator.validate(invoiceEntryWithGrossValueVariable);
 
         assertEquals(expected, resultOfValidation);
+    }
+
+    private static Stream<Arguments> setOfGrossValuesAndValidationResults() {
+        return Stream.of(
+            Arguments.of(null, Arrays.asList("Gross value cannot be null")),
+            Arguments.of(BigDecimal.valueOf(-123L), Arrays.asList("Gross value cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(0L), Arrays.asList("Gross value cannot be lower than or equal to zero")),
+            Arguments.of(BigDecimal.valueOf(-2333.45), Arrays.asList("Gross value cannot be lower than or equal to zero"))
+        );
     }
 
     @Test
@@ -198,6 +180,15 @@ class InvoiceEntryValidatorTest {
         assertEquals(expected, resultOfValidation);
     }
 
+    private static Stream<Arguments> setOfRelationsBetweenQuantityPriceNetValueAndValidationResults() {
+        return Stream.of(
+            Arguments.of(5L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.05), Arrays.asList()),
+            Arguments.of(4L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.05), Arrays.asList("Quantity must be a quotient of net value and price")),
+            Arguments.of(5L, BigDecimal.valueOf(31.70), BigDecimal.valueOf(161.05), Arrays.asList("Quantity must be a quotient of net value and price")),
+            Arguments.of(5L, BigDecimal.valueOf(32.21), BigDecimal.valueOf(161.65), Arrays.asList("Quantity must be a quotient of net value and price", "Gross value does not match net value and vat rate"))
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("setOfRelationsBetweenNetValueGrossValueVatRateAndValidationResults")
     void shouldValidateRelationBetweenNetValueGrossValueAndVatRate(BigDecimal netValue, BigDecimal grossValue, Vat vatRate, List<String> expected) {
@@ -213,5 +204,14 @@ class InvoiceEntryValidatorTest {
         List<String> resultOfValidation = InvoiceEntryValidator.validate(invoiceEntryWithRelationVariable);
 
         assertEquals(expected, resultOfValidation);
+    }
+
+    private static Stream<Arguments> setOfRelationsBetweenNetValueGrossValueVatRateAndValidationResults() {
+        return Stream.of(
+            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.09), Vat.VAT_23, Arrays.asList()),
+            Arguments.of(BigDecimal.valueOf(161.65), BigDecimal.valueOf(198.09), Vat.VAT_23, Arrays.asList("Quantity must be a quotient of net value and price", "Gross value does not match net value and vat rate")),
+            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.08), Vat.VAT_23, Arrays.asList("Gross value does not match net value and vat rate")),
+            Arguments.of(BigDecimal.valueOf(161.05), BigDecimal.valueOf(198.09), Vat.VAT_5, Arrays.asList("Gross value does not match net value and vat rate"))
+        );
     }
 }

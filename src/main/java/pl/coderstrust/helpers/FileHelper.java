@@ -8,11 +8,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
 public class FileHelper {
+
     private static final String ENCODING = "UTF-8";
 
     public void create(String filePath) throws IOException {

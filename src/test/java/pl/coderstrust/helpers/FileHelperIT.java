@@ -15,12 +15,12 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class FileHelperIT {
+
     private static final String INPUT_FILE = "src/test/resources/helpers/input_file.txt";
     private static final String EXPECTED_FILE = "src/test/resources/helpers/expected_file.txt";
     private static final String ENCODING = "UTF-8";
