@@ -27,7 +27,6 @@ class InvoiceValidatorTest {
 
     @BeforeEach
     void setup() {
-
         correctSeller = new Company.Builder().withName("xyz")
             .withAddress("ul. Krakowska 47a, 02-876 Warszawa")
             .withAccountNumber("82 1020 5226 0000 6102 0417 7895").withPhoneNumber("+48505609023")

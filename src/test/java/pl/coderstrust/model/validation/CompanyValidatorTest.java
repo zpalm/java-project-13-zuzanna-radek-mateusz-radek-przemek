@@ -37,7 +37,6 @@ class CompanyValidatorTest {
             Arguments.of("Company Name", Arrays.asList()),
             Arguments.of("$^#!@^^($#@#", Arrays.asList()),
             Arguments.of("12345678", Arrays.asList())
-
         );
     }
 
@@ -57,7 +56,6 @@ class CompanyValidatorTest {
         List<String> resultOfValidation = CompanyValidator.validate(companyWithAddressVariable);
 
         assertEquals(expected, resultOfValidation);
-
     }
 
     private static Stream<Arguments> setOfAddressesAndValidationResults() {
