@@ -15,6 +15,12 @@ import pl.coderstrust.model.Vat;
 
 class InvoiceEntryValidatorTest {
 
+    @Test
+    void shouldValidateInvoiceEntry() {
+        List<String> resultOfValidation = InvoiceEntryValidator.validate(null);
+        assertEquals(Arrays.asList("Invoice entry cannot be null"), resultOfValidation);
+    }
+
     @ParameterizedTest
     @MethodSource("setOfDescriptionsAndValidationResults")
     void shouldValidateDescription(String description, List<String> expected) {
