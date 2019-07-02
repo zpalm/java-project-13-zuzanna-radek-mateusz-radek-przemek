@@ -51,8 +51,7 @@ class InvoiceValidatorTest {
 
     @Test
     void shouldValidateInvoice() {
-        Invoice nullINvoice = null;
-        List<String> resultOfValidation = InvoiceValidator.validate(nullINvoice);
+        List<String> resultOfValidation = InvoiceValidator.validate(null);
         assertEquals(Arrays.asList("Invoice cannot be null"), resultOfValidation);
     }
 
@@ -89,7 +88,7 @@ class InvoiceValidatorTest {
 
     @ParameterizedTest
     @MethodSource("setOfIssuedDatesAndValidationResults")
-    void shouldValidateNumber(LocalDate issuedDate, List<String> expected) {
+    void shouldValidateIssuedDate(LocalDate issuedDate, List<String> expected) {
         Invoice invoiceWithIssuedDateVariable = Invoice.builder()
             .withId(1L)
             .withNumber("9/FA/2019/5/DEP/INV")
