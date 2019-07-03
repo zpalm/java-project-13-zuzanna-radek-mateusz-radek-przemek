@@ -85,6 +85,7 @@
                         <exclude>/pl/coderstrust/model/validation/Validator.class</exclude>
                         <exclude>/pl/coderstrust/database/Database.class</exclude>
                         <exclude>/pl/coderstrust/database/DatabaseOperationException.class</exclude>
+                        <exclude>/pl/coderstrust/database/hibernate/InvoiceRepository.class</exclude>
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
                     </excludes>
                 </configuration>
@@ -186,6 +187,29 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <version>2.1.6.RELEASE</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.199</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-commons</artifactId>
+            <version>1.4.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.28.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

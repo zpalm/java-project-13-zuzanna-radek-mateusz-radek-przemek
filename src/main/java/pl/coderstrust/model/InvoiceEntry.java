@@ -3,8 +3,16 @@ package pl.coderstrust.model;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
 public final class InvoiceEntry {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private final Long id;
     private final String description;
     private final Long quantity;
@@ -12,6 +20,16 @@ public final class InvoiceEntry {
     private final BigDecimal netValue;
     private final BigDecimal grossValue;
     private final Vat vatRate;
+
+    private InvoiceEntry() {
+        this.id = null;
+        this.description = null;
+        this.quantity = null;
+        this.price = null;
+        this.netValue = null;
+        this.grossValue = null;
+        this.vatRate = null;
+    }
 
     private InvoiceEntry(Builder builder) {
         this.id = builder.id;

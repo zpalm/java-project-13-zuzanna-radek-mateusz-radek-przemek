@@ -2,8 +2,16 @@ package pl.coderstrust.model;
 
 import java.util.Objects;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
 public final class Company {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private final Long id;
     private final String name;
     private final String address;
@@ -11,6 +19,16 @@ public final class Company {
     private final String accountNumber;
     private final String phoneNumber;
     private final String email;
+
+    private Company() {
+        this.id = null;
+        this.name = null;
+        this.address = null;
+        this.taxId = null;
+        this.accountNumber = null;
+        this.phoneNumber = null;
+        this.email = null;
+    }
 
     private Company(Builder builder) {
         this.id = builder.id;

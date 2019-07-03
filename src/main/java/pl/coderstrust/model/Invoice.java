@@ -5,15 +5,42 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+
+@Entity
 public final class Invoice {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private final Long id;
     private final String number;
     private final LocalDate issuedDate;
     private final LocalDate dueDate;
+
+    @ManyToOne(cascade = CascadeType.ALL)
     private final Company seller;
+
+    @ManyToOne(cascade = CascadeType.ALL)
     private final Company buyer;
+
+    @ManyToMany(cascade = CascadeType.ALL)
     private final List<InvoiceEntry> entries;
+
+    private Invoice() {
+        id = null;
+        number = null;
+        issuedDate = null;
+        dueDate = null;
+        seller = null;
+        buyer = null;
+        entries = null;
+    }
 
     private Invoice(Builder builder) {
         this.id = builder.id;
