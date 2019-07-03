@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -117,14 +118,16 @@ class HibernateDatabaseTest {
     @Test
     void shouldReturnInvoiceByNumber() {
         //given
-        Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        when(invoiceRepository.findAll()).thenReturn(List.of(invoice));
+        Invoice invoiceToFind = InvoiceGenerator.getRandomInvoice();
+        when(invoiceRepository.findOne(any())).thenReturn(Optional.of(invoiceToFind));
 
         //when
-        Optional<Invoice> result = database.getByNumber("1/1/1");
+        Optional<Invoice> result = database.getByNumber(invoiceToFind.getNumber());
 
         //then
-        verify(invoiceRepository).findAll();
+        assertTrue(result.isPresent());
+        assertEquals(invoiceToFind, result.get());
+        verify(invoiceRepository).findOne(any());
     }
 
     @Test

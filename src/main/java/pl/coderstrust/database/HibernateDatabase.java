@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import org.springframework.data.domain.Example;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
 import pl.coderstrust.model.Invoice;
 
@@ -48,7 +49,8 @@ public class HibernateDatabase implements Database {
         if (number == null) {
             throw new IllegalArgumentException("Number cannot be null.");
         }
-        return invoiceRepository.findAll().stream().filter(i -> i.getNumber().equals(number)).findFirst();
+        Example<Invoice> example = Example.of(new Invoice.Builder().withNumber(number).build());
+        return invoiceRepository.findOne(example);
     }
 
     @Override
