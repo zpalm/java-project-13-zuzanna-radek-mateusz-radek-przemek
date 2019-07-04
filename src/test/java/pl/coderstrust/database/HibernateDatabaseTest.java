@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Example;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
 import pl.coderstrust.generators.InvoiceGenerator;
 import pl.coderstrust.model.Invoice;
@@ -32,33 +34,18 @@ class HibernateDatabaseTest {
     HibernateDatabase database;
 
     @Test
-    void shouldAddInvoice() {
+    void shouldSaveInvoice() {
         //given
-        Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoiceWithNullId();
-        Invoice addedInvoice = InvoiceGenerator.getRandomInvoice();
-        when(invoiceRepository.save(invoiceToAdd)).thenReturn(addedInvoice);
+        Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
+        Invoice saveInvoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceRepository.save(invoiceToSave)).thenReturn(saveInvoice);
 
         //when
-        Invoice result = database.save(invoiceToAdd);
+        Invoice result = database.save(invoiceToSave);
 
         //then
-        assertEquals(addedInvoice, result);
-        verify(invoiceRepository).save(invoiceToAdd);
-    }
-
-    @Test
-    void shouldUpdate() {
-        //given
-        Invoice invoiceToUpdate = InvoiceGenerator.getRandomInvoice();
-        Invoice invoiceUpdated = InvoiceGenerator.getRandomInvoice();
-        when(invoiceRepository.save(invoiceToUpdate)).thenReturn(invoiceUpdated);
-
-        //when
-        Invoice result = database.save(invoiceToUpdate);
-
-        //then
-        assertEquals(invoiceUpdated, result);
-        verify(invoiceRepository).save(invoiceToUpdate);
+        assertEquals(saveInvoice, result);
+        verify(invoiceRepository).save(invoiceToSave);
     }
 
     @Test
@@ -87,12 +74,13 @@ class HibernateDatabaseTest {
 
     @Test
     void deleteMethodShouldThrowExceptionDuringDeletingNotExistingInvoice() {
-        //when
+        //given
         when(invoiceRepository.existsById(100L)).thenReturn(false);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.delete(100L));
         verify(invoiceRepository).existsById(100L);
+        verify(invoiceRepository, never()).deleteById(1L);
     }
 
     @Test
@@ -111,6 +99,16 @@ class HibernateDatabaseTest {
     }
 
     @Test
+    void shouldReturnEmptyOptionalWhileGettingNonExistingInvoiceById() {
+        //when
+        Optional<Invoice> invoice = database.getById(100L);
+
+        //then
+        assertTrue(invoice.isEmpty());
+        verify(invoiceRepository).findById(100L);
+    }
+
+    @Test
     void getByIdMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.getById(null));
     }
@@ -118,25 +116,26 @@ class HibernateDatabaseTest {
     @Test
     void shouldReturnInvoiceByNumber() {
         //given
-        Invoice invoiceToFind = InvoiceGenerator.getRandomInvoice();
-        when(invoiceRepository.findOne(any())).thenReturn(Optional.of(invoiceToFind));
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceRepository.findOne(any(Example.class))).thenReturn(Optional.of(invoice));
 
         //when
-        Optional<Invoice> result = database.getByNumber(invoiceToFind.getNumber());
+        Optional<Invoice> result = database.getByNumber(invoice.getNumber());
 
         //then
         assertTrue(result.isPresent());
-        assertEquals(invoiceToFind, result.get());
-        verify(invoiceRepository).findOne(any());
+        assertEquals(invoice, result.get());
+        verify(invoiceRepository).findOne(any(Example.class));
     }
 
     @Test
-    void shouldReturnEmptyOptionalWhileGetNonExistingInvoiceByNumber() {
+    void shouldReturnEmptyOptionalWhileGettingNonExistingInvoiceByNumber() {
         //when
         Optional<Invoice> invoice = database.getByNumber("not_existing_number");
 
         //then
         assertTrue(invoice.isEmpty());
+        verify(invoiceRepository).findOne(any(Example.class));
     }
 
     @Test
@@ -165,11 +164,17 @@ class HibernateDatabaseTest {
 
         //then
         assertTrue(database.exists(1L));
+        verify(invoiceRepository).existsById(1L);
     }
 
     @Test
     void shouldReturnFalseForNonExistingInvoice() {
+        //given
+        when(invoiceRepository.existsById(100L)).thenReturn(false);
+
+        //then
         assertFalse(database.exists(100L));
+        verify(invoiceRepository).existsById(100L);
     }
 
     @Test

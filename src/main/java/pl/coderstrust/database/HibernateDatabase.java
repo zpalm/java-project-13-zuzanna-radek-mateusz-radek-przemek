@@ -2,8 +2,6 @@ package pl.coderstrust.database;
 
 import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.springframework.data.domain.Example;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
@@ -55,8 +53,7 @@ public class HibernateDatabase implements Database {
 
     @Override
     public Collection<Invoice> getAll() {
-        Iterable<Invoice> invoices = invoiceRepository.findAll();
-        return StreamSupport.stream(invoices.spliterator(), false).collect(Collectors.toList());
+        return invoiceRepository.findAll();
     }
 
     @Override
