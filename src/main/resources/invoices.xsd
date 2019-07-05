@@ -1,0 +1,173 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:tns="http://spring.io/guides/gs-producing-web-service"
+    targetNamespace="http://spring.io/guides/gs-producing-web-service"
+    elementFormDefault="qualified">
+
+    <xs:element name="getAllInvoicesRequest">
+        <xs:complexType>
+            <xs:sequence/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="addInvoiceRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="invoice" type="tns:invoiceSoap"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getInvoiceByIdRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="updateInvoiceRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="invoice" type="tns:invoiceSoap"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteInvoiceByIdRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="deleteAllInvoicesRequest">
+        <xs:complexType>
+            <xs:sequence/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoiceExistsRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="id" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="getInvoiceByNumberRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="number" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoicesCountRequest">
+        <xs:complexType>
+            <xs:sequence/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoiceResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:status"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="invoice" type="tns:invoiceSoap" nillable="true"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoiceExistsResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:status"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="exists" type="xs:boolean"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoicesCountResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:status"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:element name="count" type="xs:long"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="invoicesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="status" type="tns:status"/>
+                <xs:element name="message" type="xs:string"/>
+                <xs:sequence>
+                    <xs:element name="invoices" type="tns:invoiceSoap" minOccurs="0"
+                        maxOccurs="unbounded" nillable="true"/>
+                </xs:sequence>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="invoiceSoap">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="number" type="xs:string"/>
+            <xs:element name="issuedDate" type="xs:string"/>
+            <xs:element name="dueDate" type="xs:string"/>
+            <xs:element name="seller" type="tns:companySoap"/>
+            <xs:element name="buyer" type="tns:companySoap"/>
+            <xs:element name="entries" type="tns:entriesList"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="entriesList">
+        <xs:sequence>
+            <xs:element name="entry" type="tns:invoiceEntrySoap" minOccurs="0"
+                maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="companySoap">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="name" type="xs:string"/>
+            <xs:element name="address" type="xs:string"/>
+            <xs:element name="taxId" type="xs:string"/>
+            <xs:element name="accountNumber" type="xs:string"/>
+            <xs:element name="phoneNumber" type="xs:string"/>
+            <xs:element name="email" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:complexType name="invoiceEntrySoap">
+        <xs:sequence>
+            <xs:element name="id" type="xs:long"/>
+            <xs:element name="description" type="xs:string"/>
+            <xs:element name="quantity" type="xs:long"/>
+            <xs:element name="price" type="xs:decimal"/>
+            <xs:element name="netValue" type="xs:decimal"/>
+            <xs:element name="grossValue" type="xs:decimal"/>
+            <xs:element name="vatRate" type="tns:vatSoap"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:simpleType name="vatSoap">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="VAT_23"/>
+            <xs:enumeration value="VAT_8"/>
+            <xs:enumeration value="VAT_5"/>
+            <xs:enumeration value="VAT_0"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="status">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="failed"/>
+            <xs:enumeration value="success"/>
+        </xs:restriction>
+    </xs:simpleType>
+</xs:schema>

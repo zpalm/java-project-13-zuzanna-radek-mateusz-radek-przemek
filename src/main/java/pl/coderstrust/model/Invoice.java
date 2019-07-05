@@ -98,7 +98,7 @@ public final class Invoice {
     }
 
     public List<InvoiceEntry> getEntries() {
-        return new ArrayList<>(entries);
+        return entries != null ? new ArrayList(entries) : new ArrayList();
     }
 
     @Override

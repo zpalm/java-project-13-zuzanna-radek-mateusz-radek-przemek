@@ -1,0 +1,3 @@
+<gs:invoiceExistsRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+    <gs:id>1</gs:id>
+</gs:invoiceExistsRequest>

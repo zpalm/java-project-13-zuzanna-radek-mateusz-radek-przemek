@@ -1,0 +1,3 @@
+<gs:getInvoiceByNumberRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+    <gs:number>25/FA/456</gs:number>
+</gs:getInvoiceByNumberRequest>

@@ -1,0 +1,3 @@
+<gs:getInvoiceByNumberRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+    <gs:number>DADFHEWADA#6345213FQ#@%^$#@!#@SFVWAD</gs:number>
+</gs:getInvoiceByNumberRequest>
