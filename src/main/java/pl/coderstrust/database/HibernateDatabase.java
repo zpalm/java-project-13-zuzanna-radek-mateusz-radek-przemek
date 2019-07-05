@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.data.domain.Example;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
@@ -40,11 +39,7 @@ public class HibernateDatabase implements Database {
         }
         try {
             invoiceRepository.deleteById(id);
-        } catch (EmptyResultDataAccessException e) {
-            throw new DatabaseOperationException("An error occurred during deleting invoice.", e);
-        } catch (NonTransientDataAccessException e) {
-            throw new DatabaseOperationException("An error occurred during deleting invoice.", e);
-        } catch (NoSuchElementException e) {
+        } catch (NonTransientDataAccessException | NoSuchElementException e) {
             throw new DatabaseOperationException("An error occurred during deleting invoice.", e);
         }
     }

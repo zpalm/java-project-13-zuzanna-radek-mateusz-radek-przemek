@@ -21,7 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.data.domain.Example;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
@@ -96,18 +95,6 @@ class HibernateDatabaseTest {
         assertThrows(DatabaseOperationException.class, () -> database.delete(100L));
         verify(invoiceRepository).existsById(100L);
         verify(invoiceRepository, never()).deleteById(1L);
-    }
-
-    @Test
-    void deleteMethodShouldThrowDatabaseOperationExceptionWhenEmptyResultDataAccessExceptionOccurDuringDeletingInvoice() {
-        //given
-        when(invoiceRepository.existsById(1L)).thenReturn(true);
-        doThrow(new EmptyResultDataAccessException(0)).when(invoiceRepository).deleteById(1L);
-
-        //then
-        assertThrows(DatabaseOperationException.class, () -> database.delete(1L));
-        verify(invoiceRepository).existsById(1L);
-        verify(invoiceRepository).deleteById(1L);
     }
 
     @Test
