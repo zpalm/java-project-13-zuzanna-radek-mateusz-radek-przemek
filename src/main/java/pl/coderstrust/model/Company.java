@@ -1,5 +1,8 @@
 package pl.coderstrust.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
 import java.util.Objects;
 
 import javax.persistence.Entity;
@@ -8,6 +11,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
+@JsonDeserialize(builder = Company.Builder.class)
 public final class Company {
 
     @Id
@@ -108,6 +112,7 @@ public final class Company {
             + '}';
     }
 
+    @JsonPOJOBuilder
     public static class Builder {
 
         private Long id;

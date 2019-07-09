@@ -2,10 +2,13 @@ package pl.coderstrust.service;
 
 import java.util.Collection;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
 import pl.coderstrust.database.Database;
 import pl.coderstrust.database.DatabaseOperationException;
 import pl.coderstrust.model.Invoice;
 
+@Service
 public class InvoiceService {
 
     private final Database database;

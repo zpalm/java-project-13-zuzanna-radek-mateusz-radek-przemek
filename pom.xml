@@ -87,6 +87,7 @@
                         <exclude>/pl/coderstrust/database/DatabaseOperationException.class</exclude>
                         <exclude>/pl/coderstrust/database/hibernate/InvoiceRepository.class</exclude>
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
+                        <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

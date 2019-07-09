@@ -1,5 +1,8 @@
 package pl.coderstrust.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +18,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 @Entity
+@JsonDeserialize(builder = Invoice.Builder.class)
 public final class Invoice {
 
     @Id
@@ -121,6 +125,7 @@ public final class Invoice {
             + '}';
     }
 
+    @JsonPOJOBuilder
     public static class Builder {
 
         private Long id;
