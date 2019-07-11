@@ -54,6 +54,9 @@ public class InvoiceController {
 
     @GetMapping("/byNumber")
     public ResponseEntity<?> getByNumber(@RequestParam String number) {
+        if (number == null) {
+            return new ResponseEntity<>(new ErrorMessage("Number cannot be null."), HttpStatus.BAD_REQUEST);
+        }
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceByNumber(number);
             if (invoice.isPresent()) {
@@ -98,8 +101,7 @@ public class InvoiceController {
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be updated because it does not exist in database."),
                     HttpStatus.NOT_FOUND);
             }
-            Invoice updatedInvoice = invoiceService.updateInvoice(invoice);
-            return new ResponseEntity<>(updatedInvoice, HttpStatus.OK);
+            return new ResponseEntity<>(invoiceService.updateInvoice(invoice), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
