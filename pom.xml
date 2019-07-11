@@ -88,6 +88,7 @@
                         <exclude>/pl/coderstrust/database/hibernate/InvoiceRepository.class</exclude>
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
+                        <exclude>/pl/coderstrust/configuration/WebSecurityConfiguration.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -205,6 +206,15 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>2.28.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
