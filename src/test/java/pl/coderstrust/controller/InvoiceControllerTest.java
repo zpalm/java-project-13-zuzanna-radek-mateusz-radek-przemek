@@ -1,5 +1,26 @@
 package pl.coderstrust.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import pl.coderstrust.generators.InvoiceGenerator;
+import pl.coderstrust.model.Invoice;
+import pl.coderstrust.service.InvoicePdfService;
+import pl.coderstrust.service.InvoiceService;
+import pl.coderstrust.service.ServiceOperationException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
@@ -14,27 +35,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
-import pl.coderstrust.generators.InvoiceGenerator;
-import pl.coderstrust.model.Invoice;
-import pl.coderstrust.service.InvoiceService;
-import pl.coderstrust.service.ServiceOperationException;
-
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(InvoiceController.class)
 @WithMockUser(roles = "USER")
@@ -42,6 +42,9 @@ class InvoiceControllerTest {
 
     @MockBean
     private InvoiceService invoiceService;
+
+    @MockBean
+    private InvoicePdfService invoicePdfService;
 
     @Autowired
     private MockMvc mockMvc;
@@ -387,5 +390,48 @@ class InvoiceControllerTest {
 
         verify(invoiceService).invoiceExists(invoiceId);
         verify(invoiceService).deleteInvoiceById(invoiceId);
+    }
+
+    @Test
+    public void shouldReturnPdfForPassedInvoiced() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
+
+        String url = String.format("/invoices/pdf/%d", invoice.getId());
+
+        mockMvc.perform(get(url)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(new byte[]{}));
+
+        verify(invoicePdfService).createPdf(invoice);
+    }
+
+    @Test
+    public void shouldReturnNotFoundStatusWhenInvoiceToCreatePdfDoesNotExist() throws Exception {
+        Long id = 1L;
+        when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
+
+        String url = String.format("/invoices/pdf/%d", id);
+
+        mockMvc.perform(get(url)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+
+        verify(invoiceService).getInvoiceById(id);
+    }
+
+    @Test
+    public void shouldReturnInternalServerErrorDuringCreatingPdfFromPassedInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+        Long id = 1L;
+        when(invoiceService.getInvoiceById(id)).thenThrow(new ServiceOperationException());
+
+        String url = String.format("/invoices/pdf/%d", id);
+
+        mockMvc.perform(get(url)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
+
+        verify(invoiceService).getInvoiceById(id);
     }
 }

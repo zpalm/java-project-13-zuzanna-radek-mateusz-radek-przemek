@@ -6,10 +6,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
-import java.net.URI;
-import java.util.Optional;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.coderstrust.model.Invoice;
+import pl.coderstrust.service.InvoicePdfService;
 import pl.coderstrust.service.InvoiceService;
+
+import java.net.URI;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/invoices")
@@ -31,9 +31,11 @@ import pl.coderstrust.service.InvoiceService;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final InvoicePdfService invoicePdfService;
 
-    public InvoiceController(InvoiceService invoiceService) {
+    public InvoiceController(InvoiceService invoiceService, InvoicePdfService invoicePdfService) {
         this.invoiceService = invoiceService;
+        this.invoicePdfService = invoicePdfService;
     }
 
     @GetMapping
@@ -47,7 +49,7 @@ public class InvoiceController {
             return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -68,7 +70,7 @@ public class InvoiceController {
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -93,7 +95,7 @@ public class InvoiceController {
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -120,7 +122,7 @@ public class InvoiceController {
             return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -146,12 +148,12 @@ public class InvoiceController {
             }
             if (!invoiceService.invoiceExists(id)) {
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be updated because it does not exist in database."),
-                    HttpStatus.NOT_FOUND);
+                        HttpStatus.NOT_FOUND);
             }
             return new ResponseEntity<>(invoiceService.updateInvoice(invoice), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -167,13 +169,34 @@ public class InvoiceController {
         try {
             if (!invoiceService.invoiceExists(id)) {
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be deleted because it does not exist in database."),
-                    HttpStatus.NOT_FOUND);
+                        HttpStatus.NOT_FOUND);
             }
             invoiceService.deleteInvoiceById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+                    HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @GetMapping("/pdf/{id}")
+    @ApiOperation(value = "Create pfd from invoice ID", notes = "Retrieving the invoice by provided id to create pdf")
+    @ApiResponses({
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
+            @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
+    })
+    @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
+    public ResponseEntity<?> createPdf(@PathVariable("id") Long id) {
+        try {
+            Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
+            if (invoice.isPresent()) {
+                return new ResponseEntity<>(invoicePdfService.createPdf(invoice.get()), HttpStatus.OK);
+            }
+            return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
