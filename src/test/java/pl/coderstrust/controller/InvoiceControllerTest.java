@@ -6,7 +6,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -38,6 +37,7 @@ import pl.coderstrust.service.ServiceOperationException;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(InvoiceController.class)
+@WithMockUser(roles = "USER")
 class InvoiceControllerTest {
 
     @MockBean
@@ -50,7 +50,6 @@ class InvoiceControllerTest {
     private ObjectMapper mapper;
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnAllInvoices() throws Exception {
         Collection<Invoice> invoices = Arrays.asList(InvoiceGenerator.getRandomInvoice(), InvoiceGenerator.getRandomInvoice());
         when(invoiceService.getAllInvoices()).thenReturn(invoices);
@@ -66,7 +65,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnEmptyListOfInvoicesWhenThereAreNoInvoicesInTheDatabase() throws Exception {
         Collection<Invoice> invoices = new ArrayList<>();
         when(invoiceService.getAllInvoices()).thenReturn(invoices);
@@ -82,7 +80,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringGettingAllInvoicesWhenSomethingWentWrongOnServer() throws Exception {
         when(invoiceService.getAllInvoices()).thenThrow(new ServiceOperationException());
 
@@ -96,7 +93,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInvoiceById() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
@@ -112,7 +108,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnNotFoundStatusDuringGettingInvoiceByIdWhenInvoiceWithSpecificIdDoesNotExist() throws Exception {
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
@@ -127,7 +122,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringGettingInvoiceByIdWhenSomethingWentWrongOnServer() throws Exception {
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenThrow(new ServiceOperationException());
@@ -142,7 +136,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnBadRequestStatusDuringGettingInvoiceByNumberWhenNumberIsNull() throws Exception {
         String url = "/invoices/byNumber";
 
@@ -154,7 +147,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInvoiceByNumber() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
@@ -170,7 +162,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnNotFoundStatusDuringGettingInvoiceByNumberWhenInvoiceWithSpecificNumberDoesNotExist() throws Exception {
         String number = "1a";
         when(invoiceService.getInvoiceByNumber(number)).thenReturn(Optional.empty());
@@ -185,7 +176,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringGettingInvoiceByNumberWhenSomethingWentWrongOnServer() throws Exception {
         String number = "1a";
         when(invoiceService.getInvoiceByNumber(number)).thenThrow(new ServiceOperationException());
@@ -200,7 +190,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldAddInvoice() throws Exception {
         Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
         Invoice addedInvoice = InvoiceGenerator.getRandomInvoice();
@@ -209,7 +198,7 @@ class InvoiceControllerTest {
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url).with(csrf().asHeader())
+        mockMvc.perform(post(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoiceToAdd))
             .accept(MediaType.APPLICATION_JSON))
@@ -222,14 +211,13 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnConflictStatusDuringAddingInvoiceWhenInvoiceExistsInDatabase() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url).with(csrf().asHeader())
+        mockMvc.perform(post(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -240,11 +228,10 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnBadRequestStatusDuringAddingNullAsInvoice() throws Exception {
         String url = "/invoices";
 
-        mockMvc.perform(post(url).with(csrf().asHeader())
+        mockMvc.perform(post(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(null))
             .accept(MediaType.APPLICATION_JSON))
@@ -255,7 +242,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringAddingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(false);
@@ -263,7 +249,7 @@ class InvoiceControllerTest {
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url).with(csrf().asHeader())
+        mockMvc.perform(post(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -274,7 +260,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldUpdateInvoice() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
@@ -282,7 +267,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url).with(csrf().asHeader())
+        mockMvc.perform(put(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -294,11 +279,10 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnBadRequestStatusDuringUpdatingNullAsInvoice() throws Exception {
         String url = "/invoices/1";
 
-        mockMvc.perform(put(url).with(csrf().asHeader())
+        mockMvc.perform(put(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(null))
             .accept(MediaType.APPLICATION_JSON))
@@ -309,13 +293,12 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnBadRequestStatusDuringUpdatingInvoiceWhenPassedIdIsDifferentThanInvoiceId() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
 
         String url = String.format("/invoices/%d", Long.valueOf(invoice.getId() + "1"));
 
-        mockMvc.perform(put(url).with(csrf().asHeader())
+        mockMvc.perform(put(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -326,14 +309,13 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnNotFoundStatusDuringUpdatingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(false);
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url).with(csrf().asHeader())
+        mockMvc.perform(put(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -344,7 +326,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringUpdatingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
@@ -352,7 +333,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url).with(csrf().asHeader())
+        mockMvc.perform(put(url)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -363,7 +344,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldRemoveInvoice() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
@@ -371,7 +351,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(delete(url).with(csrf().asHeader())
+        mockMvc.perform(delete(url)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
@@ -380,13 +360,12 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnNotFoundStatusDuringRemovingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
         when(invoiceService.invoiceExists(1L)).thenReturn(false);
 
         String url = "/invoices/1";
 
-        mockMvc.perform(delete(url).with(csrf().asHeader())
+        mockMvc.perform(delete(url)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
 
@@ -395,7 +374,6 @@ class InvoiceControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "user", password = "pass")
     public void shouldReturnInternalServerErrorDuringRemovingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
         Long invoiceId = 1L;
         when(invoiceService.invoiceExists(invoiceId)).thenReturn(true);
@@ -403,7 +381,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoiceId);
 
-        mockMvc.perform(delete(url).with(csrf().asHeader())
+        mockMvc.perform(delete(url)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError());
 
