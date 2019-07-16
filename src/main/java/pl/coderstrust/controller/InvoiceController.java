@@ -1,5 +1,10 @@
 package pl.coderstrust.controller;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+
 import java.net.URI;
 import java.util.Optional;
 
@@ -29,6 +34,10 @@ public class InvoiceController {
     }
 
     @GetMapping
+    @ApiOperation(value = "Get all invoices", notes = "Retrieving the collection of all invoices in database", response = Invoice[].class)
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Success", response = Invoice[].class)
+    })
     public ResponseEntity<?> getAll() {
         try {
             return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
@@ -39,7 +48,12 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
+    @ApiOperation(value = "Get invoice by id", notes = "Retrieving the invoice by provided id", response = Invoice.class)
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Success", response = Invoice.class),
+        @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class)
+    })
+    public ResponseEntity<?> getById(@ApiParam(required = true, name = "Id", value = "Id of the invoice to get") @PathVariable("id") Long id) {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
             if (invoice.isPresent()) {
@@ -53,7 +67,13 @@ public class InvoiceController {
     }
 
     @GetMapping("/byNumber")
-    public ResponseEntity<?> getByNumber(@RequestParam String number) {
+    @ApiOperation(value = "Get invoice by number", notes = "Retrieving the invoice by provided number", response = Invoice.class)
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "Success", response = Invoice.class),
+        @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
+        @ApiResponse(code = 404, message = "Not found", response = ErrorMessage.class)
+    })
+    public ResponseEntity<?> getByNumber(@ApiParam(required = true, name = "Number", value = "Number of the invoice to get") @RequestParam String number) {
         if (number == null) {
             return new ResponseEntity<>(new ErrorMessage("Number cannot be null."), HttpStatus.BAD_REQUEST);
         }
@@ -70,7 +90,13 @@ public class InvoiceController {
     }
 
     @PostMapping
-    public ResponseEntity<?> add(@RequestBody Invoice invoice) {
+    @ApiOperation(value = "Add new invoice", notes = "Add new invoice to database", response = Invoice.class)
+    @ApiResponses({
+        @ApiResponse(code = 201, message = "Created", response = Invoice.class),
+        @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
+        @ApiResponse(code = 409, message = "Conflict", response = ErrorMessage.class)
+    })
+    public ResponseEntity<?> add(@ApiParam(required = true, name = "Invoice", value = "New invoice data") @RequestBody Invoice invoice) {
         if (invoice == null) {
             return new ResponseEntity<>(new ErrorMessage("Invoice cannot be null."), HttpStatus.BAD_REQUEST);
         }
@@ -89,7 +115,16 @@ public class InvoiceController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Invoice invoice) {
+    @ApiOperation(value = "Update invoice", notes = "Update invoice with provided id", response = Invoice.class)
+    @ApiResponses({
+        @ApiResponse(code = 201, message = "Created", response = Invoice.class),
+        @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
+        @ApiResponse(code = 404, message = "Not found", response = ErrorMessage.class)
+    })
+    public ResponseEntity<?> update(@ApiParam(required = true, name = "Id", value = "Id of invoice to update")
+                                    @PathVariable("id") Long id,
+                                    @ApiParam(required = true, name = "Invoice", value = "Invoice with updated data")
+                                    @RequestBody Invoice invoice) {
         if (invoice == null) {
             return new ResponseEntity<>(new ErrorMessage("Invoice cannot be null."), HttpStatus.BAD_REQUEST);
         }
@@ -109,7 +144,12 @@ public class InvoiceController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> remove(@PathVariable("id") Long id) {
+    @ApiOperation(value = "Delete invoice", notes = "Delete invoice with provided id")
+    @ApiResponses({
+        @ApiResponse(code = 204, message = "No content"),
+        @ApiResponse(code = 404, message = "Not found", response = ErrorMessage.class)
+    })
+    public ResponseEntity<?> remove(@ApiParam(required = true, name = "Id", value = "Id of invoice to delete") @PathVariable("id") Long id) {
         try {
             if (!invoiceService.invoiceExists(id)) {
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be deleted because it does not exist in database."),

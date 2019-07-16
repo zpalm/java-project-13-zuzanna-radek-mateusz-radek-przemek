@@ -2,6 +2,8 @@ package pl.coderstrust.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
@@ -12,16 +14,30 @@ import javax.persistence.Id;
 
 @Entity
 @JsonDeserialize(builder = Company.Builder.class)
+@ApiModel(value = "Company", description = "Company")
 public final class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @ApiModelProperty(value = "The unique identifier of the company.")
     private final Long id;
+
+    @ApiModelProperty(value = "Company name.")
     private final String name;
+
+    @ApiModelProperty(value = "Company address.")
     private final String address;
+
+    @ApiModelProperty(value = "Company tax id.")
     private final String taxId;
+
+    @ApiModelProperty(value = "Company bank account number.")
     private final String accountNumber;
+
+    @ApiModelProperty(value = "Company phone number.")
     private final String phoneNumber;
+
+    @ApiModelProperty(value = "Company email address.")
     private final String email;
 
     private Company() {
