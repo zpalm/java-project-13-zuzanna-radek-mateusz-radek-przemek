@@ -20,25 +20,25 @@ public final class InvoiceEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the entry.")
+    @ApiModelProperty(value = "The unique identifier of the entry.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "Description of the entry.")
+    @ApiModelProperty(value = "Description of the entry.", example = "Kurs")
     private final String description;
 
-    @ApiModelProperty(value = "Number of units of the entry.")
+    @ApiModelProperty(value = "Number of units of the entry.", example = "1")
     private final Long quantity;
 
-    @ApiModelProperty(value = "Unit price of the entry.")
+    @ApiModelProperty(value = "Unit price of the entry.", example = "1000")
     private final BigDecimal price;
 
-    @ApiModelProperty(value = "Price without tax.")
+    @ApiModelProperty(value = "Price without tax.", example = "1000")
     private final BigDecimal netValue;
 
-    @ApiModelProperty(value = "Price with tax.")
+    @ApiModelProperty(value = "Price with tax.", example = "1230")
     private final BigDecimal grossValue;
 
-    @ApiModelProperty(value = "Vat tax rate.")
+    @ApiModelProperty(value = "Vat tax rate.", example = "VAT_23")
     private final Vat vatRate;
 
     private InvoiceEntry() {

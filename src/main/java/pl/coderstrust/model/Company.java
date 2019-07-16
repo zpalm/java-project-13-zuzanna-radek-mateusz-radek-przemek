@@ -19,25 +19,25 @@ public final class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the company.")
+    @ApiModelProperty(value = "The unique identifier of the company.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "Company name.")
+    @ApiModelProperty(value = "Company name.", example = "CodersTrust")
     private final String name;
 
-    @ApiModelProperty(value = "Company address.")
+    @ApiModelProperty(value = "Company address.", example = "ul. Bukowińska 24 d/7, 02-703 Warszawa")
     private final String address;
 
-    @ApiModelProperty(value = "Company tax id.")
+    @ApiModelProperty(value = "Company tax id.", example = "701-041-63-84")
     private final String taxId;
 
-    @ApiModelProperty(value = "Company bank account number.")
+    @ApiModelProperty(value = "Company bank account number.", example = "27 1030 0019 0109 8503 0014 2668")
     private final String accountNumber;
 
-    @ApiModelProperty(value = "Company phone number.")
+    @ApiModelProperty(value = "Company phone number.", example = "691 950 343")
     private final String phoneNumber;
 
-    @ApiModelProperty(value = "Company email address.")
+    @ApiModelProperty(value = "Company email address.", example = "hello@coderstrust.pl")
     private final String email;
 
     private Company() {

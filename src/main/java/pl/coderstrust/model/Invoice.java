@@ -26,16 +26,16 @@ public final class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the invoice")
+    @ApiModelProperty(value = "The unique identifier of the invoice.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "The number of the invoice")
+    @ApiModelProperty(value = "The number of the invoice.", example = "1/2/3")
     private final String number;
 
-    @ApiModelProperty(value = "The date when invoice was created")
+    @ApiModelProperty(value = "The date when invoice was created.", example = "2019-07-16")
     private final LocalDate issuedDate;
 
-    @ApiModelProperty(value = "The date when payment will be required")
+    @ApiModelProperty(value = "The date when payment will be required.", example = "2019-07-30")
     private final LocalDate dueDate;
 
     @ManyToOne(cascade = CascadeType.ALL)
