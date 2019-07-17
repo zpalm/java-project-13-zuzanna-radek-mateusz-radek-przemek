@@ -4,11 +4,15 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.data.domain.Example;
+import org.springframework.stereotype.Repository;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
 import pl.coderstrust.model.Invoice;
 
+@Repository
+@ConditionalOnProperty(name = "spring.database", havingValue = "hibernate")
 public class HibernateDatabase implements Database {
 
     private final InvoiceRepository invoiceRepository;
