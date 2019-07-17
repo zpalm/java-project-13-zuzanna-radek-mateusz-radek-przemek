@@ -1,5 +1,9 @@
 package pl.coderstrust.configuration;
 
+import io.swagger.annotations.Api;
+
+import java.util.Collections;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -17,13 +21,15 @@ public class SwaggerConfiguration {
     public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
             .select()
-            .apis(RequestHandlerSelectors.basePackage("pl.coderstrust.controller"))
-            .paths(PathSelectors.any())
+            .apis(RequestHandlerSelectors.withClassAnnotation(Api.class))
+            .paths(PathSelectors.ant("/invoices/**"))
             .build()
-            .apiInfo(info());
+            .consumes(Collections.singleton("application/json"))
+            .produces(Collections.singleton("application/json"))
+            .apiInfo(getApiInfo());
     }
 
-    private ApiInfo info() {
+    private ApiInfo getApiInfo() {
         return new ApiInfoBuilder()
             .title("Invoice REST API")
             .description("REST API documentation for Online Invoicing System")
