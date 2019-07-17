@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import pl.coderstrust.model.Invoice;
 
 @Repository
-@ConditionalOnProperty(name = "spring.database", havingValue = "in_memory")
+@ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "in-memory")
 public class InMemoryDatabase implements Database {
 
     private Map<Long, Invoice> storage;
