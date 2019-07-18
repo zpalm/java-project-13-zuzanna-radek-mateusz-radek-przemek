@@ -60,9 +60,9 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(invoices)));
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(invoices)));
 
         verify(invoiceService).getAllInvoices();
     }
@@ -75,9 +75,9 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(invoices)));
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(invoices)));
 
         verify(invoiceService).getAllInvoices();
     }
@@ -89,8 +89,8 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getAllInvoices();
     }
@@ -103,9 +103,9 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(invoice)));
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(invoice)));
 
         verify(invoiceService).getInvoiceById(invoice.getId());
     }
@@ -118,8 +118,8 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", id);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
         verify(invoiceService).getInvoiceById(id);
     }
@@ -132,8 +132,8 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", id);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getInvoiceById(id);
     }
@@ -143,8 +143,8 @@ class InvoiceControllerTest {
         String url = "/invoices/byNumber";
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
 
         verify(invoiceService, never()).getInvoiceByNumber(any());
     }
@@ -157,9 +157,9 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(invoice)));
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(invoice)));
 
         verify(invoiceService).getInvoiceByNumber(invoice.getNumber());
     }
@@ -172,8 +172,8 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/byNumber?number=%s", number);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
         verify(invoiceService).getInvoiceByNumber(number);
     }
@@ -186,8 +186,8 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/byNumber?number=%s", number);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getInvoiceByNumber(number);
     }
@@ -202,12 +202,12 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(post(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoiceToAdd))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isCreated())
-            .andExpect(header().stringValues("location", String.format("/invoices/%d", addedInvoice.getId())))
-            .andExpect(content().json(mapper.writeValueAsString(addedInvoice)));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoiceToAdd))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(header().stringValues("location", String.format("/invoices/%d", addedInvoice.getId())))
+                .andExpect(content().json(mapper.writeValueAsString(addedInvoice)));
 
         verify(invoiceService).invoiceExists(invoiceToAdd.getId());
         verify(invoiceService).addInvoice(invoiceToAdd);
@@ -221,10 +221,10 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(post(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isConflict());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isConflict());
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService, never()).addInvoice(invoice);
@@ -235,10 +235,10 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(post(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(null))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(null))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
 
         verify(invoiceService, never()).invoiceExists(any());
         verify(invoiceService, never()).addInvoice(any());
@@ -253,10 +253,10 @@ class InvoiceControllerTest {
         String url = "/invoices";
 
         mockMvc.perform(post(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService).addInvoice(invoice);
@@ -271,11 +271,11 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(put(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().json(mapper.writeValueAsString(invoice)));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(mapper.writeValueAsString(invoice)));
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService).updateInvoice(invoice);
@@ -286,10 +286,10 @@ class InvoiceControllerTest {
         String url = "/invoices/1";
 
         mockMvc.perform(put(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(null))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(null))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
 
         verify(invoiceService, never()).invoiceExists(any());
         verify(invoiceService, never()).invoiceExists(any());
@@ -302,10 +302,10 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", Long.valueOf(invoice.getId() + "1"));
 
         mockMvc.perform(put(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
 
         verify(invoiceService, never()).invoiceExists(any());
         verify(invoiceService, never()).updateInvoice(any());
@@ -319,10 +319,10 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(put(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService, never()).updateInvoice(invoice);
@@ -337,10 +337,10 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(put(url)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(mapper.writeValueAsBytes(invoice))
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsBytes(invoice))
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService).updateInvoice(invoice);
@@ -355,8 +355,8 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(delete(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNoContent());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNoContent());
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService).deleteInvoiceById(invoice.getId());
@@ -369,8 +369,8 @@ class InvoiceControllerTest {
         String url = "/invoices/1";
 
         mockMvc.perform(delete(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isNotFound());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
 
         verify(invoiceService).invoiceExists(1L);
         verify(invoiceService, never()).deleteInvoiceById(1L);
@@ -385,30 +385,34 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoiceId);
 
         mockMvc.perform(delete(url)
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isInternalServerError());
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isInternalServerError());
 
         verify(invoiceService).invoiceExists(invoiceId);
         verify(invoiceService).deleteInvoiceById(invoiceId);
     }
 
     @Test
-    public void shouldReturnPdfForPassedInvoiced() throws Exception {
+    public void shouldReturnInvoiceAsPdf() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
+        when(invoicePdfService.createPdf(invoice)).thenReturn(expectedByteArray);
 
         String url = String.format("/invoices/pdf/%d", invoice.getId());
 
         mockMvc.perform(get(url)
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(MediaType.APPLICATION_PDF))
                 .andExpect(status().isOk())
-                .andExpect(content().bytes(new byte[]{}));
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(content().bytes(expectedByteArray));
 
+        verify(invoiceService).getInvoiceById(invoice.getId());
         verify(invoicePdfService).createPdf(invoice);
     }
 
     @Test
-    public void shouldReturnNotFoundStatusWhenInvoiceToCreatePdfDoesNotExist() throws Exception {
+    public void shouldReturnNotFoundDuringGettingInvoiceAsPdfWhenInvoiceDoesNotExist() throws Exception {
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
 
@@ -419,19 +423,22 @@ class InvoiceControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(invoiceService).getInvoiceById(id);
+        verify(invoicePdfService, never()).createPdf(any());
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringCreatingPdfFromPassedInvoiceWhenSomethingWentWrongOnServer() throws Exception {
-        Long id = 1L;
-        when(invoiceService.getInvoiceById(id)).thenThrow(new ServiceOperationException());
+    public void shouldReturnInternalServerErrorDuringGettingInvoiceAsPdfWhenSomethingWentWrongOnServer() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.ofNullable(invoice));
+        when(invoicePdfService.createPdf(invoice)).thenThrow(ServiceOperationException.class);
 
-        String url = String.format("/invoices/pdf/%d", id);
+        String url = String.format("/invoices/pdf/%d", invoice.getId());
 
         mockMvc.perform(get(url)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());
 
-        verify(invoiceService).getInvoiceById(id);
+        verify(invoiceService).getInvoiceById(invoice.getId());
+        verify(invoicePdfService).createPdf(invoice);
     }
 }

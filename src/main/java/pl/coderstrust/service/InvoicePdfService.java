@@ -9,12 +9,11 @@ import com.itextpdf.text.TabSettings;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import org.springframework.stereotype.Service;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.model.InvoiceEntry;
-
-import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
 
 @Service
 public class InvoicePdfService {
@@ -67,12 +66,12 @@ public class InvoicePdfService {
         Paragraph companyDataHeader = generateCompanyDataLine("Seller:", "Buyer:");
         Paragraph companyNames = generateCompanyDataLine(invoice.getSeller().getName(), invoice.getBuyer().getName());
         Paragraph companyAddresses = generateCompanyDataLine(invoice.getSeller().getAddress(), invoice.getBuyer().getAddress());
-        Paragraph companyTaxIDS = generateCompanyDataLine(invoice.getSeller().getTaxId(), invoice.getBuyer().getTaxId());
+        Paragraph companyTaxIds = generateCompanyDataLine(invoice.getSeller().getTaxId(), invoice.getBuyer().getTaxId());
 
         companyData.add(companyDataHeader);
         companyData.add(companyNames);
         companyData.add(companyAddresses);
-        companyData.add(companyTaxIDS);
+        companyData.add(companyTaxIds);
         companyData.add(Chunk.NEWLINE);
         return companyData;
     }
@@ -102,10 +101,10 @@ public class InvoicePdfService {
         entriesTable.setWidthPercentage(WIDTH_PERCENTAGE);
         for (InvoiceEntry entry : invoice.getEntries()) {
             PdfPCell description = new PdfPCell(new Paragraph(entry.getDescription()));
-            PdfPCell quantity = new PdfPCell(new Paragraph(entry.getQuantity()));
+            PdfPCell quantity = new PdfPCell(new Paragraph(String.valueOf(entry.getQuantity())));
             PdfPCell price = new PdfPCell(new Paragraph(String.valueOf(entry.getPrice())));
             PdfPCell netValue = new PdfPCell(new Paragraph(String.valueOf(entry.getNetValue())));
-            PdfPCell vatRate = new PdfPCell(new Paragraph(String.valueOf(entry.getVatRate())));
+            PdfPCell vatRate = new PdfPCell(new Paragraph(String.format("%,.2f %%", entry.getVatRate().getValue() * 100)));
             PdfPCell grossValue = new PdfPCell(new Paragraph(String.valueOf(entry.getGrossValue())));
 
             entriesTable.addCell(description);

@@ -6,8 +6,11 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.net.URI;
+import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.service.InvoicePdfService;
 import pl.coderstrust.service.InvoiceService;
-
-import java.net.URI;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/invoices")
@@ -43,7 +43,7 @@ public class InvoiceController {
     @ApiResponses({
         @ApiResponse(code = 200, message = "OK", response = Invoice[].class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     public ResponseEntity<?> getAll() {
         try {
             return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
@@ -59,7 +59,7 @@ public class InvoiceController {
         @ApiResponse(code = 200, message = "OK", response = Invoice.class),
         @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
     public ResponseEntity<?> getById(@PathVariable("id") Long id) {
         try {
@@ -81,7 +81,7 @@ public class InvoiceController {
         @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
         @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     @ApiImplicitParam(required = true, name = "number", value = "Number of the invoice to get", dataType = "String")
     public ResponseEntity<?> getByNumber(@RequestParam String number) {
         if (number == null) {
@@ -106,7 +106,7 @@ public class InvoiceController {
         @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
         @ApiResponse(code = 409, message = "Invoice exists", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     @ApiImplicitParam(required = true, name = "invoice", value = "New invoice data", dataType = "Invoice")
     public ResponseEntity<?> add(@RequestBody Invoice invoice) {
         if (invoice == null) {
@@ -133,11 +133,11 @@ public class InvoiceController {
         @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
         @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, name = "id", value = "Id of invoice to update", dataType = "Long"),
         @ApiImplicitParam(required = true, name = "invoice", value = "Invoice with updated data", dataType = "Invoice")
-    })
+        })
     public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Invoice invoice) {
         if (invoice == null) {
             return new ResponseEntity<>(new ErrorMessage("Invoice cannot be null."), HttpStatus.BAD_REQUEST);
@@ -163,7 +163,7 @@ public class InvoiceController {
         @ApiResponse(code = 204, message = "No content"),
         @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        })
     @ApiImplicitParam(required = true, name = "id", value = "Id of invoice to delete", dataType = "Long")
     public ResponseEntity<?> remove(@PathVariable("id") Long id) {
         try {
@@ -180,18 +180,21 @@ public class InvoiceController {
     }
 
     @GetMapping("/pdf/{id}")
-    @ApiOperation(value = "Create pfd from invoice ID", notes = "Retrieving the invoice by provided id to create pdf")
+    @ApiOperation(value = "Get invoice as PDF", notes = "Retrieving the invoice by provided id to create pdf")
     @ApiResponses({
-            @ApiResponse(code = 200, message = "OK"),
-            @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
-            @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
+        @ApiResponse(code = 200, message = "OK"),
+        @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
+        @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
+        })
     @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
     public ResponseEntity<?> createPdf(@PathVariable("id") Long id) {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
             if (invoice.isPresent()) {
-                return new ResponseEntity<>(invoicePdfService.createPdf(invoice.get()), HttpStatus.OK);
+                byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
+                HttpHeaders responseHeadres = new HttpHeaders();
+                responseHeadres.setContentType(MediaType.APPLICATION_PDF);
+                return new ResponseEntity<>(byteArray, responseHeadres, HttpStatus.OK);
             }
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
