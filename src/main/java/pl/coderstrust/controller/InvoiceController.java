@@ -107,7 +107,7 @@ public class InvoiceController {
             if (invoice.isPresent()) {
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
-            logger.debug("Attempt to get invoice by id that does not exist in database.");
+            logger.debug("Attempt to get invoice by number that does not exist in database.");
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             logger.error("An error occurred during getting invoice by name.", e);
@@ -142,7 +142,7 @@ public class InvoiceController {
             logger.debug(String.format("New invoice added with id %d.", invoice.getId()));
             return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
         } catch (Exception e) {
-            logger.error("An error occurred during adding new invoice.", e);
+            logger.error("An error occurred during adding invoice.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -203,6 +203,7 @@ public class InvoiceController {
             logger.debug(String.format("Deleted invoice with id %d.", id));
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
+            logger.error("An error occurred during deleting invoice.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -223,11 +224,13 @@ public class InvoiceController {
                 byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
                 HttpHeaders responseHeaders = new HttpHeaders();
                 responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+                logger.debug("Created PDF for invoice with id {}.", id);
                 return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
             }
+            logger.error("Attempt to create PDF for not existing invoice.");
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error("An error occurred during deleting invoice.", e);
+            logger.error("An error occurred during generating invoice to PDF.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }

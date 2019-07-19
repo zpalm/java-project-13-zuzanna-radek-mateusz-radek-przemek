@@ -11,6 +11,9 @@ import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.model.InvoiceEntry;
@@ -23,8 +26,11 @@ public class InvoicePdfService {
     private static final int HEADER_FONT_SIZE = 14;
     private static final float TAB_INTERVAL = 300f;
 
+    private Logger logger = LoggerFactory.getLogger(InvoicePdfService.class);
+
     public byte[] createPdf(Invoice invoice) throws ServiceOperationException {
         if (invoice == null) {
+            logger.error("Attempt to create PDF for null invoice.");
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         Document document = new Document();
@@ -43,6 +49,7 @@ public class InvoicePdfService {
             document.close();
             return byteStream.toByteArray();
         } catch (DocumentException e) {
+            logger.error("An error occurred during generating pdf.", e);
             throw new ServiceOperationException("An error occurred during generating pdf.", e);
         }
     }
