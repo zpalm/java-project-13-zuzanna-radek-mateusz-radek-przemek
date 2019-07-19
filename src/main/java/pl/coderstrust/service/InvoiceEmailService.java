@@ -16,25 +16,28 @@ import pl.coderstrust.model.Invoice;
 public class InvoiceEmailService {
 
     private final JavaMailSender mailSender;
-    private final MailProperties properties;
+    private final MailProperties mailProperties;
     private final InvoicePdfService invoicePdfService;
 
     @Autowired
-    public InvoiceEmailService(JavaMailSender mailSender, MailProperties properties, InvoicePdfService invoicePdfService) {
+    public InvoiceEmailService(JavaMailSender mailSender, MailProperties mailProperties, InvoicePdfService invoicePdfService) {
         this.mailSender = mailSender;
-        this.properties = properties;
+        this.mailProperties = mailProperties;
         this.invoicePdfService = invoicePdfService;
     }
 
     @Async
     public void sendMailWithInvoice(Invoice invoice) {
+        if (invoice == null) {
+            throw new IllegalArgumentException("Invoice cannot be null.");
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
-            helper.setFrom(properties.getProperties().get("from"));
-            helper.setTo(properties.getProperties().get("to"));
-            helper.setSubject(properties.getProperties().get("title"));
-            helper.setText(properties.getProperties().get("content"));
+            helper.setFrom(mailProperties.getUsername());
+            helper.setTo(mailProperties.getProperties().get("to"));
+            helper.setSubject(mailProperties.getProperties().get("title"));
+            helper.setText(mailProperties.getProperties().get("content"));
             helper.addAttachment(String.format("%s.pdf", invoice.getNumber()), new ByteArrayResource(invoicePdfService.createPdf(invoice)));
             mailSender.send(message);
         } catch (MessagingException | ServiceOperationException e) {
@@ -42,4 +45,3 @@ public class InvoiceEmailService {
         }
     }
 }
-
