@@ -88,6 +88,7 @@
                         <exclude>/pl/coderstrust/database/DatabaseOperationException.class</exclude>
                         <exclude>/pl/coderstrust/database/hibernate/InvoiceRepository.class</exclude>
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
+                        <exclude>/pl/coderstrust/service/InvoiceEmailService.class</exclude>
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
                         <exclude>/pl/coderstrust/configuration/WebSecurityConfiguration.class</exclude>
                     </excludes>
@@ -222,6 +223,10 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <dependency>
             <groupId>io.springfox</groupId>

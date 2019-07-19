@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import pl.coderstrust.model.Invoice;
+import pl.coderstrust.service.InvoiceEmailService;
 import pl.coderstrust.service.InvoicePdfService;
 import pl.coderstrust.service.InvoiceService;
 
@@ -31,10 +32,13 @@ import pl.coderstrust.service.InvoiceService;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final InvoiceEmailService invoiceEmailService;
     private final InvoicePdfService invoicePdfService;
 
+    public InvoiceController(InvoiceService invoiceService, InvoiceEmailService invoiceEmailService) {
     public InvoiceController(InvoiceService invoiceService, InvoicePdfService invoicePdfService) {
         this.invoiceService = invoiceService;
+        this.invoiceEmailService = invoiceEmailService;
         this.invoicePdfService = invoicePdfService;
     }
 
@@ -119,6 +123,7 @@ public class InvoiceController {
             Invoice addedInvoice = invoiceService.addInvoice(invoice);
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setLocation(URI.create(String.format("/invoices/%d", addedInvoice.getId())));
+//            invoiceEmailService.sendMailWithInvoice(addedInvoice);
             return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
