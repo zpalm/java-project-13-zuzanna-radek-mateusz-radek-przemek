@@ -26,11 +26,12 @@ public class InvoicePdfService {
     private static final int HEADER_FONT_SIZE = 14;
     private static final float TAB_INTERVAL = 300f;
 
-    private Logger logger = LoggerFactory.getLogger(InvoicePdfService.class);
+    private Logger log = LoggerFactory.getLogger(InvoicePdfService.class);
 
     public byte[] createPdf(Invoice invoice) throws ServiceOperationException {
         if (invoice == null) {
-            logger.error("Attempt to create PDF for null invoice.");
+            String message = "Attempt to create PDF for null invoice.";
+            log.error(message);
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         Document document = new Document();
@@ -49,7 +50,8 @@ public class InvoicePdfService {
             document.close();
             return byteStream.toByteArray();
         } catch (DocumentException e) {
-            logger.error("An error occurred during generating pdf.", e);
+            String message = "An error occurred during generating pdf.";
+            log.error(message, e);
             throw new ServiceOperationException("An error occurred during generating pdf.", e);
         }
     }
