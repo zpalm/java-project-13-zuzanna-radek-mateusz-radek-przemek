@@ -2,7 +2,8 @@ package pl.coderstrust.service;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.core.io.ByteArrayResource;
@@ -14,6 +15,8 @@ import pl.coderstrust.model.Invoice;
 
 @Service
 public class InvoiceEmailService {
+
+    private Logger log = LoggerFactory.getLogger(InvoiceEmailService.class);
 
     private final JavaMailSender mailSender;
     private final MailProperties mailProperties;
@@ -29,6 +32,8 @@ public class InvoiceEmailService {
     @Async
     public void sendMailWithInvoice(Invoice invoice) {
         if (invoice == null) {
+            String message = "Attempt to send email with null invoice.";
+            log.error(message);
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         try {
@@ -41,6 +46,8 @@ public class InvoiceEmailService {
             helper.addAttachment(String.format("%s.pdf", invoice.getNumber()), new ByteArrayResource(invoicePdfService.createPdf(invoice)));
             mailSender.send(message);
         } catch (MessagingException | ServiceOperationException e) {
+            String message = "An error occurred during sending email.";
+            log.error(message, e);
             e.printStackTrace();
         }
     }
