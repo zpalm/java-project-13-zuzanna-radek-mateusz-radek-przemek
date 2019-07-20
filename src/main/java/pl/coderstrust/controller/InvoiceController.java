@@ -147,7 +147,7 @@ public class InvoiceController {
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setLocation(URI.create(String.format("/invoices/%d", addedInvoice.getId())));
             invoiceEmailService.sendMailWithInvoice(addedInvoice);
-            String message = String.format("New invoice added with id %d.", invoice.getId());
+            String message = String.format("New invoice added with id %d.", addedInvoice.getId());
             log.debug(message);
             return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
         } catch (Exception e) {
