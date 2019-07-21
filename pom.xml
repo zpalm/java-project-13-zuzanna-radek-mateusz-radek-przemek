@@ -73,6 +73,7 @@
                     </execution>
                 </executions>
                 <configuration>
+                    <excludes>pl/coderstrust/soap/bindingclasses/*.java</excludes>
                     <failsOnError>true</failsOnError>
                     <failOnViolation>true</failOnViolation>
                     <violationSeverity>warning</violationSeverity>
@@ -104,8 +105,10 @@
                         <exclude>/pl/coderstrust/service/InvoiceEmailService.class</exclude>
                         <exclude>/pl/coderstrust/helpers/*.class</exclude>
                         <exclude>/pl/coderstrust/soap/bindingclasses/*.class</exclude>
+                        <exclude>/pl/coderstrust/soap/ModelConverter.class</exclude>
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
                         <exclude>/pl/coderstrust/configuration/WebSecurityConfiguration.class</exclude>
+                        <exclude>/pl/coderstrust/configuration/WebServiceConfiguration.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

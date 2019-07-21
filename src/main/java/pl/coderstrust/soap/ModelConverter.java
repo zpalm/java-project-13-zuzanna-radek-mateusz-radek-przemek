@@ -18,7 +18,7 @@ import pl.coderstrust.soap.bindingclasses.VatSoap;
 
 class ModelConverter {
 
-    private final static Pattern DATE_PATTERN = Pattern.compile("[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]");
+    private static final Pattern DATE_PATTERN = Pattern.compile("[1-2][0-9]{3}-[0-1][0-9]-[0-3][0-9]");
 
     static Invoice convertInvoiceSoapToInvoice(InvoiceSoap invoiceSoap) throws ServiceOperationException {
         if (!DATE_PATTERN.matcher(invoiceSoap.getIssuedDate()).matches() || !DATE_PATTERN.matcher(invoiceSoap.getDueDate()).matches()) {
@@ -153,27 +153,27 @@ class ModelConverter {
 
     private static Vat convertVatSoapToVat(VatSoap vatSoap) {
         switch (vatSoap) {
-            case VAT_0:
-                return Vat.VAT_0;
-            case VAT_5:
-                return Vat.VAT_5;
-            case VAT_8:
-                return Vat.VAT_8;
-            default:
-                return Vat.VAT_23;
+          case VAT_0:
+              return Vat.VAT_0;
+          case VAT_5:
+              return Vat.VAT_5;
+          case VAT_8:
+              return Vat.VAT_8;
+          default:
+              return Vat.VAT_23;
         }
     }
 
     private static VatSoap convertVatToVatSoap(Vat vat) {
         switch (vat) {
-            case VAT_0:
-                return VatSoap.VAT_0;
-            case VAT_5:
-                return VatSoap.VAT_5;
-            case VAT_8:
-                return VatSoap.VAT_8;
-            default:
-                return VatSoap.VAT_23;
+          case VAT_0:
+              return VatSoap.VAT_0;
+          case VAT_5:
+              return VatSoap.VAT_5;
+          case VAT_8:
+              return VatSoap.VAT_8;
+          default:
+              return VatSoap.VAT_23;
         }
     }
 }
