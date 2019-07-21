@@ -183,7 +183,6 @@ public class InvoiceEndpoint {
         }
     }
 
-
     private InvoicesResponse createErrorResponse(InvoicesResponse response, String message) {
         response.setMessage(message);
         response.setStatus(Status.FAILED);
