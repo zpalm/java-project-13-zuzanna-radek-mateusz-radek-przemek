@@ -1,6 +1,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    xmlns:tns="http://spring.io/guides/gs-producing-web-service"
-    targetNamespace="http://spring.io/guides/gs-producing-web-service"
+    xmlns:tns="http://project-13-zuzanna-radek-mateusz-radek-przemek"
+    targetNamespace="http://project-13-zuzanna-radek-mateusz-radek-przemek"
     elementFormDefault="qualified">
 
     <xs:element name="getAllInvoicesRequest">

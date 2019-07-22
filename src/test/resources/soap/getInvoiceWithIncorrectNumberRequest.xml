@@ -1,3 +1,3 @@
-<gs:getInvoiceByNumberRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+<gs:getInvoiceByNumberRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <gs:number>DADFHEWADA#6345213FQ#@%^$#@!#@SFVWAD</gs:number>
 </gs:getInvoiceByNumberRequest>

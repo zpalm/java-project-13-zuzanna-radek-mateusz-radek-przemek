@@ -1,4 +1,4 @@
-<ns2:invoiceResponse xmlns:ns2="http://spring.io/guides/gs-producing-web-service">
+<ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <ns2:status>failed</ns2:status>
     <ns2:message>Invoice could not be added to database: pl.coderstrust.service.ServiceOperationException: Invoice already exists in database.
     </ns2:message>

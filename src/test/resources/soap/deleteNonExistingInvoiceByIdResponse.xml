@@ -1,4 +1,4 @@
-<ns2:invoiceResponse xmlns:ns2="http://spring.io/guides/gs-producing-web-service">
+<ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <ns2:status>failed</ns2:status>
     <ns2:message>Invoice could not be deleted: pl.coderstrust.service.ServiceOperationException: Invoice cannot be null</ns2:message>
     <ns2:invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>

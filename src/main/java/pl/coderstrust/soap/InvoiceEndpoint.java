@@ -29,7 +29,7 @@ import pl.coderstrust.soap.bindingclasses.UpdateInvoiceRequest;
 @Endpoint
 public class InvoiceEndpoint {
 
-    private static final String NAMESPACE_URI = "http://spring.io/guides/gs-producing-web-service";
+    private static final String NAMESPACE_URI = "http://project-13-zuzanna-radek-mateusz-radek-przemek";
 
     private InvoiceService invoiceService;
 

@@ -1,4 +1,4 @@
-<ns2:invoiceExistsResponse xmlns:ns2="http://spring.io/guides/gs-producing-web-service">
+<ns2:invoiceExistsResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <ns2:status>success</ns2:status>
     <ns2:message/>
     <ns2:exists>true</ns2:exists>

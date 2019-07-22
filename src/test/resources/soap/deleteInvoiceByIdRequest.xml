@@ -1,3 +1,3 @@
-<gs:deleteInvoiceByIdRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+<gs:deleteInvoiceByIdRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <gs:id>2</gs:id>
 </gs:deleteInvoiceByIdRequest>

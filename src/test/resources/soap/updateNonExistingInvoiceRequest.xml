@@ -1,4 +1,4 @@
-<gs:updateInvoiceRequest xmlns:gs="http://spring.io/guides/gs-producing-web-service">
+<gs:updateInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <gs:invoice>
         <gs:id>123456789</gs:id>
         <gs:number>44/FA/231</gs:number>
