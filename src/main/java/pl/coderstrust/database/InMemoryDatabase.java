@@ -22,8 +22,7 @@ public class InMemoryDatabase implements Database {
 
     public InMemoryDatabase(Map<Long, Invoice> storage) {
         if (storage == null) {
-            String message = "Attempt to set null storage.";
-            log.error(message);
+            log.error("Attempt to set null storage.");
             throw new IllegalArgumentException("Storage cannot be null.");
         }
         this.storage = storage;
@@ -32,8 +31,7 @@ public class InMemoryDatabase implements Database {
     @Override
     public synchronized Invoice save(Invoice invoice) {
         if (invoice == null) {
-            String message = "Attempt to save null invoice.";
-            log.error(message);
+            log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
         if (invoice.getId() == null || !storage.containsKey(invoice.getId())) {
@@ -76,13 +74,11 @@ public class InMemoryDatabase implements Database {
     @Override
     public synchronized void delete(Long id) throws DatabaseOperationException {
         if (id == null) {
-            String message = "Attempt to delete invoice providing null id.";
-            log.error(message);
+            log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         if (!storage.containsKey(id)) {
-            String message = "Attempt to delete not existing invoice.";
-            log.error(message);
+            log.error("Attempt to delete not existing invoice.");
             throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
         }
         storage.remove(id);
@@ -91,8 +87,7 @@ public class InMemoryDatabase implements Database {
     @Override
     public Optional<Invoice> getById(Long id) {
         if (id == null) {
-            String message = "Attempt to get invoice by id providing null id.";
-            log.error(message);
+            log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         return Optional.ofNullable(storage.get(id));
@@ -101,8 +96,7 @@ public class InMemoryDatabase implements Database {
     @Override
     public Optional<Invoice> getByNumber(String number) {
         if (number == null) {
-            String message = "Attempt to get invoice by number providing null number.";
-            log.error(message);
+            log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
         return storage.values()
@@ -124,8 +118,7 @@ public class InMemoryDatabase implements Database {
     @Override
     public boolean exists(Long id) {
         if (id == null) {
-            String message = "Attempt to check if invoice exists providing null id.";
-            log.error(message);
+            log.error("Attempt to check if invoice exists providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         return storage.containsKey(id);

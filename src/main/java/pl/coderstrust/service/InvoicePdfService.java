@@ -1,5 +1,8 @@
 package pl.coderstrust.service;
 
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
@@ -9,9 +12,6 @@ import com.itextpdf.text.TabSettings;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
 import com.itextpdf.text.pdf.PdfWriter;
-import java.io.ByteArrayOutputStream;
-import java.math.BigDecimal;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,8 +30,7 @@ public class InvoicePdfService {
 
     public byte[] createPdf(Invoice invoice) throws ServiceOperationException {
         if (invoice == null) {
-            String message = "Attempt to create PDF for null invoice.";
-            log.error(message);
+            log.error("Attempt to create PDF for null invoice.");
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         Document document = new Document();
@@ -52,7 +51,7 @@ public class InvoicePdfService {
         } catch (DocumentException e) {
             String message = "An error occurred during generating pdf.";
             log.error(message, e);
-            throw new ServiceOperationException("An error occurred during generating pdf.", e);
+            throw new ServiceOperationException(message, e);
         }
     }
 

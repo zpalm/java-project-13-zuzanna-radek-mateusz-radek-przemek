@@ -59,8 +59,7 @@ public class InvoiceController {
         try {
             return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
         } catch (Exception e) {
-            String message = "An error occurred during getting all invoices.";
-            log.error(message, e);
+            log.error("An error occurred during getting all invoices.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -80,12 +79,10 @@ public class InvoiceController {
             if (invoice.isPresent()) {
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
-            String message = "Attempt to get invoice by id that does not exist in database.";
-            log.error(message);
+            log.error("Attempt to get invoice by id that does not exist in database.");
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            String message = "An error occurred during getting invoice by id.";
-            log.error(message, e);
+            log.error("An error occurred during getting invoice by id.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -102,8 +99,7 @@ public class InvoiceController {
     @ApiImplicitParam(required = true, name = "number", value = "Number of the invoice to get", dataType = "String")
     public ResponseEntity<?> getByNumber(@RequestParam String number) {
         if (number == null) {
-            String message = "Attempt to get invoice providing null number.";
-            log.error(message);
+            log.error("Attempt to get invoice providing null number.");
             return new ResponseEntity<>(new ErrorMessage("Number cannot be null."), HttpStatus.BAD_REQUEST);
         }
         try {
@@ -111,12 +107,10 @@ public class InvoiceController {
             if (invoice.isPresent()) {
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
-            String message = "Attempt to get invoice by number that does not exist in database.";
-            log.debug(message);
+            log.debug("Attempt to get invoice by number that does not exist in database.");
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            String message = "An error occurred during getting invoice by name.";
-            log.error(message, e);
+            log.error("An error occurred during getting invoice by name.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -133,26 +127,22 @@ public class InvoiceController {
     @ApiImplicitParam(required = true, name = "invoice", value = "New invoice data", dataType = "Invoice")
     public ResponseEntity<?> add(@RequestBody Invoice invoice) {
         if (invoice == null) {
-            String message = "Attempt to add null invoice.";
-            log.error(message);
+            log.error("Attempt to add null invoice.");
             return new ResponseEntity<>(new ErrorMessage("Invoice cannot be null."), HttpStatus.BAD_REQUEST);
         }
         try {
             if (invoice.getId() != null && invoiceService.invoiceExists(invoice.getId())) {
-                String message = "Attempt to add invoice already existing in database.";
-                log.error(message);
+                log.error("Attempt to add invoice already existing in database.");
                 return new ResponseEntity<>(new ErrorMessage("Invoice already exists in database."), HttpStatus.CONFLICT);
             }
             Invoice addedInvoice = invoiceService.addInvoice(invoice);
             HttpHeaders responseHeaders = new HttpHeaders();
             responseHeaders.setLocation(URI.create(String.format("/invoices/%d", addedInvoice.getId())));
             invoiceEmailService.sendMailWithInvoice(addedInvoice);
-            String message = String.format("New invoice added with id %d.", addedInvoice.getId());
-            log.debug(message);
+            log.debug(String.format("New invoice added with id %d.", addedInvoice.getId()));
             return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
         } catch (Exception e) {
-            String message = "An error occurred during adding invoice.";
-            log.error(message, e);
+            log.error("An error occurred during adding invoice.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -172,28 +162,23 @@ public class InvoiceController {
     })
     public ResponseEntity<?> update(@PathVariable("id") Long id, @RequestBody Invoice invoice) {
         if (invoice == null) {
-            String message = "Attempt to update invoice providing null invoice.";
-            log.error(message);
+            log.error("Attempt to update invoice providing null invoice.");
             return new ResponseEntity<>(new ErrorMessage("Invoice cannot be null."), HttpStatus.BAD_REQUEST);
         }
         try {
             if (!id.equals(invoice.getId())) {
-                String message = "Attempt to update invoice providing different invoice id.";
-                log.error(message);
+                log.error("Attempt to update invoice providing different invoice id.");
                 return new ResponseEntity<>(new ErrorMessage("Id is different than given invoice's id."), HttpStatus.BAD_REQUEST);
             }
             if (!invoiceService.invoiceExists(id)) {
-                String message = "Attempt to update not existing invoice.";
-                log.error(message);
+                log.error("Attempt to update not existing invoice.");
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be updated because it does not exist in database."),
                     HttpStatus.NOT_FOUND);
             }
-            String message = String.format("Updated invoice with id %d.", invoice.getId());
-            log.debug(message);
+            log.debug(String.format("Updated invoice with id %d.", invoice.getId()));
             return new ResponseEntity<>(invoiceService.updateInvoice(invoice), HttpStatus.OK);
         } catch (Exception e) {
-            String message = "An error occurred during updating invoice.";
-            log.error(message, e);
+            log.error("An error occurred during updating invoice.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -210,18 +195,15 @@ public class InvoiceController {
     public ResponseEntity<?> remove(@PathVariable("id") Long id) {
         try {
             if (!invoiceService.invoiceExists(id)) {
-                String message = "Attempt to delete not existing invoice.";
-                log.error(message);
+                log.error("Attempt to delete not existing invoice.");
                 return new ResponseEntity<>(new ErrorMessage("Given invoice cannot be deleted because it does not exist in database."),
                     HttpStatus.NOT_FOUND);
             }
             invoiceService.deleteInvoiceById(id);
-            String message = String.format("Deleted invoice with id %d.", id);
-            log.debug(message);
+            log.debug(String.format("Deleted invoice with id %d.", id));
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            String message = "An error occurred during deleting invoice.";
-            log.error(message, e);
+            log.error("An error occurred during deleting invoice.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -242,16 +224,13 @@ public class InvoiceController {
                 byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
                 HttpHeaders responseHeaders = new HttpHeaders();
                 responseHeaders.setContentType(MediaType.APPLICATION_PDF);
-                String message = String.format("Created PDF for invoice with id %d.", id);
-                log.debug(message);
+                log.debug(String.format("Created PDF for invoice with id %d.", id));
                 return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
             }
-            String message = "Attempt to create PDF for not existing invoice.";
-            log.error(message);
+            log.error("Attempt to create PDF for not existing invoice.");
             return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            String message = "An error occurred during generating invoice to PDF.";
-            log.error(message, e);
+            log.error("An error occurred during generating invoice to PDF.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }

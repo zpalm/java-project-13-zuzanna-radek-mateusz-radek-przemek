@@ -32,8 +32,7 @@ public class InvoiceEmailService {
     @Async
     public void sendMailWithInvoice(Invoice invoice) {
         if (invoice == null) {
-            String message = "Attempt to send email with null invoice.";
-            log.error(message);
+            log.error("Attempt to send email with null invoice.");
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         try {
@@ -46,9 +45,7 @@ public class InvoiceEmailService {
             helper.addAttachment(String.format("%s.pdf", invoice.getNumber()), new ByteArrayResource(invoicePdfService.createPdf(invoice)));
             mailSender.send(message);
         } catch (MessagingException | ServiceOperationException e) {
-            String message = "An error occurred during sending email.";
-            log.error(message, e);
-            e.printStackTrace();
+            log.error("An error occurred during sending email.", e);
         }
     }
 }
