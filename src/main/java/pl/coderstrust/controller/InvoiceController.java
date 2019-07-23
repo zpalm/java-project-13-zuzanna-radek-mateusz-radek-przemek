@@ -87,11 +87,10 @@ public class InvoiceController {
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
             log.error("Attempt to get invoice by id that does not exist in database.");
-            return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("An error occurred during getting invoice by id.", e);
-            return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

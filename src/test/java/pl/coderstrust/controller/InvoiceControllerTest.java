@@ -426,7 +426,7 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", id);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
+            .accept(MediaType.APPLICATION_PDF))
             .andExpect(status().isNotFound());
 
         verify(invoiceService).getInvoiceById(id);
@@ -442,7 +442,7 @@ class InvoiceControllerTest {
         String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
+            .accept(MediaType.APPLICATION_PDF))
             .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getInvoiceById(invoice.getId());
