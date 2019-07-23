@@ -406,7 +406,7 @@ class InvoiceControllerTest {
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
         when(invoicePdfService.createPdf(invoice)).thenReturn(expectedByteArray);
 
-        String url = String.format("/invoices/pdf/%d", invoice.getId());
+        String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(get(url)
             .accept(MediaType.APPLICATION_PDF))
@@ -423,10 +423,10 @@ class InvoiceControllerTest {
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
 
-        String url = String.format("/invoices/pdf/%d", id);
+        String url = String.format("/invoices/%d", id);
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
             .andExpect(status().isNotFound());
 
         verify(invoiceService).getInvoiceById(id);
@@ -439,10 +439,10 @@ class InvoiceControllerTest {
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.ofNullable(invoice));
         when(invoicePdfService.createPdf(invoice)).thenThrow(ServiceOperationException.class);
 
-        String url = String.format("/invoices/pdf/%d", invoice.getId());
+        String url = String.format("/invoices/%d", invoice.getId());
 
         mockMvc.perform(get(url)
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
             .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getInvoiceById(invoice.getId());

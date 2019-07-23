@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -66,17 +67,23 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
-    @ApiOperation(value = "Get invoice by id", notes = "Retrieving the invoice by provided id", response = Invoice.class)
+    @ApiOperation(value = "Get invoice by id", notes = "Retrieving the invoice by provided id in json or pdf format", produces = "application/json, application/pdf", response = Invoice.class)
     @ApiResponses({
         @ApiResponse(code = 200, message = "OK", response = Invoice.class),
         @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
     })
     @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
-    public ResponseEntity<?> getById(@PathVariable("id") Long id) {
+    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestHeader HttpHeaders httpHeaders) {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
             if (invoice.isPresent()) {
+                if (httpHeaders.getAccept().contains(MediaType.APPLICATION_PDF)) {
+                    byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
+                    HttpHeaders responseHeaders = new HttpHeaders();
+                    responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+                    return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
+                }
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
             log.error("Attempt to get invoice by id that does not exist in database.");
@@ -204,33 +211,6 @@ public class InvoiceController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             log.error("An error occurred during deleting invoice.", e);
-            return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/pdf/{id}")
-    @ApiOperation(value = "Get invoice as PDF", notes = "Retrieving the invoice by provided id to create pdf")
-    @ApiResponses({
-        @ApiResponse(code = 200, message = "OK"),
-        @ApiResponse(code = 404, message = "Invoice not found", response = ErrorMessage.class),
-        @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
-    })
-    @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
-    public ResponseEntity<?> createPdf(@PathVariable("id") Long id) {
-        try {
-            Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
-            if (invoice.isPresent()) {
-                byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
-                HttpHeaders responseHeaders = new HttpHeaders();
-                responseHeaders.setContentType(MediaType.APPLICATION_PDF);
-                log.debug(String.format("Created PDF for invoice with id %d.", id));
-                return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
-            }
-            log.error("Attempt to create PDF for not existing invoice.");
-            return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            log.error("An error occurred during generating invoice to PDF.", e);
             return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
                 HttpStatus.INTERNAL_SERVER_ERROR);
         }
