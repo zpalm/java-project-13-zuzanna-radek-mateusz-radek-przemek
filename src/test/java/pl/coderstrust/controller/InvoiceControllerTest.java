@@ -400,7 +400,7 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInvoiceAsPdf() throws Exception {
+    public void gettingInvoiceByIdShouldReturnInvoiceAsPdf() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
@@ -446,6 +446,25 @@ class InvoiceControllerTest {
             .andExpect(status().isInternalServerError());
 
         verify(invoiceService).getInvoiceById(invoice.getId());
+        verify(invoicePdfService).createPdf(invoice);
+    }
+
+    @Test
+    public void gettingInvoiceByNumberShouldReturnInvoiceAsPdf() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        byte[] expectedByteArray = new byte[10];
+        when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
+        when(invoicePdfService.createPdf(invoice)).thenReturn(expectedByteArray);
+
+        String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_PDF))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+            .andExpect(content().bytes(expectedByteArray));
+
+        verify(invoiceService).getInvoiceByNumber(invoice.getNumber());
         verify(invoicePdfService).createPdf(invoice);
     }
 }

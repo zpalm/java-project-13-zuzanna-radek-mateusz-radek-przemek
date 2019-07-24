@@ -78,7 +78,7 @@ public class InvoiceController {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
             if (invoice.isPresent()) {
-                if (httpHeaders.getAccept().contains(MediaType.APPLICATION_PDF)) {
+                if (httpHeaders.getAccept().get(0).equals(MediaType.APPLICATION_PDF)) {
                     byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
                     HttpHeaders responseHeaders = new HttpHeaders();
                     responseHeaders.setContentType(MediaType.APPLICATION_PDF);
@@ -95,7 +95,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/byNumber")
-    @ApiOperation(value = "Get invoice by number", notes = "Retrieving the invoice by provided number", response = Invoice.class)
+    @ApiOperation(value = "Get invoice by number", notes = "Retrieving the invoice by provided number in json or pdf format", produces = "application/json, application/pdf", response = Invoice.class)
     @ApiResponses({
         @ApiResponse(code = 200, message = "OK", response = Invoice.class),
         @ApiResponse(code = 400, message = "Bad request", response = ErrorMessage.class),
@@ -103,7 +103,7 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error", response = ErrorMessage.class)
     })
     @ApiImplicitParam(required = true, name = "number", value = "Number of the invoice to get", dataType = "String")
-    public ResponseEntity<?> getByNumber(@RequestParam String number) {
+    public ResponseEntity<?> getByNumber(@RequestParam String number, @RequestHeader HttpHeaders httpHeaders) {
         if (number == null) {
             log.error("Attempt to get invoice providing null number.");
             return new ResponseEntity<>(new ErrorMessage("Number cannot be null."), HttpStatus.BAD_REQUEST);
@@ -111,14 +111,19 @@ public class InvoiceController {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceByNumber(number);
             if (invoice.isPresent()) {
+                if (httpHeaders.getAccept().get(0).equals(MediaType.APPLICATION_PDF)) {
+                    byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
+                    HttpHeaders responseHeaders = new HttpHeaders();
+                    responseHeaders.setContentType(MediaType.APPLICATION_PDF);
+                    return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
+                }
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
             log.debug("Attempt to get invoice by number that does not exist in database.");
-            return new ResponseEntity<>(new ErrorMessage("Invoice does not exist in database."), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("An error occurred during getting invoice by name.", e);
-            return new ResponseEntity<>(new ErrorMessage("Something went wrong, we are working hard to fix it. Please try again."),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
