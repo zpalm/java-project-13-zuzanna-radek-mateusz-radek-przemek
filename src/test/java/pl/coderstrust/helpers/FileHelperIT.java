@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,14 @@ class FileHelperIT {
     void shouldWriteLineToFile() throws IOException {
         FileUtils.writeLines(expectedFile, ENCODING, Collections.singleton("test test"), true);
         fileHelper.writeLine(INPUT_FILE, "test test");
+        assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
+    }
+
+    @Test
+    void shouldReplaceLineInFile() throws IOException {
+        FileUtils.writeLines(inputFile, ENCODING, Arrays.asList("bla1", "blabla", "bla3"), true);
+        FileUtils.writeLines(expectedFile, ENCODING, Arrays.asList("bla1", "bla2", "bla3"), true);
+        fileHelper.replaceLine(INPUT_FILE, "bla2", 2);
         assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
     }
 
@@ -173,7 +182,7 @@ class FileHelperIT {
     }
 
     @Test
-    void removeLineMethodShouldThrowExceptionForLineNumberSmallerThaOneArgument() {
+    void removeLineMethodShouldThrowExceptionForLineNumberSmallerThanOneArgument() {
         assertThrows(IllegalArgumentException.class, () -> fileHelper.removeLine(INPUT_FILE, 0));
     }
 
@@ -191,5 +200,20 @@ class FileHelperIT {
     @Test
     void isEmptyMethodShouldThrowExceptionForNonExistingFile() {
         assertThrows(FileNotFoundException.class, () -> fileHelper.isEmpty(INPUT_FILE));
+    }
+
+    @Test
+    void replaceLineMethodShouldThrowExceptionForNullFilePathArgument() {
+        assertThrows(IllegalArgumentException.class, () -> fileHelper.replaceLine(null, "bla", 1));
+    }
+
+    @Test
+    void replaceLineMethodShouldThrowExceptionForNullLineArgument() {
+        assertThrows(IllegalArgumentException.class, () -> fileHelper.replaceLine(INPUT_FILE, null, 1));
+    }
+
+    @Test
+    void replaceLineMethodShouldThrowExceptionForForLineNumberSmallerThanOneArgument() {
+        assertThrows(IllegalArgumentException.class, () -> fileHelper.replaceLine(INPUT_FILE, "bla", 0));
     }
 }

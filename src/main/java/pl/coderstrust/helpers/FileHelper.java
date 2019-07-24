@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 
@@ -89,6 +90,22 @@ public class FileHelper {
         File file = new File(filePath);
         List<String> lines = FileUtils.readLines(file, ENCODING);
         lines.remove(lineNumber - 1);
+        FileUtils.writeLines(file, ENCODING, lines, false);
+    }
+
+    public void replaceLine(String filePath, String line, int lineNumber) throws IOException {
+        if (filePath == null) {
+            throw new IllegalArgumentException("File's path cannot be null.");
+        }
+        if (line == null) {
+            throw new IllegalArgumentException("Line cannot be null.");
+        }
+        if (lineNumber < 1) {
+            throw new IllegalArgumentException("Line number cannot be lower than one.");
+        }
+        File file = new File(filePath);
+        List<String> lines = FileUtils.readLines(file, ENCODING);
+        lines.set(lineNumber - 1, line);
         FileUtils.writeLines(file, ENCODING, lines, false);
     }
 }
