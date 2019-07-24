@@ -41,113 +41,100 @@ public class InvoiceEndpoint {
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getAllInvoicesRequest")
     @ResponsePayload
     public InvoicesResponse getAllInvoices(@RequestPayload GetAllInvoicesRequest request) throws ServiceOperationException {
-        InvoicesResponse response = new InvoicesResponse();
         try {
             Collection<Invoice> allInvoices = invoiceService.getAllInvoices();
             Collection<InvoiceSoap> allInvoicesSoap = ModelConverter.convertInvoiceCollectionToInvoicesSoap(allInvoices);
-            response.getInvoices().addAll(allInvoicesSoap);
-            return createSuccessResponse(response);
+            return createSuccessResponse(allInvoicesSoap);
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoices could not be retrieved: " + e);
+            return createErrorResponseForInvoicesCollection("Invoices could not be retrieved: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "addInvoiceRequest")
     @ResponsePayload
     public InvoiceResponse addInvoice(@RequestPayload AddInvoiceRequest request) throws ServiceOperationException {
-        InvoiceResponse response = new InvoiceResponse();
         try {
             InvoiceSoap invoiceSoapToSave = request.getInvoice();
             Invoice invoiceToSave = ModelConverter.convertInvoiceSoapToInvoice(invoiceSoapToSave);
             Invoice invoice = invoiceService.addInvoice(invoiceToSave);
             InvoiceSoap invoiceSoapToDisplay = ModelConverter.convertInvoiceToInvoiceSoap(invoice);
-            response.setInvoice(invoiceSoapToDisplay);
-            return createSuccessResponse(response);
+            return createSuccessResponse(invoiceSoapToDisplay);
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoice could not be added to database: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be added to database: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getInvoiceByIdRequest")
     @ResponsePayload
     public InvoiceResponse getInvoiceById(@RequestPayload GetInvoiceByIdRequest request) {
-        InvoiceResponse response = new InvoiceResponse();
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceById(request.getId());
             if (invoiceOptional.isEmpty()) {
                 throw new ServiceOperationException("Invoice cannot be null");
             } else {
                 Invoice retrievedInvoice = invoiceOptional.get();
-                response.setInvoice(ModelConverter.convertInvoiceToInvoiceSoap(retrievedInvoice));
-                return createSuccessResponse(response);
+                return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(retrievedInvoice));
             }
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoice could not be retrieved: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be retrieved: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "updateInvoiceRequest")
     @ResponsePayload
     public InvoiceResponse updateInvoice(@RequestPayload UpdateInvoiceRequest request) {
-        InvoiceResponse response = new InvoiceResponse();
         try {
             InvoiceSoap invoiceSoapToUpdate = request.getInvoice();
             Invoice invoiceToUpdate = ModelConverter.convertInvoiceSoapToInvoice(invoiceSoapToUpdate);
             Invoice invoiceToDisplay = invoiceService.updateInvoice(invoiceToUpdate);
-            response.setInvoice(ModelConverter.convertInvoiceToInvoiceSoap(invoiceToDisplay));
-            return createSuccessResponse(response);
+            return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceToDisplay));
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoice could not be updated: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be updated: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteInvoiceByIdRequest")
     @ResponsePayload
     public InvoiceResponse deleteInvoiceById(@RequestPayload DeleteInvoiceByIdRequest request) {
-        InvoiceResponse response = new InvoiceResponse();
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceById(request.getId());
             if (invoiceOptional.isEmpty()) {
                 throw new ServiceOperationException("Invoice cannot be null");
             } else {
-                response.setInvoice(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
                 invoiceService.deleteInvoiceById(request.getId());
-                return createSuccessResponse(response);
+                return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
             }
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoice could not be deleted: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be deleted: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "deleteAllInvoicesRequest")
     @ResponsePayload
     public InvoicesResponse deleteAllInvoices(@RequestPayload DeleteAllInvoicesRequest request) {
-        InvoicesResponse response = new InvoicesResponse();
         try {
             Collection<Invoice> allInvoices = invoiceService.getAllInvoices();
             Collection<InvoiceSoap> allInvoicesSoap = ModelConverter.convertInvoiceCollectionToInvoicesSoap(allInvoices);
-            response.getInvoices().addAll(allInvoicesSoap);
+            ;
             invoiceService.deleteAllInvoices();
-            return createSuccessResponse(response);
+            return createSuccessResponse(allInvoicesSoap);
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoices could not be deleted: " + e);
+            return createErrorResponseForInvoicesCollection("Invoices could not be deleted: " + e);
         }
     }
 
     @PayloadRoot(namespace = NAMESPACE_URI, localPart = "getInvoiceByNumberRequest")
     @ResponsePayload
     public InvoiceResponse getInvoiceByNumber(@RequestPayload GetInvoiceByNumberRequest request) {
-        InvoiceResponse response = new InvoiceResponse();
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceByNumber(request.getNumber());
             if (invoiceOptional.isEmpty()) {
                 throw new ServiceOperationException("Invoice cannot be null");
             } else {
-                response.setInvoice(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
-                return createSuccessResponse(response);
+                return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
             }
         } catch (Exception e) {
-            return createErrorResponse(response, "Invoice could not be retrieved");
+            return createErrorResponseForSingleInvoice("Invoice could not be retrieved");
         }
     }
 
@@ -183,27 +170,35 @@ public class InvoiceEndpoint {
         }
     }
 
-    private InvoicesResponse createErrorResponse(InvoicesResponse response, String message) {
+    private InvoiceResponse createSuccessResponse(InvoiceSoap invoice) {
+        InvoiceResponse response = new InvoiceResponse();
+        response.setInvoice(invoice);
+        response.setMessage("");
+        response.setStatus(Status.SUCCESS);
+        return response;
+    }
+
+    private InvoiceResponse createErrorResponseForSingleInvoice(String message) {
+        InvoiceResponse response = new InvoiceResponse();
+        response.setInvoice(null);
         response.setMessage(message);
         response.setStatus(Status.FAILED);
         return response;
     }
 
-    private InvoiceResponse createErrorResponse(InvoiceResponse response, String message) {
+    private InvoicesResponse createSuccessResponse(Collection<InvoiceSoap> invoices) {
+        InvoicesResponse response = new InvoicesResponse();
+        response.getInvoices().addAll(invoices);
+        response.setMessage("");
+        response.setStatus(Status.SUCCESS);
+        return response;
+    }
+
+    private InvoicesResponse createErrorResponseForInvoicesCollection(String message) {
+        InvoicesResponse response = new InvoicesResponse();
+        response.getInvoices().addAll(null);
         response.setMessage(message);
         response.setStatus(Status.FAILED);
-        return response;
-    }
-
-    private InvoicesResponse createSuccessResponse(InvoicesResponse response) {
-        response.setStatus(Status.SUCCESS);
-        response.setMessage("");
-        return response;
-    }
-
-    private InvoiceResponse createSuccessResponse(InvoiceResponse response) {
-        response.setStatus(Status.SUCCESS);
-        response.setMessage("");
         return response;
     }
 }
