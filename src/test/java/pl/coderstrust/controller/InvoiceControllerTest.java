@@ -88,6 +88,17 @@ class InvoiceControllerTest {
     }
 
     @Test
+    void shouldReturnNotAcceptableStatusDuringGettingAllInvoicesWithNotSupportedMediaType() throws Exception {
+        String url = "/invoices";
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML))
+            .andExpect(status().isNotAcceptable());
+
+        verify(invoiceService, never()).getAllInvoices();
+    }
+
+    @Test
     public void shouldReturnInternalServerErrorDuringGettingAllInvoicesWhenSomethingWentWrongOnServer() throws Exception {
         when(invoiceService.getAllInvoices()).thenThrow(new ServiceOperationException());
 
@@ -113,6 +124,33 @@ class InvoiceControllerTest {
             .andExpect(content().json(mapper.writeValueAsString(invoice)));
 
         verify(invoiceService).getInvoiceById(invoice.getId());
+    }
+
+    @Test
+    public void shouldReturnInvoiceByIdAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
+
+        String url = String.format("/invoices/%d", invoice.getId());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
+            .andExpect(status().isOk())
+            .andExpect(content().json(mapper.writeValueAsString(invoice)));
+
+        verify(invoiceService).getInvoiceById(invoice.getId());
+    }
+
+    @Test
+    void shouldReturnNotAcceptableStatusDuringGettingInvoiceByIdWithNotSupportedMediaType() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        String url = String.format("/invoices/%d", invoice.getId());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML))
+            .andExpect(status().isNotAcceptable());
+
+        verify(invoiceService, never()).getInvoiceById(invoice.getId());
     }
 
     @Test
@@ -170,6 +208,33 @@ class InvoiceControllerTest {
     }
 
     @Test
+    public void shouldReturnInvoiceByNumberAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
+
+        String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
+            .andExpect(status().isOk())
+            .andExpect(content().json(mapper.writeValueAsString(invoice)));
+
+        verify(invoiceService).getInvoiceByNumber(invoice.getNumber());
+    }
+
+    @Test
+    void shouldReturnNotAcceptableStatusDuringGettingInvoiceByNumberWithNotSupportedMediaType() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML))
+            .andExpect(status().isNotAcceptable());
+
+        verify(invoiceService, never()).getInvoiceByNumber(invoice.getNumber());
+    }
+
+    @Test
     public void shouldReturnNotFoundStatusDuringGettingInvoiceByNumberWhenInvoiceWithSpecificNumberDoesNotExist() throws Exception {
         String number = "1a";
         when(invoiceService.getInvoiceByNumber(number)).thenReturn(Optional.empty());
@@ -218,6 +283,20 @@ class InvoiceControllerTest {
         verify(invoiceService).invoiceExists(invoiceToAdd.getId());
         verify(invoiceService).addInvoice(invoiceToAdd);
         verify(invoiceEmailService).sendMailWithInvoice(addedInvoice);
+    }
+
+    @Test
+    void shouldReturnUnsupportedMediaTypeStatusDuringAddingInvoiceWithNotSupportedMediaType() throws Exception {
+        Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
+        String url = "/invoices";
+
+        mockMvc.perform(post(url)
+            .contentType(MediaType.APPLICATION_XML)
+            .content(mapper.writeValueAsBytes(invoiceToAdd))
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnsupportedMediaType());
+
+        verify(invoiceService, never()).addInvoice(invoiceToAdd);
     }
 
     @Test
@@ -286,6 +365,20 @@ class InvoiceControllerTest {
 
         verify(invoiceService).invoiceExists(invoice.getId());
         verify(invoiceService).updateInvoice(invoice);
+    }
+
+    @Test
+    void shouldReturnUnsupportedMediaTypeStatusDuringUpdatingInvoiceWithNotSupportedMediaType() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        String url = String.format("/invoices/%d", invoice.getId());
+
+        mockMvc.perform(put(url)
+            .contentType(MediaType.APPLICATION_XML)
+            .content(mapper.writeValueAsBytes(invoice))
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnsupportedMediaType());
+
+        verify(invoiceService, never()).updateInvoice(invoice);
     }
 
     @Test
@@ -419,6 +512,25 @@ class InvoiceControllerTest {
     }
 
     @Test
+    public void gettingInvoiceByIdShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        byte[] expectedByteArray = new byte[10];
+        when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
+        when(invoicePdfService.createPdf(invoice)).thenReturn(expectedByteArray);
+
+        String url = String.format("/invoices/%d", invoice.getId());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+            .andExpect(content().bytes(expectedByteArray));
+
+        verify(invoiceService).getInvoiceById(invoice.getId());
+        verify(invoicePdfService).createPdf(invoice);
+    }
+
+    @Test
     public void shouldReturnNotFoundDuringGettingInvoiceAsPdfWhenInvoiceDoesNotExist() throws Exception {
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
@@ -460,6 +572,25 @@ class InvoiceControllerTest {
 
         mockMvc.perform(get(url)
             .accept(MediaType.APPLICATION_PDF))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+            .andExpect(content().bytes(expectedByteArray));
+
+        verify(invoiceService).getInvoiceByNumber(invoice.getNumber());
+        verify(invoicePdfService).createPdf(invoice);
+    }
+
+    @Test
+    public void gettingInvoiceByNumberShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        byte[] expectedByteArray = new byte[10];
+        when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
+        when(invoicePdfService.createPdf(invoice)).thenReturn(expectedByteArray);
+
+        String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
             .andExpect(content().bytes(expectedByteArray));
