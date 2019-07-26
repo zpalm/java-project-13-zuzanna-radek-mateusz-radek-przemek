@@ -1,7 +1,5 @@
 package pl.coderstrust.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -61,13 +61,13 @@ public final class Invoice {
     }
 
     private Invoice(Builder builder) {
-        this.id = builder.id;
-        this.number = builder.number;
-        this.issuedDate = builder.issuedDate;
-        this.dueDate = builder.dueDate;
-        this.seller = builder.seller;
-        this.buyer = builder.buyer;
-        this.entries = builder.entries;
+        id = builder.id;
+        number = builder.number;
+        issuedDate = builder.issuedDate;
+        dueDate = builder.dueDate;
+        seller = builder.seller;
+        buyer = builder.buyer;
+        entries = builder.entries;
     }
 
     public static Invoice.Builder builder() {
@@ -140,7 +140,6 @@ public final class Invoice {
 
     @JsonPOJOBuilder
     public static class Builder {
-
         private Long id;
         private String number;
         private LocalDate issuedDate;

@@ -11,27 +11,21 @@ import pl.coderstrust.model.InvoiceEntry;
 public final class Invoice {
 
     private final String id;
-
     private final String number;
-
     private final LocalDate issuedDate;
-
     private final LocalDate dueDate;
-
     private final Company seller;
-
     private final Company buyer;
-
     private final List<InvoiceEntry> entries;
 
     private Invoice(Builder builder) {
-        this.id = builder.id;
-        this.number = builder.number;
-        this.issuedDate = builder.issuedDate;
-        this.dueDate = builder.dueDate;
-        this.seller = builder.seller;
-        this.buyer = builder.buyer;
-        this.entries = builder.entries;
+        id = builder.id;
+        number = builder.number;
+        issuedDate = builder.issuedDate;
+        dueDate = builder.dueDate;
+        seller = builder.seller;
+        buyer = builder.buyer;
+        entries = builder.entries;
     }
 
     public static Invoice.Builder builder() {
@@ -103,7 +97,6 @@ public final class Invoice {
     }
 
     public static class Builder {
-
         private String id;
         private String number;
         private LocalDate issuedDate;

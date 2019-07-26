@@ -5,24 +5,19 @@ import java.util.Objects;
 public final class Company {
 
     private final String name;
-
     private final String address;
-
     private final String taxId;
-
     private final String accountNumber;
-
     private final String phoneNumber;
-
     private final String email;
 
     private Company(Builder builder) {
-        this.name = builder.name;
-        this.address = builder.address;
-        this.taxId = builder.taxId;
-        this.accountNumber = builder.accountNumber;
-        this.phoneNumber = builder.phoneNumber;
-        this.email = builder.email;
+        name = builder.name;
+        address = builder.address;
+        taxId = builder.taxId;
+        accountNumber = builder.accountNumber;
+        phoneNumber = builder.phoneNumber;
+        email = builder.email;
     }
 
     public static Company.Builder builder() {
@@ -88,7 +83,6 @@ public final class Company {
     }
 
     public static class Builder {
-
         private String name;
         private String address;
         private String taxId;

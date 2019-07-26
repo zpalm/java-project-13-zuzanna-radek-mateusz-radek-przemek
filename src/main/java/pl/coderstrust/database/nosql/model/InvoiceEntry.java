@@ -8,24 +8,19 @@ import pl.coderstrust.model.Vat;
 public final class InvoiceEntry {
 
     private final String description;
-
     private final Long quantity;
-
     private final BigDecimal price;
-
     private final BigDecimal netValue;
-
     private final BigDecimal grossValue;
-
     private final Vat vatRate;
 
     private InvoiceEntry(Builder builder) {
-        this.description = builder.description;
-        this.quantity = builder.quantity;
-        this.price = builder.price;
-        this.netValue = builder.netValue;
-        this.grossValue = builder.grossValue;
-        this.vatRate = builder.vatRate;
+        description = builder.description;
+        quantity = builder.quantity;
+        price = builder.price;
+        netValue = builder.netValue;
+        grossValue = builder.grossValue;
+        vatRate = builder.vatRate;
     }
 
     public static InvoiceEntry.Builder builder() {
@@ -91,7 +86,6 @@ public final class InvoiceEntry {
     }
 
     public static class Builder {
-
         private String description;
         private Long quantity;
         private BigDecimal price;

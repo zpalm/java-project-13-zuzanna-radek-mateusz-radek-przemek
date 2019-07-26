@@ -1,13 +1,13 @@
 package pl.coderstrust.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -42,23 +42,23 @@ public final class InvoiceEntry {
     private final Vat vatRate;
 
     private InvoiceEntry() {
-        this.id = null;
-        this.description = null;
-        this.quantity = null;
-        this.price = null;
-        this.netValue = null;
-        this.grossValue = null;
-        this.vatRate = null;
+        id = null;
+        description = null;
+        quantity = null;
+        price = null;
+        netValue = null;
+        grossValue = null;
+        vatRate = null;
     }
 
     private InvoiceEntry(Builder builder) {
-        this.id = builder.id;
-        this.description = builder.description;
-        this.quantity = builder.quantity;
-        this.price = builder.price;
-        this.netValue = builder.netValue;
-        this.grossValue = builder.grossValue;
-        this.vatRate = builder.vatRate;
+        id = builder.id;
+        description = builder.description;
+        quantity = builder.quantity;
+        price = builder.price;
+        netValue = builder.netValue;
+        grossValue = builder.grossValue;
+        vatRate = builder.vatRate;
     }
 
     public static InvoiceEntry.Builder builder() {
@@ -131,7 +131,6 @@ public final class InvoiceEntry {
 
     @JsonPOJOBuilder
     public static class Builder {
-
         private Long id;
         private String description;
         private Long quantity;

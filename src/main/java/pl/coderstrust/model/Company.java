@@ -1,12 +1,12 @@
 package pl.coderstrust.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -41,23 +41,23 @@ public final class Company {
     private final String email;
 
     private Company() {
-        this.id = null;
-        this.name = null;
-        this.address = null;
-        this.taxId = null;
-        this.accountNumber = null;
-        this.phoneNumber = null;
-        this.email = null;
+        id = null;
+        name = null;
+        address = null;
+        taxId = null;
+        accountNumber = null;
+        phoneNumber = null;
+        email = null;
     }
 
     private Company(Builder builder) {
-        this.id = builder.id;
-        this.name = builder.name;
-        this.address = builder.address;
-        this.taxId = builder.taxId;
-        this.accountNumber = builder.accountNumber;
-        this.phoneNumber = builder.phoneNumber;
-        this.email = builder.email;
+        id = builder.id;
+        name = builder.name;
+        address = builder.address;
+        taxId = builder.taxId;
+        accountNumber = builder.accountNumber;
+        phoneNumber = builder.phoneNumber;
+        email = builder.email;
     }
 
     public static Company.Builder builder() {
@@ -130,7 +130,6 @@ public final class Company {
 
     @JsonPOJOBuilder
     public static class Builder {
-
         private Long id;
         private String name;
         private String address;
