@@ -3,8 +3,6 @@ package pl.coderstrust.database.nosql.model;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-import pl.coderstrust.model.Vat;
-
 public final class InvoiceEntry {
 
     private final String description;

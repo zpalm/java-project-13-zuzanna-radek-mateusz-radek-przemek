@@ -5,9 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import pl.coderstrust.model.Company;
-import pl.coderstrust.model.InvoiceEntry;
-
 public final class Invoice {
 
     private final String id;
