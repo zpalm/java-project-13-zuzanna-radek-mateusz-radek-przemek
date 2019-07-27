@@ -1,0 +1,46 @@
+<gs:addInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
+    <gs:invoice>
+        <gs:id xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
+        <gs:number>25/FA/456</gs:number>
+        <gs:issuedDate>2019-06-30</gs:issuedDate>
+        <gs:dueDate>2019-07-31</gs:dueDate>
+        <gs:seller>
+            <gs:id>1</gs:id>
+            <gs:name>abc</gs:name>
+            <gs:address>ul. Warszawska 15, 06-456 Kraków</gs:address>
+            <gs:taxId>523-02-44324</gs:taxId>
+            <gs:accountNumber>47191010482944033582500001</gs:accountNumber>
+            <gs:phoneNumber>+48505609023</gs:phoneNumber>
+            <gs:email>abc@yandex.ru</gs:email>
+        </gs:seller>
+        <gs:buyer>
+            <gs:id>2</gs:id>
+            <gs:name>xyz</gs:name>
+            <gs:address>ul. Krakowska 32/1, 02-786 Warszawa</gs:address>
+            <gs:taxId>935-78-43-209</gs:taxId>
+            <gs:accountNumber>93 1020 1068 1230 7223 1226 0763</gs:accountNumber>
+            <gs:phoneNumber>256821990</gs:phoneNumber>
+            <gs:email>xyz@sizmek.cz</gs:email>
+        </gs:buyer>
+        <gs:entries>
+            <gs:entry>
+                <gs:id>1</gs:id>
+                <gs:description>Pencils and scissors</gs:description>
+                <gs:quantity>10</gs:quantity>
+                <gs:price>24.50</gs:price>
+                <gs:netValue>245</gs:netValue>
+                <gs:grossValue>301.35</gs:grossValue>
+                <gs:vatRate>VAT_23</gs:vatRate>
+            </gs:entry>
+            <gs:entry>
+                <gs:id>2</gs:id>
+                <gs:description>FKZ/1573/N/Department</gs:description>
+                <gs:quantity>5</gs:quantity>
+                <gs:price>10</gs:price>
+                <gs:netValue>50</gs:netValue>
+                <gs:grossValue>52.5</gs:grossValue>
+                <gs:vatRate>VAT_5</gs:vatRate>
+            </gs:entry>
+        </gs:entries>
+    </gs:invoice>
+</gs:addInvoiceRequest>

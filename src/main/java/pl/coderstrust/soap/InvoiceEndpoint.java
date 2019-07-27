@@ -2,6 +2,8 @@ package pl.coderstrust.soap;
 
 import java.util.Collection;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -29,6 +31,8 @@ import pl.coderstrust.soap.bindingclasses.UpdateInvoiceRequest;
 @Endpoint
 public class InvoiceEndpoint {
 
+    private Logger log = LoggerFactory.getLogger(InvoiceEndpoint.class);
+
     private static final String NAMESPACE_URI = "http://project-13-zuzanna-radek-mateusz-radek-przemek";
 
     private InvoiceService invoiceService;
@@ -46,7 +50,7 @@ public class InvoiceEndpoint {
             Collection<InvoiceSoap> allInvoicesSoap = ModelConverter.convertInvoiceCollectionToInvoicesSoap(allInvoices);
             return createSuccessResponse(allInvoicesSoap);
         } catch (Exception e) {
-            return createErrorResponseForInvoicesCollection("Invoices could not be retrieved: " + e);
+            return createErrorResponseForInvoicesCollection("An error occured during getting all invoices", e);
         }
     }
 
@@ -55,12 +59,16 @@ public class InvoiceEndpoint {
     public InvoiceResponse addInvoice(@RequestPayload AddInvoiceRequest request) throws ServiceOperationException {
         try {
             InvoiceSoap invoiceSoapToSave = request.getInvoice();
+            if (invoiceSoapToSave.getId() != null && invoiceService.invoiceExists(invoiceSoapToSave.getId())) {
+                return createErrorResponseForSingleInvoice(String.format("Invoice with the following id: %d does not exist and cannot be updated", invoiceSoapToSave.getId()));
+            }
             Invoice invoiceToSave = ModelConverter.convertInvoiceSoapToInvoice(invoiceSoapToSave);
             Invoice invoice = invoiceService.addInvoice(invoiceToSave);
             InvoiceSoap invoiceSoapToDisplay = ModelConverter.convertInvoiceToInvoiceSoap(invoice);
+            log.debug(String.format("New invoice with id %d was added to database", invoiceSoapToDisplay.getId()));
             return createSuccessResponse(invoiceSoapToDisplay);
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be added to database: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be added to database", e);
         }
     }
 
@@ -70,13 +78,13 @@ public class InvoiceEndpoint {
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceById(request.getId());
             if (invoiceOptional.isEmpty()) {
-                throw new ServiceOperationException("Invoice cannot be null");
+                return createErrorResponseForSingleInvoice(String.format("Invoice with the following id: %d does not exist and cannot be retrieved", request.getId()));
             } else {
                 Invoice retrievedInvoice = invoiceOptional.get();
                 return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(retrievedInvoice));
             }
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be retrieved: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be retrieved from database",e);
         }
     }
 
@@ -85,11 +93,15 @@ public class InvoiceEndpoint {
     public InvoiceResponse updateInvoice(@RequestPayload UpdateInvoiceRequest request) {
         try {
             InvoiceSoap invoiceSoapToUpdate = request.getInvoice();
+            if (!invoiceService.invoiceExists(invoiceSoapToUpdate.getId())) {
+                return createErrorResponseForSingleInvoice(String.format("Invoice with the following id: %d does not exist and cannot be updated", invoiceSoapToUpdate.getId()));
+            }
             Invoice invoiceToUpdate = ModelConverter.convertInvoiceSoapToInvoice(invoiceSoapToUpdate);
             Invoice invoiceToDisplay = invoiceService.updateInvoice(invoiceToUpdate);
+            log.debug(String.format("Invoice with the following id: %d was successfully updated", invoiceToDisplay.getId()));
             return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceToDisplay));
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be updated: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be updated ", e);
         }
     }
 
@@ -99,13 +111,14 @@ public class InvoiceEndpoint {
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceById(request.getId());
             if (invoiceOptional.isEmpty()) {
-                throw new ServiceOperationException("Invoice cannot be null");
+                return createErrorResponseForSingleInvoice(String.format("Invoice with the following id: %d does not exist and cannot be deleted", request.getId()));
             } else {
                 invoiceService.deleteInvoiceById(request.getId());
-                return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
+                log.debug(String.format("Invoice with the following id: %d was successfully deleted from database", request.getId()));
+                return createSuccessResponse((InvoiceSoap) null);
             }
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be deleted: " + e);
+            return createErrorResponseForSingleInvoice("Invoice could not be deleted: ", e);
         }
     }
 
@@ -115,11 +128,11 @@ public class InvoiceEndpoint {
         try {
             Collection<Invoice> allInvoices = invoiceService.getAllInvoices();
             Collection<InvoiceSoap> allInvoicesSoap = ModelConverter.convertInvoiceCollectionToInvoicesSoap(allInvoices);
-            ;
             invoiceService.deleteAllInvoices();
-            return createSuccessResponse(allInvoicesSoap);
+            log.debug("All invoices were successfully deleted from database");
+            return createSuccessResponse((Collection<InvoiceSoap>) null);
         } catch (Exception e) {
-            return createErrorResponseForInvoicesCollection("Invoices could not be deleted: " + e);
+            return createErrorResponseForInvoicesCollection("Invoices could not be deleted", e);
         }
     }
 
@@ -129,12 +142,12 @@ public class InvoiceEndpoint {
         try {
             Optional<Invoice> invoiceOptional = invoiceService.getInvoiceByNumber(request.getNumber());
             if (invoiceOptional.isEmpty()) {
-                throw new ServiceOperationException("Invoice cannot be null");
+                return createErrorResponseForSingleInvoice(String.format("Invoice with the following number: %s does not exist", request.getNumber()));
             } else {
                 return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(invoiceOptional.get()));
             }
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be retrieved");
+            return createErrorResponseForSingleInvoice("Invoice could not be retrieved", e);
         }
     }
 
@@ -143,13 +156,14 @@ public class InvoiceEndpoint {
     public InvoiceExistsResponse invoiceExists(@RequestPayload InvoiceExistsRequest request) {
         InvoiceExistsResponse response = new InvoiceExistsResponse();
         try {
+            log.debug("Checking if invoice exists");
             response.setExists(invoiceService.invoiceExists(request.getId()));
             response.setMessage("");
             response.setStatus(Status.SUCCESS);
             return response;
         } catch (Exception e) {
             response.setStatus(Status.FAILED);
-            response.setMessage("Invoice does not exist: " + e);
+            response.setMessage("Invoice does not exist");
             return response;
         }
     }
@@ -159,13 +173,15 @@ public class InvoiceEndpoint {
     public InvoicesCountResponse invoicesCount(@RequestPayload InvoicesCountRequest request) {
         InvoicesCountResponse response = new InvoicesCountResponse();
         try {
+            log.debug("Retrieving number of invoices stored in database");
             response.setCount(invoiceService.invoicesCount());
             response.setMessage("");
             response.setStatus(Status.SUCCESS);
             return response;
         } catch (Exception e) {
+            log.error("Could not retrieve number of  invoices", e);
             response.setStatus(Status.FAILED);
-            response.setMessage("Could not retrieve number of invoices: " + e);
+            response.setMessage("Could not retrieve number of invoices");
             return response;
         }
     }
@@ -179,8 +195,16 @@ public class InvoiceEndpoint {
     }
 
     private InvoiceResponse createErrorResponseForSingleInvoice(String message) {
+        log.error(message);
         InvoiceResponse response = new InvoiceResponse();
-        response.setInvoice(null);
+        response.setMessage(message);
+        response.setStatus(Status.FAILED);
+        return response;
+    }
+
+    private InvoiceResponse createErrorResponseForSingleInvoice(String message, Exception e) {
+        log.error(message, e);
+        InvoiceResponse response = new InvoiceResponse();
         response.setMessage(message);
         response.setStatus(Status.FAILED);
         return response;
@@ -188,15 +212,17 @@ public class InvoiceEndpoint {
 
     private InvoicesResponse createSuccessResponse(Collection<InvoiceSoap> invoices) {
         InvoicesResponse response = new InvoicesResponse();
-        response.getInvoices().addAll(invoices);
+        if (invoices != null) {
+            response.getInvoices().addAll(invoices);
+        }
         response.setMessage("");
         response.setStatus(Status.SUCCESS);
         return response;
     }
 
-    private InvoicesResponse createErrorResponseForInvoicesCollection(String message) {
+    private InvoicesResponse createErrorResponseForInvoicesCollection(String message, Exception e) {
+        log.error(message, e);
         InvoicesResponse response = new InvoicesResponse();
-        response.getInvoices().addAll(null);
         response.setMessage(message);
         response.setStatus(Status.FAILED);
         return response;

@@ -1,0 +1,48 @@
+<ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
+    <ns2:status>success</ns2:status>
+    <ns2:message/>
+    <ns2:invoice>
+        <ns2:id>4</ns2:id>
+        <ns2:number>25/FA/456</ns2:number>
+        <ns2:issuedDate>2019-06-30</ns2:issuedDate>
+        <ns2:dueDate>2019-07-31</ns2:dueDate>
+        <ns2:seller>
+            <ns2:id>1</ns2:id>
+            <ns2:name>abc</ns2:name>
+            <ns2:address>ul. Warszawska 15, 06-456 Kraków</ns2:address>
+            <ns2:taxId>523-02-44324</ns2:taxId>
+            <ns2:accountNumber>47191010482944033582500001</ns2:accountNumber>
+            <ns2:phoneNumber>+48505609023</ns2:phoneNumber>
+            <ns2:email>abc@yandex.ru</ns2:email>
+        </ns2:seller>
+        <ns2:buyer>
+            <ns2:id>2</ns2:id>
+            <ns2:name>xyz</ns2:name>
+            <ns2:address>ul. Krakowska 32/1, 02-786 Warszawa</ns2:address>
+            <ns2:taxId>935-78-43-209</ns2:taxId>
+            <ns2:accountNumber>93 1020 1068 1230 7223 1226 0763</ns2:accountNumber>
+            <ns2:phoneNumber>256821990</ns2:phoneNumber>
+            <ns2:email>xyz@sizmek.cz</ns2:email>
+        </ns2:buyer>
+        <ns2:entries>
+            <ns2:entry>
+                <ns2:id>1</ns2:id>
+                <ns2:description>Pencils and scissors</ns2:description>
+                <ns2:quantity>10</ns2:quantity>
+                <ns2:price>24.50</ns2:price>
+                <ns2:netValue>245</ns2:netValue>
+                <ns2:grossValue>301.35</ns2:grossValue>
+                <ns2:vatRate>VAT_23</ns2:vatRate>
+            </ns2:entry>
+            <ns2:entry>
+                <ns2:id>2</ns2:id>
+                <ns2:description>FKZ/1573/N/Department</ns2:description>
+                <ns2:quantity>5</ns2:quantity>
+                <ns2:price>10</ns2:price>
+                <ns2:netValue>50</ns2:netValue>
+                <ns2:grossValue>52.5</ns2:grossValue>
+                <ns2:vatRate>VAT_5</ns2:vatRate>
+            </ns2:entry>
+        </ns2:entries>
+    </ns2:invoice>
+</ns2:invoiceResponse>

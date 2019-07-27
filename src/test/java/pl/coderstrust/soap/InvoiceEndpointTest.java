@@ -147,6 +147,12 @@ class InvoiceEndpointTest {
         testComplianceOfRequestAndResponse("invoicesCountRequest", "invoicesCountWhenEmptyRepositoryResponse");
     }
 
+    @Test
+    @Order(20)
+    void shouldAddInvoiceWithoutIdSpecified() throws IOException {
+        testComplianceOfRequestAndResponse("addInvoiceWithoutIdRequest", "addInvoiceWithoutIdResponse");
+    }
+
     private void testComplianceOfRequestAndResponse(String requestFile, String responseFile) throws IOException {
         Resource requestPayload = applicationContext.getResource("classpath:soap/" + requestFile + ".xml");
         Resource responsePayload = applicationContext.getResource("classpath:soap/" + responseFile + ".xml");

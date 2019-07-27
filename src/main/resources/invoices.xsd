@@ -104,7 +104,7 @@
             <xs:sequence>
                 <xs:element name="status" type="tns:status"/>
                 <xs:element name="message" type="xs:string"/>
-                <xs:sequence>
+                <xs:sequence minOccurs="0">
                     <xs:element name="invoices" type="tns:invoiceSoap" minOccurs="0"
                         maxOccurs="unbounded" nillable="true"/>
                 </xs:sequence>
@@ -114,7 +114,7 @@
 
     <xs:complexType name="invoiceSoap">
         <xs:sequence>
-            <xs:element name="id" type="xs:long"/>
+            <xs:element name="id" type="xs:long" nillable="true"/>
             <xs:element name="number" type="xs:string"/>
             <xs:element name="issuedDate" type="xs:string"/>
             <xs:element name="dueDate" type="xs:string"/>
