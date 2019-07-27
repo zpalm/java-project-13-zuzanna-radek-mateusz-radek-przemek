@@ -84,7 +84,7 @@ public class InvoiceEndpoint {
                 return createSuccessResponse(ModelConverter.convertInvoiceToInvoiceSoap(retrievedInvoice));
             }
         } catch (Exception e) {
-            return createErrorResponseForSingleInvoice("Invoice could not be retrieved from database",e);
+            return createErrorResponseForSingleInvoice("Invoice could not be retrieved from database", e);
         }
     }
 
@@ -194,6 +194,16 @@ public class InvoiceEndpoint {
         return response;
     }
 
+    private InvoicesResponse createSuccessResponse(Collection<InvoiceSoap> invoices) {
+        InvoicesResponse response = new InvoicesResponse();
+        if (invoices != null) {
+            response.getInvoices().addAll(invoices);
+        }
+        response.setMessage("");
+        response.setStatus(Status.SUCCESS);
+        return response;
+    }
+
     private InvoiceResponse createErrorResponseForSingleInvoice(String message) {
         log.error(message);
         InvoiceResponse response = new InvoiceResponse();
@@ -207,16 +217,6 @@ public class InvoiceEndpoint {
         InvoiceResponse response = new InvoiceResponse();
         response.setMessage(message);
         response.setStatus(Status.FAILED);
-        return response;
-    }
-
-    private InvoicesResponse createSuccessResponse(Collection<InvoiceSoap> invoices) {
-        InvoicesResponse response = new InvoicesResponse();
-        if (invoices != null) {
-            response.getInvoices().addAll(invoices);
-        }
-        response.setMessage("");
-        response.setStatus(Status.SUCCESS);
         return response;
     }
 

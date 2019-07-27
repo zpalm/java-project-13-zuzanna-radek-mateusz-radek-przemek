@@ -109,6 +109,7 @@
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
                         <exclude>/pl/coderstrust/configuration/WebSecurityConfiguration.class</exclude>
                         <exclude>/pl/coderstrust/configuration/WebServiceConfiguration.class</exclude>
+                        <exclude>pl/coderstrust/database/nosql/model/*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

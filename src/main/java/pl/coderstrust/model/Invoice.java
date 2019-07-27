@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,6 +138,7 @@ public final class Invoice {
 
     @JsonPOJOBuilder
     public static class Builder {
+
         private Long id;
         private String number;
         private LocalDate issuedDate;

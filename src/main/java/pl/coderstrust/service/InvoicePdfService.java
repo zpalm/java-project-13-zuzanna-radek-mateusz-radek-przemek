@@ -1,5 +1,8 @@
 package pl.coderstrust.service;
 
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
+
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-
 import java.math.BigDecimal;
 import java.util.Objects;
 import javax.persistence.Entity;
@@ -130,6 +129,7 @@ public final class InvoiceEntry {
 
     @JsonPOJOBuilder
     public static class Builder {
+
         private Long id;
         private String description;
         private Long quantity;
