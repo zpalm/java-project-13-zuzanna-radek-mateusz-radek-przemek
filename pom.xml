@@ -91,6 +91,8 @@
                         <exclude>/pl/coderstrust/service/InvoiceEmailService.class</exclude>
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>
                         <exclude>/pl/coderstrust/configuration/WebSecurityConfiguration.class</exclude>
+                        <exclude>/pl/coderstrust/database/nosql/model/*.class</exclude>
+                        <exclude>/pl/coderstrust/database/sql/model/*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

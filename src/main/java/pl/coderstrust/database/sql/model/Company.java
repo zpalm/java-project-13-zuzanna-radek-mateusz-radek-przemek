@@ -1,9 +1,4 @@
-package pl.coderstrust.model;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+package pl.coderstrust.database.sql.model;
 
 import java.util.Objects;
 import javax.persistence.Entity;
@@ -12,31 +7,17 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-@JsonDeserialize(builder = Company.Builder.class)
-@ApiModel(value = "Company", description = "Company")
-public final class Company {
+public class Company {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the company.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "Company name.", example = "CodersTrust")
     private final String name;
-
-    @ApiModelProperty(value = "Company address.", example = "ul. Bukowińska 24 d/7, 02-703 Warszawa")
     private final String address;
-
-    @ApiModelProperty(value = "Company tax id.", example = "701-041-63-84")
     private final String taxId;
-
-    @ApiModelProperty(value = "Company bank account number.", example = "27 1030 0019 0109 8503 0014 2668")
     private final String accountNumber;
-
-    @ApiModelProperty(value = "Company phone number.", example = "691 950 343")
     private final String phoneNumber;
-
-    @ApiModelProperty(value = "Company email address.", example = "hello@coderstrust.pl")
     private final String email;
 
     private Company() {
@@ -127,7 +108,6 @@ public final class Company {
             + '}';
     }
 
-    @JsonPOJOBuilder
     public static class Builder {
         private Long id;
         private String name;

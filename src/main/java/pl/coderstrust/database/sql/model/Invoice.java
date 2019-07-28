@@ -1,9 +1,4 @@
-package pl.coderstrust.model;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+package pl.coderstrust.database.sql.model;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -19,34 +14,23 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 
 @Entity
-@JsonDeserialize(builder = Invoice.Builder.class)
-@ApiModel(value = "Invoice", description = "Invoice")
-public final class Invoice {
+public class Invoice {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the invoice.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "The number of the invoice.", example = "1/2/3")
     private final String number;
-
-    @ApiModelProperty(value = "The date when invoice was created.", example = "2019-07-16")
     private final LocalDate issuedDate;
-
-    @ApiModelProperty(value = "The date when payment will be required.", example = "2019-07-30")
     private final LocalDate dueDate;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @ApiModelProperty(value = "The company issuing the invoice.")
     private final Company seller;
 
     @ManyToOne(cascade = CascadeType.ALL)
-    @ApiModelProperty(value = "The company accepting the invoice.")
     private final Company buyer;
 
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @ApiModelProperty(value = "List of items on the invoice.")
     private final List<InvoiceEntry> entries;
 
     private Invoice() {
@@ -137,7 +121,6 @@ public final class Invoice {
             + '}';
     }
 
-    @JsonPOJOBuilder
     public static class Builder {
         private Long id;
         private String number;

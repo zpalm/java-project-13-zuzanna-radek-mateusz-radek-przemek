@@ -1,9 +1,4 @@
-package pl.coderstrust.model;
-
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+package pl.coderstrust.database.sql.model;
 
 import java.math.BigDecimal;
 import java.util.Objects;
@@ -13,31 +8,17 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-@JsonDeserialize(builder = InvoiceEntry.Builder.class)
-@ApiModel(value = "InvoiceEntry", description = "List of invoice entries.")
-public final class InvoiceEntry {
+public class InvoiceEntry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @ApiModelProperty(value = "The unique identifier of the entry.", position = -1, dataType = "Long")
     private final Long id;
 
-    @ApiModelProperty(value = "Description of the entry.", example = "Kurs")
     private final String description;
-
-    @ApiModelProperty(value = "Number of units of the entry.", example = "1")
     private final Long quantity;
-
-    @ApiModelProperty(value = "Unit price of the entry.", example = "1000")
     private final BigDecimal price;
-
-    @ApiModelProperty(value = "Price without tax.", example = "1000")
     private final BigDecimal netValue;
-
-    @ApiModelProperty(value = "Price with tax.", example = "1230")
     private final BigDecimal grossValue;
-
-    @ApiModelProperty(value = "Vat tax rate.", example = "VAT_23")
     private final Vat vatRate;
 
     private InvoiceEntry() {
@@ -128,8 +109,7 @@ public final class InvoiceEntry {
             + '}';
     }
 
-    @JsonPOJOBuilder
-    public static class Builder {
+    private static class Builder {
         private Long id;
         private String description;
         private Long quantity;
