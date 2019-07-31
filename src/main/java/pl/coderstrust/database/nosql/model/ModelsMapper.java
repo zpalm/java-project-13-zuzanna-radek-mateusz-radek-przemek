@@ -1,5 +1,7 @@
 package pl.coderstrust.database.nosql.model;
 
+import java.util.List;
+
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -25,6 +27,8 @@ public interface ModelsMapper {
     @Mapping(target = "withEntries", source = "entries")
     pl.coderstrust.model.Invoice toSqlInvoice(Invoice invoice);
 
+    List<pl.coderstrust.model.Invoice> mapToSqlInvoices(List<Invoice> invoices);
+
     @Mapping(target = "withName", source = "name")
     @Mapping(target = "withAddress", source = "address")
     @Mapping(target = "withTaxId", source = "taxId")
@@ -33,7 +37,7 @@ public interface ModelsMapper {
     @Mapping(target = "withEmail", source = "email")
     Company toNoSqlCompany(pl.coderstrust.model.Company company);
 
-    @Mapping(target = "withId", defaultValue = "0")
+    @Mapping(target = "withId", constant = "0L")
     @Mapping(target = "withName", source = "name")
     @Mapping(target = "withAddress", source = "address")
     @Mapping(target = "withTaxId", source = "taxId")
@@ -50,7 +54,7 @@ public interface ModelsMapper {
     @Mapping(target = "withVatRate", source = "vatRate")
     InvoiceEntry toNoSqlInvoiceEntry(pl.coderstrust.model.InvoiceEntry invoiceEntry);
 
-    @Mapping(target = "withId", defaultValue = "0")
+    @Mapping(target = "withId", constant = "0L")
     @Mapping(target = "withDescription", source = "description")
     @Mapping(target = "withQuantity", source = "quantity")
     @Mapping(target = "withPrice", source = "price")
