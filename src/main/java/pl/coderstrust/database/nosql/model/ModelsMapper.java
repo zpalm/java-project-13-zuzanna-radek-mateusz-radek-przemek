@@ -5,7 +5,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR)
-public interface ModelMapper {
+public interface ModelsMapper {
 
     @Mapping(target = "withId", source = "id")
     @Mapping(target = "withNumber", source = "number")

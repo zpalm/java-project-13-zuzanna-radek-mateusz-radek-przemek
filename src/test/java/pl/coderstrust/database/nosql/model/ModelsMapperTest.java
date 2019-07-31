@@ -13,9 +13,9 @@ import pl.coderstrust.model.Invoice;
 import pl.coderstrust.model.InvoiceEntry;
 import pl.coderstrust.model.Vat;
 
-class ModelMapperTest {
+class ModelsMapperTest {
 
-    private ModelMapper modelMapper = Mappers.getMapper(ModelMapper.class);
+    private ModelsMapper modelsMapper = Mappers.getMapper(ModelsMapper.class);
 
     @Test
     void shouldMapInvoiceToNoSqlInvoice() {
@@ -23,7 +23,7 @@ class ModelMapperTest {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
 
         //when
-        pl.coderstrust.database.nosql.model.Invoice noSqlInvoice = modelMapper.toNoSqlInvoice(invoice);
+        pl.coderstrust.database.nosql.model.Invoice noSqlInvoice = modelsMapper.toNoSqlInvoice(invoice);
 
         //then
         assertEquals(invoice.getId().toString(), noSqlInvoice.getId());
@@ -38,7 +38,7 @@ class ModelMapperTest {
         Company company = CompanyGenerator.getRandomCompany();
 
         //when
-        pl.coderstrust.database.nosql.model.Company noSqlCompany = modelMapper.toNoSqlCompany(company);
+        pl.coderstrust.database.nosql.model.Company noSqlCompany = modelsMapper.toNoSqlCompany(company);
 
         //then
         assertEquals(company.getName(), noSqlCompany.getName());
@@ -55,7 +55,7 @@ class ModelMapperTest {
         InvoiceEntry invoiceEntry = InvoiceEntryGenerator.getRandomEntry();
 
         //when
-        pl.coderstrust.database.nosql.model.InvoiceEntry noSqlInvoiceEntry = modelMapper.toNoSqlInvoiceEntry(invoiceEntry);
+        pl.coderstrust.database.nosql.model.InvoiceEntry noSqlInvoiceEntry = modelsMapper.toNoSqlInvoiceEntry(invoiceEntry);
 
         //then
         assertEquals(invoiceEntry.getDescription(), noSqlInvoiceEntry.getDescription());
@@ -71,7 +71,7 @@ class ModelMapperTest {
         Vat vat = VatRateGenerator.getRandomVatRate(Vat.class);
 
         //when
-        pl.coderstrust.database.nosql.model.Vat noSqlVat = modelMapper.toNoSqlVat(vat);
+        pl.coderstrust.database.nosql.model.Vat noSqlVat = modelsMapper.toNoSqlVat(vat);
 
         //then
         assertEquals(vat.getValue(), noSqlVat.getValue());
@@ -83,8 +83,8 @@ class ModelMapperTest {
         Company company = CompanyGenerator.getRandomCompany();
 
         //when
-        pl.coderstrust.database.nosql.model.Company noSqlCompany = modelMapper.toNoSqlCompany(company);
-        Company sqlCompany = modelMapper.toSqlCompany(noSqlCompany);
+        pl.coderstrust.database.nosql.model.Company noSqlCompany = modelsMapper.toNoSqlCompany(company);
+        Company sqlCompany = modelsMapper.toSqlCompany(noSqlCompany);
 
         //then
         assertEquals(0, sqlCompany.getId());
@@ -96,8 +96,8 @@ class ModelMapperTest {
         InvoiceEntry invoiceEntry = InvoiceEntryGenerator.getRandomEntry();
 
         //when
-        pl.coderstrust.database.nosql.model.InvoiceEntry noSqlInvoiceEntry = modelMapper.toNoSqlInvoiceEntry(invoiceEntry);
-        InvoiceEntry sqlInvoiceEntry = modelMapper.toSqlInvoiceEntry(noSqlInvoiceEntry);
+        pl.coderstrust.database.nosql.model.InvoiceEntry noSqlInvoiceEntry = modelsMapper.toNoSqlInvoiceEntry(invoiceEntry);
+        InvoiceEntry sqlInvoiceEntry = modelsMapper.toSqlInvoiceEntry(noSqlInvoiceEntry);
 
         //then
         assertEquals(0, sqlInvoiceEntry.getId());
