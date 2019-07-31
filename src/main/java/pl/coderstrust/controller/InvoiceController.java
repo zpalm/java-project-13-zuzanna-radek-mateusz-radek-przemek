@@ -8,7 +8,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 
 import org.slf4j.Logger;
@@ -80,10 +79,9 @@ public class InvoiceController {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
             if (invoice.isPresent()) {
-                MediaType acceptedMediaType = getFirstAcceptedOrDefaultMediaType(httpHeaders.getAccept(), List.of(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF));
-                if (acceptedMediaType.equals(MediaType.APPLICATION_PDF)) {
-                    byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
-                    return getOkResponse(byteArray);
+                if (isPdfResponse(httpHeaders)) {
+                    byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
+                    return createPdfResponse(invoiceAsPdf);
                 }
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
@@ -113,10 +111,9 @@ public class InvoiceController {
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceByNumber(number);
             if (invoice.isPresent()) {
-                MediaType acceptedMediaType = getFirstAcceptedOrDefaultMediaType(httpHeaders.getAccept(), List.of(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF));
-                if (acceptedMediaType.equals(MediaType.APPLICATION_PDF)) {
-                    byte[] byteArray = (invoicePdfService.createPdf(invoice.get()));
-                    return getOkResponse(byteArray);
+                if (isPdfResponse(httpHeaders)) {
+                    byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
+                    return createPdfResponse(invoiceAsPdf);
                 }
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
@@ -220,18 +217,19 @@ public class InvoiceController {
         }
     }
 
-    private ResponseEntity<?> getOkResponse(byte[] byteArray) {
+    private ResponseEntity<?> createPdfResponse(byte[] array) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_PDF);
-        return new ResponseEntity<>(byteArray, responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(array, responseHeaders, HttpStatus.OK);
     }
 
-    private MediaType getFirstAcceptedOrDefaultMediaType(List<MediaType> requested, List<MediaType> accepted) {
-        for (MediaType type: requested) {
-            if (accepted.contains(type)) {
-                return type;
-            }
+    private boolean isPdfResponse(HttpHeaders httpHeaders) {
+        Optional<MediaType> type = httpHeaders.getAccept().stream()
+            .filter(x -> x.isCompatibleWith(MediaType.APPLICATION_PDF) || x.isCompatibleWith(MediaType.APPLICATION_JSON))
+            .findFirst();
+        if (type.isEmpty()) {
+            return false;
         }
-        return MediaType.APPLICATION_JSON;
+        return !type.get().isWildcardType() && type.get().isCompatibleWith(MediaType.APPLICATION_PDF);
     }
 }
