@@ -1,5 +1,5 @@
 <ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
-    <ns2:status>success</ns2:status>
+    <ns2:status>SUCCESS</ns2:status>
     <ns2:message/>
     <ns2:invoice>
         <ns2:id>2</ns2:id>

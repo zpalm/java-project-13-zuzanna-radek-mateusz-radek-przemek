@@ -1,5 +1,5 @@
 <ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
-    <ns2:status>failed</ns2:status>
+    <ns2:status>FAILURE</ns2:status>
     <ns2:message>Invoice with the following id: 2 does not exist and cannot be updated</ns2:message>
     <ns2:invoice xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:nil="true"/>
 </ns2:invoiceResponse>

@@ -101,54 +101,30 @@ class InvoiceEndpointTest {
 
     @Test
     @Order(12)
-    void shouldInvoiceExistsReturnTrueWhenInvoiceExists() throws IOException {
-        testComplianceOfRequestAndResponse("invoiceExistsRequest", "invoiceExistsResponse");
-    }
-
-    @Test
-    @Order(13)
-    void shouldInvoiceExistsReturnFalseWhenInvoiceNotExists() throws IOException {
-        testComplianceOfRequestAndResponse("invoiceNotExistsRequest", "invoiceNotExistsResponse");
-    }
-
-    @Test
-    @Order(14)
-    void shouldInvoicesCountReturnCurrentNumberOfInvoices() throws IOException {
-        testComplianceOfRequestAndResponse("invoicesCountRequest", "invoicesCountResponse");
-    }
-
-    @Test
-    @Order(15)
     void shouldDeleteInvoiceById() throws IOException {
         testComplianceOfRequestAndResponse("deleteInvoiceByIdRequest", "deleteInvoiceByIdResponse");
     }
 
     @Test
-    @Order(16)
+    @Order(13)
     void shouldDeleteInvoiceByIdReturnStatusFailedWhenInvoiceNotExists() throws IOException {
         testComplianceOfRequestAndResponse("deleteInvoiceByIdRequest", "deleteNonExistingInvoiceByIdResponse");
     }
 
     @Test
-    @Order(17)
+    @Order(14)
     void shouldAddAnotherInvoiceAgain() throws IOException {
         testComplianceOfRequestAndResponse("addAnotherInvoiceRequest", "addAnotherInvoiceAgainResponse");
     }
 
     @Test
-    @Order(18)
+    @Order(15)
     void shouldDeleteAllInvoices() throws IOException {
         testComplianceOfRequestAndResponse("deleteAllInvoicesRequest", "deleteAllInvoicesResponse");
     }
 
     @Test
-    @Order(19)
-    void shouldInvoicesCountReturnZeroWhenInvoicesRepositoryIsEmpty() throws IOException {
-        testComplianceOfRequestAndResponse("invoicesCountRequest", "invoicesCountWhenEmptyRepositoryResponse");
-    }
-
-    @Test
-    @Order(20)
+    @Order(16)
     void shouldAddInvoiceWithoutIdSpecified() throws IOException {
         testComplianceOfRequestAndResponse("addInvoiceWithoutIdRequest", "addInvoiceWithoutIdResponse");
     }
