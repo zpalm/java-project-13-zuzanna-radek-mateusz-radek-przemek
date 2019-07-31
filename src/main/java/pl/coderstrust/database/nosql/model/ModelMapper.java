@@ -48,7 +48,7 @@ public interface ModelMapper {
     @Mapping(target = "withNetValue", source = "netValue")
     @Mapping(target = "withGrossValue", source = "grossValue")
     @Mapping(target = "withVatRate", source = "vatRate")
-    InvoiceEntry toNoSqlInvoiceEntries(pl.coderstrust.model.InvoiceEntry invoiceEntry);
+    InvoiceEntry toNoSqlInvoiceEntry(pl.coderstrust.model.InvoiceEntry invoiceEntry);
 
     @Mapping(target = "withId", defaultValue = "0")
     @Mapping(target = "withDescription", source = "description")
@@ -57,7 +57,7 @@ public interface ModelMapper {
     @Mapping(target = "withNetValue", source = "netValue")
     @Mapping(target = "withGrossValue", source = "grossValue")
     @Mapping(target = "withVatRate", source = "vatRate")
-    pl.coderstrust.model.InvoiceEntry toSqlInvoiceEntries(InvoiceEntry invoiceEntry);
+    pl.coderstrust.model.InvoiceEntry toSqlInvoiceEntry(InvoiceEntry invoiceEntry);
 
     Vat toNoSqlVat(pl.coderstrust.model.Vat vat);
 
