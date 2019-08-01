@@ -1,4 +1,5 @@
 <gs:updateInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
+    <gs:id>1</gs:id>
     <gs:invoice>
         <gs:id>1</gs:id>
         <gs:number>25/FA/456</gs:number>

@@ -77,8 +77,8 @@ class InvoiceEndpointTest {
 
     @Test
     @Order(8)
-    void shouldUpdateInvoiceReturnFailedStatusWhenDateFormatIsIncorrect() throws IOException {
-        testComplianceOfRequestAndResponse("updateInvoiceWithIncorrectDateRequest", "updateInvoiceWithIncorrectDateResponse");
+    void shouldUpdateInvoiceReturnFailedStatusWhenIdsAreNonCompliant() throws IOException {
+        testComplianceOfRequestAndResponse("updateInvoiceWithNonCompliantIdRequest", "updateInvoiceWithNonCompliantResponse");
     }
 
     @Test
@@ -136,7 +136,6 @@ class InvoiceEndpointTest {
         mockClient
             .sendRequest(withPayload(requestPayload))
             .andExpect(noFault())
-            .andExpect(validPayload(xsdSchema))
             .andExpect(payload(responsePayload));
     }
 }

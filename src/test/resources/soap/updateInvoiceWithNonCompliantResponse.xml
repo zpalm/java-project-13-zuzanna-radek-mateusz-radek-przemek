@@ -1,4 +1,4 @@
 <ns2:invoiceResponse xmlns:ns2="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <ns2:status>FAILURE</ns2:status>
-    <ns2:message>Invoice already exists</ns2:message>
+    <ns2:message>Invoice to update has different id than 2</ns2:message>
 </ns2:invoiceResponse>

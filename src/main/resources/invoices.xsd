@@ -81,20 +81,21 @@
         </xs:complexType>
     </xs:element>
 
-    <xs:element name="response">
-        <xs:complexType>
-            <xs:complexContent>
-                <xs:extension base="tns:responseBase"/>
-            </xs:complexContent>
-        </xs:complexType>
-    </xs:element>
-
     <xs:complexType name="responseBase">
         <xs:sequence>
             <xs:element name="status" type="tns:responseStatus"/>
             <xs:element name="message" type="xs:string"/>
         </xs:sequence>
     </xs:complexType>
+
+    <xs:element name="response">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="tns:responseBase">
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
 
     <xs:simpleType name="responseStatus">
         <xs:restriction base="xs:string">
