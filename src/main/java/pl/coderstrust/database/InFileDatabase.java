@@ -2,17 +2,12 @@ package pl.coderstrust.database;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.LineIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,16 +21,38 @@ import pl.coderstrust.model.Invoice;
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "in-file")
 public class InFileDatabase implements Database {
 
-    private Logger log = LoggerFactory.getLogger(InMemoryDatabase.class);
+    private Logger log = LoggerFactory.getLogger(InFileDatabase.class);
     private String path;
     private ObjectMapper mapper;
-
-    private static FileHelper fileHelper = new FileHelper();
+    private FileHelper fileHelper;
+    private AtomicLong nextId;
 
     @Autowired
-    public InFileDatabase(InFileDatabaseProperties inFileDatabaseProperties, ObjectMapper objectMapper) {
+    public InFileDatabase(InFileDatabaseProperties inFileDatabaseProperties, ObjectMapper mapper, FileHelper fileHelper) {
         this.path = inFileDatabaseProperties.getPath();
-        this.mapper = objectMapper;
+        this.mapper = mapper;
+        this.fileHelper = fileHelper;
+        init();
+    }
+
+    private void init() {
+        if (!fileHelper.exists(path)) {
+            try {
+                fileHelper.create(path);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        try {
+            if (fileHelper.isEmpty(path)) {
+                this.nextId = new AtomicLong(0);
+            } else {
+                Invoice lastInvoice = mapper.readValue(fileHelper.readLastLine(path), Invoice.class);
+                this.nextId = new AtomicLong(lastInvoice.getId());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -51,25 +68,11 @@ public class InFileDatabase implements Database {
     }
 
     private Invoice insertInvoice(Invoice invoice) throws DatabaseOperationException {
-        long newId = 1L;
-        if (invoice.getId() == null) {
-            try {
-                if (fileHelper.exists(path) && !fileHelper.isEmpty(path)) {
-                    String lastInvoice = fileHelper.readLastLine(path);
-                    Pattern pattern = Pattern.compile("\"invoiceId\":(\\d+)");
-                    Matcher matcher = pattern.matcher(lastInvoice);
-                    if (matcher.find()) {
-                        newId = newId + Long.parseLong((matcher.group(1)));
-                    }
-                }
-            } catch (IOException e) {
-                throw new DatabaseOperationException("An error occurred during opening the file", e);
-            }
-        } else {
-            newId = invoice.getId();
+        if (!(invoice.getId() == null)) {
+            nextId.set(invoice.getId() - 1);
         }
         Invoice insertedInvoice = Invoice.builder()
-            .withId(newId)
+            .withId(nextId.incrementAndGet())
             .withNumber(invoice.getNumber())
             .withIssuedDate(invoice.getIssuedDate())
             .withDueDate(invoice.getDueDate())
@@ -80,7 +83,9 @@ public class InFileDatabase implements Database {
         try {
             fileHelper.writeLine(path, mapper.writeValueAsString(insertedInvoice));
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during inserting the invoice.", e);
+            String message = "An error occurred during saving invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
         return insertedInvoice;
     }
@@ -95,18 +100,16 @@ public class InFileDatabase implements Database {
             .withBuyer(invoice.getBuyer())
             .withEntries(invoice.getEntries())
             .build();
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            int lineCount = 0;
-            while (lineIterator.hasNext()) {
-                lineCount++;
-                String invoiceLine = lineIterator.nextLine();
-                if (invoiceLine.contains("\"invoiceId\":" + invoice.getId())) {
-                    fileHelper.replaceLine(path, mapper.writeValueAsString(updatedInvoice), lineCount);
-                    break;
-                }
-            }
+        try {
+            int index = fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .collect(Collectors.toList())
+                .indexOf(getById(invoice.getId()).get()) + 1;
+            fileHelper.replaceLine(path, mapper.writeValueAsString(updatedInvoice), index);
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during updating the invoice.", e);
+            String message = "An error occurred during saving invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
         return updatedInvoice;
     }
@@ -121,18 +124,16 @@ public class InFileDatabase implements Database {
             log.error("Attempt to delete not existing invoice.");
             throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
         }
-        int lineCount = 0;
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            while (lineIterator.hasNext()) {
-                lineCount++;
-                String nextInvoice = lineIterator.nextLine();
-                if (nextInvoice.contains("\"invoiceId\":" + id)) {
-                    fileHelper.removeLine(path, lineCount);
-                    break;
-                }
-            }
+        try {
+            int index = fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .collect(Collectors.toList())
+                .indexOf(getById(id).get()) + 1;
+            fileHelper.removeLine(path, index);
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during deleting the invoice.", e);
+            String message = "An error occurred during deleting invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
     }
 
@@ -142,19 +143,16 @@ public class InFileDatabase implements Database {
             log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        Optional<Invoice> invoice = Optional.empty();
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            while (lineIterator.hasNext()) {
-                String nextInvoice = lineIterator.nextLine();
-                if (nextInvoice.contains("\"invoiceId\":" + id)) {
-                    invoice = Optional.ofNullable(mapper.readValue(nextInvoice, Invoice.class));
-                    break;
-                }
-            }
+        try {
+            return fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .filter(invoice -> invoice.getId().equals(id))
+                .findFirst();
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during getting invoice by id.", e);
+            String message = "An error occurred during getting invoice by id.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return invoice;
     }
 
     @Override
@@ -163,33 +161,29 @@ public class InFileDatabase implements Database {
             log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        Optional<Invoice> invoice = Optional.empty();
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            while (lineIterator.hasNext()) {
-                String nextInvoice = lineIterator.nextLine();
-                if (nextInvoice.contains("\"number\":\"" + number)) {
-                    invoice = Optional.ofNullable(mapper.readValue(nextInvoice, Invoice.class));
-                    break;
-                }
-            }
+        try {
+            return fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .filter(invoice -> invoice.getNumber().equals(number))
+                .findFirst();
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during getting invoice by number.", e);
+            String message = "An error occurred during getting invoice by number.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return invoice;
     }
 
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
-        Collection<Invoice> invoices = new ArrayList<>(Collections.emptyList());
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            while (lineIterator.hasNext()) {
-                String nextInvoice = lineIterator.nextLine();
-                invoices.add(mapper.readValue(nextInvoice, Invoice.class));
-            }
+        try {
+            return fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .collect(Collectors.toList());
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during getting all invoices.", e);
+            String message = "An error occurred during getting all invoices.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return invoices;
     }
 
     @Override
@@ -197,7 +191,9 @@ public class InFileDatabase implements Database {
         try {
             fileHelper.clear(path);
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred deleting getting all invoices.", e);
+            String message = "An error occurred during deleting all invoices.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
     }
 
@@ -207,32 +203,35 @@ public class InFileDatabase implements Database {
             log.error("Attempt to check if invoice exists providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        if (fileHelper.exists(path)) {
-            try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-                while (lineIterator.hasNext()) {
-                    String nextInvoice = lineIterator.nextLine();
-                    if (nextInvoice.contains("\"invoiceId\":" + id)) {
-                        return true;
-                    }
-                }
-            } catch (IOException e) {
-                throw new DatabaseOperationException("An error occurred during checking if invoice exists.", e);
-            }
+        try {
+            return fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .anyMatch(invoice -> invoice.getId().equals(id));
+        } catch (IOException e) {
+            String message = "An error occurred during checking if invoice exists.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return false;
     }
 
     @Override
     public long count() throws DatabaseOperationException {
-        long count = 0;
-        try (LineIterator lineIterator = FileUtils.lineIterator(new File(path))) {
-            while (lineIterator.hasNext()) {
-                count++;
-                lineIterator.nextLine();
-            }
+        try {
+            return fileHelper.readLines(path).stream()
+                .map(this::deserialize)
+                .count();
         } catch (IOException e) {
-            throw new DatabaseOperationException("An error occurred during counting invoice entries.", e);
+            String message = "An error occurred during getting number of invoices.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return count;
+    }
+
+    private Invoice deserialize(String invoice) {
+        try {
+            return mapper.readValue(invoice, Invoice.class);
+        } catch (IOException e) {
+            throw new DeserializationException(e);
+        }
     }
 }
