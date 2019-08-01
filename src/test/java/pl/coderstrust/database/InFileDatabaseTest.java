@@ -66,18 +66,13 @@ class InFileDatabaseTest {
     }
 
     @Test
-    void test() {
-
-    }
-
-    @Test
     void shouldSaveInvoiceWithNullId() throws DatabaseOperationException, IOException {
         Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithNullId();
 
         Invoice savedInvoice = inFileDatabase.save(invoiceToSave);
 
-        assertEquals(invoiceInFile.getId() + 1, savedInvoice.getId());
         verify(fileHelper).writeLine(testPath, objectMapper.writeValueAsString(savedInvoice));
+        assertEquals(invoiceInFile.getId() + 1, savedInvoice.getId());
     }
 
     @Test
@@ -86,8 +81,8 @@ class InFileDatabaseTest {
 
         Invoice savedInvoice = inFileDatabase.save(invoiceToSave);
 
-        assertEquals(invoiceToSave.getId(), savedInvoice.getId());
         verify(fileHelper).writeLine(testPath, objectMapper.writeValueAsString(savedInvoice));
+        assertEquals(invoiceToSave.getId(), savedInvoice.getId());
     }
 
     @Test

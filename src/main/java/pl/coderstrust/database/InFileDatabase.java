@@ -231,7 +231,9 @@ public class InFileDatabase implements Database {
         try {
             return mapper.readValue(invoice, Invoice.class);
         } catch (IOException e) {
-            throw new DeserializationException(e);
+            String message = "An error occurred during deserializing invoices.";
+            log.error(message, e);
+            throw new DeserializationException(message, e);
         }
     }
 }
