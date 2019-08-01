@@ -56,7 +56,7 @@ public class InFileDatabase implements Database {
     }
 
     @Override
-    public Invoice save(Invoice invoice) throws DatabaseOperationException {
+    public synchronized Invoice save(Invoice invoice) throws DatabaseOperationException {
         if (invoice == null) {
             log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Passed invoice cannot be null.");
@@ -115,7 +115,7 @@ public class InFileDatabase implements Database {
     }
 
     @Override
-    public void delete(Long id) throws DatabaseOperationException {
+    public synchronized void delete(Long id) throws DatabaseOperationException {
         if (id == null) {
             log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
@@ -187,7 +187,7 @@ public class InFileDatabase implements Database {
     }
 
     @Override
-    public void deleteAll() throws DatabaseOperationException {
+    public synchronized void deleteAll() throws DatabaseOperationException {
         try {
             fileHelper.clear(path);
         } catch (IOException e) {
