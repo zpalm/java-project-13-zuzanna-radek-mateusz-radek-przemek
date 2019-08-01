@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public final class Invoice {
 
-    private final String id;
+    private final Long id;
     private final String number;
     private final LocalDate issuedDate;
     private final LocalDate dueDate;
@@ -29,7 +29,7 @@ public final class Invoice {
         return new Invoice.Builder();
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
@@ -94,7 +94,7 @@ public final class Invoice {
     }
 
     public static class Builder {
-        private String id;
+        private Long id;
         private String number;
         private LocalDate issuedDate;
         private LocalDate dueDate;
@@ -102,7 +102,7 @@ public final class Invoice {
         private Company buyer;
         private List<InvoiceEntry> entries;
 
-        public Builder withId(String id) {
+        public Builder withId(Long id) {
             this.id = id;
             return this;
         }

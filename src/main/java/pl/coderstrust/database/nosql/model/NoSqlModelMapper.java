@@ -7,7 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR)
-public interface ModelsMapper {
+public interface NoSqlModelMapper {
 
     @Mapping(target = "withId", source = "id")
     @Mapping(target = "withNumber", source = "number")
@@ -25,7 +25,7 @@ public interface ModelsMapper {
     @Mapping(target = "withSeller", source = "seller")
     @Mapping(target = "withBuyer", source = "buyer")
     @Mapping(target = "withEntries", source = "entries")
-    pl.coderstrust.model.Invoice toSqlInvoice(Invoice invoice);
+    pl.coderstrust.model.Invoice toInvoice(Invoice invoice);
 
     List<pl.coderstrust.model.Invoice> mapToSqlInvoices(List<Invoice> invoices);
 
@@ -44,7 +44,7 @@ public interface ModelsMapper {
     @Mapping(target = "withAccountNumber", source = "accountNumber")
     @Mapping(target = "withPhoneNumber", source = "phoneNumber")
     @Mapping(target = "withEmail", source = "email")
-    pl.coderstrust.model.Company toSqlCompany(Company company);
+    pl.coderstrust.model.Company toCompany(Company company);
 
     @Mapping(target = "withDescription", source = "description")
     @Mapping(target = "withQuantity", source = "quantity")
@@ -61,9 +61,9 @@ public interface ModelsMapper {
     @Mapping(target = "withNetValue", source = "netValue")
     @Mapping(target = "withGrossValue", source = "grossValue")
     @Mapping(target = "withVatRate", source = "vatRate")
-    pl.coderstrust.model.InvoiceEntry toSqlInvoiceEntry(InvoiceEntry invoiceEntry);
+    pl.coderstrust.model.InvoiceEntry toInvoiceEntry(InvoiceEntry invoiceEntry);
 
     Vat toNoSqlVat(pl.coderstrust.model.Vat vat);
 
-    pl.coderstrust.model.Vat toSqlVat(Vat vat);
+    pl.coderstrust.model.Vat toVat(Vat vat);
 }
