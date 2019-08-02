@@ -27,7 +27,7 @@ public interface NoSqlModelMapper {
     @Mapping(target = "withEntries", source = "entries")
     pl.coderstrust.model.Invoice toInvoice(Invoice invoice);
 
-    List<pl.coderstrust.model.Invoice> mapToSqlInvoices(List<Invoice> invoices);
+    List<pl.coderstrust.model.Invoice> mapToInvoices(List<Invoice> invoices);
 
     @Mapping(target = "withName", source = "name")
     @Mapping(target = "withAddress", source = "address")
