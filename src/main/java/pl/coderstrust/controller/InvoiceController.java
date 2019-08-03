@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.service.InvoiceEmailService;
 import pl.coderstrust.service.InvoicePdfService;
@@ -62,7 +63,8 @@ public class InvoiceController {
             return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
         } catch (Exception e) {
             log.error("An error occurred during getting all invoices.", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during getting all invoices.");
+            //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -86,10 +88,12 @@ public class InvoiceController {
                 return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
             }
             log.error("Attempt to get invoice by id that does not exist in database.");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by id that does not exist in database.");
+            //return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error("An error occurred during getting invoice by id.", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "An error occurred during getting invoice by id.");
+            //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
@@ -106,7 +110,8 @@ public class InvoiceController {
     public ResponseEntity<?> getByNumber(@RequestParam String number, @RequestHeader HttpHeaders httpHeaders) {
         if (number == null) {
             log.error("Attempt to get invoice providing null number.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to get invoice providing null number.");
+            //return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
         try {
             Optional<Invoice> invoice = invoiceService.getInvoiceByNumber(number);
