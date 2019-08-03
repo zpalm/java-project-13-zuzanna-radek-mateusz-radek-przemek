@@ -104,6 +104,7 @@
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
                         <exclude>/pl/coderstrust/service/InvoiceEmailService.class</exclude>
                         <exclude>/pl/coderstrust/helpers/*.class</exclude>
+                        <exclude>/pl/coderstrust/soap/InvoiceEndpoint.class</exclude>
                         <exclude>/pl/coderstrust/soap/bindingclasses/*.class</exclude>
                         <exclude>/pl/coderstrust/soap/mappers/*.class</exclude>
                         <exclude>/pl/coderstrust/configuration/ApplicationConfiguration.class</exclude>

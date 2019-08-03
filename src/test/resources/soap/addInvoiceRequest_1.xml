@@ -1,6 +1,6 @@
 <gs:addInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
     <gs:invoice>
-        <gs:id>1</gs:id>
+        <gs:id>5</gs:id>
         <gs:number>25/FA/456</gs:number>
         <gs:issuedDate>2019-06-30</gs:issuedDate>
         <gs:dueDate>2019-07-31</gs:dueDate>
