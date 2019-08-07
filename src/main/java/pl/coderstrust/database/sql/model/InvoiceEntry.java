@@ -109,7 +109,7 @@ public class InvoiceEntry {
             + '}';
     }
 
-    private static class Builder {
+    public static class Builder {
         private Long id;
         private String description;
         private Long quantity;
