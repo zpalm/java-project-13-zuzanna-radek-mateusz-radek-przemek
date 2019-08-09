@@ -41,7 +41,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapInvoiceEntryToSqlInvoiceEntry() {
+    void shouldMapInvoiceEntryToSqlInvoiceEntry() {
         pl.coderstrust.model.InvoiceEntry invoiceEntry = InvoiceEntryGenerator.getRandomEntry();
 
         InvoiceEntry sqlInvoiceEntry = sqlModelMapper.toSqlInvoiceEntry(invoiceEntry);
@@ -55,7 +55,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapSqlInvoiceEntryToInvoiceEntry() {
+    void shouldMapSqlInvoiceEntryToInvoiceEntry() {
         InvoiceEntry sqlInvoiceEntry = SqlInvoiceEntryGenerator.getRandomEntry();
 
         pl.coderstrust.model.InvoiceEntry invoiceEntry = sqlModelMapper.toInvoiceEntry(sqlInvoiceEntry);
@@ -69,7 +69,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapCompanyToSqlCompany() {
+    void shouldMapCompanyToSqlCompany() {
         pl.coderstrust.model.Company company = CompanyGenerator.getRandomCompany();
 
         Company sqlCompany = sqlModelMapper.toSqlCompany(company);
@@ -84,7 +84,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapSqlCompanyToCompany() {
+    void shouldMapSqlCompanyToCompany() {
         Company sqlCompany = SqlCompanyGenerator.getRandomCompany();
 
         pl.coderstrust.model.Company company = sqlModelMapper.toCompany(sqlCompany);
@@ -99,7 +99,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapVatToSqlVat() {
+    void shouldMapVatToSqlVat() {
         pl.coderstrust.model.Vat vat = VatRateGenerator.getRandomVatRate(pl.coderstrust.model.Vat.class);
 
         Vat sqlVat = sqlModelMapper.toSqlVat(vat);
@@ -108,7 +108,7 @@ public class SqlModelMapperTest {
     }
 
     @Test
-    void  shouldMapSqlVatToVat() {
+    void shouldMapSqlVatToVat() {
         Vat sqlVat = VatRateGenerator.getRandomVatRate(Vat.class);
 
         pl.coderstrust.model.Vat vat = sqlModelMapper.toVat(sqlVat);
