@@ -7,13 +7,13 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "pl.coderstrust.database.in-file")
 public class InFileDatabaseProperties {
 
-    private String path;
+    private String filePath;
 
-    public String getPath() {
-        return path;
+    public String getFilePath() {
+        return filePath;
     }
 
-    public void setPath(final String path) {
-        this.path = path;
+    public void setFilePath(final String filePath) {
+        this.filePath = filePath;
     }
 }

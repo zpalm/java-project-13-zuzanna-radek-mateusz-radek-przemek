@@ -52,17 +52,15 @@ class InFileDatabaseTest {
     @BeforeEach
     void setup() throws IOException {
         InFileDatabaseProperties inFileDatabasePropertiesTest = new InFileDatabaseProperties();
-        inFileDatabasePropertiesTest.setPath(testPath);
+        inFileDatabasePropertiesTest.setFilePath(testPath);
 
         doReturn(true).when(fileHelper).exists(testPath);
-        doReturn(false).when(fileHelper).isEmpty(testPath);
         doReturn(objectMapper.writeValueAsString(invoiceInFile)).when(fileHelper).readLastLine(testPath);
 
         inFileDatabase = new InFileDatabase(inFileDatabasePropertiesTest, objectMapper, fileHelper);
 
         verify(fileHelper).readLastLine(testPath);
         verify(fileHelper).exists(testPath);
-        verify(fileHelper).isEmpty(testPath);
     }
 
     @Test
@@ -73,16 +71,6 @@ class InFileDatabaseTest {
 
         verify(fileHelper).writeLine(testPath, objectMapper.writeValueAsString(savedInvoice));
         assertEquals(invoiceInFile.getId() + 1, savedInvoice.getId());
-    }
-
-    @Test
-    void shouldSaveInvoiceWithSetId() throws DatabaseOperationException, IOException {
-        Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificId(5L);
-
-        Invoice savedInvoice = inFileDatabase.save(invoiceToSave);
-
-        verify(fileHelper).writeLine(testPath, objectMapper.writeValueAsString(savedInvoice));
-        assertEquals(invoiceToSave.getId(), savedInvoice.getId());
     }
 
     @Test

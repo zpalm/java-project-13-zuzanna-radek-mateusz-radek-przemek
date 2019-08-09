@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -22,36 +23,33 @@ import pl.coderstrust.model.Invoice;
 public class InFileDatabase implements Database {
 
     private Logger log = LoggerFactory.getLogger(InFileDatabase.class);
-    private String path;
+    private String filePath;
     private ObjectMapper mapper;
     private FileHelper fileHelper;
     private AtomicLong nextId;
 
     @Autowired
-    public InFileDatabase(InFileDatabaseProperties inFileDatabaseProperties, ObjectMapper mapper, FileHelper fileHelper) {
-        this.path = inFileDatabaseProperties.getPath();
+    public InFileDatabase(InFileDatabaseProperties inFileDatabaseProperties, ObjectMapper mapper, FileHelper fileHelper) throws IOException {
+        this.filePath = inFileDatabaseProperties.getFilePath();
         this.mapper = mapper;
         this.fileHelper = fileHelper;
         init();
     }
 
-    private void init() {
-        if (!fileHelper.exists(path)) {
-            try {
-                fileHelper.create(path);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    private void init() throws IOException {
+        if (!fileHelper.exists(filePath)) {
+            fileHelper.create(filePath);
         }
-        try {
-            if (fileHelper.isEmpty(path)) {
-                this.nextId = new AtomicLong(0);
+        String lastInvoiceAsJson = fileHelper.readLastLine(filePath);
+        if (lastInvoiceAsJson == null) {
+            nextId = new AtomicLong(0);
+        } else {
+            Invoice invoice = deserializeJsonToInvoice(lastInvoiceAsJson);
+            if (invoice == null) {
+                nextId = new AtomicLong(0);
             } else {
-                Invoice lastInvoice = mapper.readValue(fileHelper.readLastLine(path), Invoice.class);
-                this.nextId = new AtomicLong(lastInvoice.getId());
+                nextId = new AtomicLong(invoice.getId());
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -61,16 +59,19 @@ public class InFileDatabase implements Database {
             log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
-        if (invoice.getId() == null || !exists(invoice.getId())) {
-            return insertInvoice(invoice);
+        try {
+            if (invoice.getId() == null || !exists(invoice.getId())) {
+                return insertInvoice(invoice);
+            }
+            return updateInvoice(invoice);
+        } catch (IOException e) {
+            String message = "An error occurred during saving invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return updateInvoice(invoice);
     }
 
-    private Invoice insertInvoice(Invoice invoice) throws DatabaseOperationException {
-        if (!(invoice.getId() == null)) {
-            nextId.set(invoice.getId() - 1);
-        }
+    private Invoice insertInvoice(Invoice invoice) throws IOException {
         Invoice insertedInvoice = Invoice.builder()
             .withId(nextId.incrementAndGet())
             .withNumber(invoice.getNumber())
@@ -80,17 +81,11 @@ public class InFileDatabase implements Database {
             .withBuyer(invoice.getBuyer())
             .withEntries(invoice.getEntries())
             .build();
-        try {
-            fileHelper.writeLine(path, mapper.writeValueAsString(insertedInvoice));
-        } catch (IOException e) {
-            String message = "An error occurred during saving invoice.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
-        }
+        fileHelper.writeLine(filePath, mapper.writeValueAsString(insertedInvoice));
         return insertedInvoice;
     }
 
-    private Invoice updateInvoice(Invoice invoice) throws DatabaseOperationException {
+    private Invoice updateInvoice(Invoice invoice) throws DatabaseOperationException, IOException {
         Invoice updatedInvoice = Invoice.builder()
             .withId(invoice.getId())
             .withNumber(invoice.getNumber())
@@ -100,17 +95,15 @@ public class InFileDatabase implements Database {
             .withBuyer(invoice.getBuyer())
             .withEntries(invoice.getEntries())
             .build();
-        try {
-            int index = fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .collect(Collectors.toList())
-                .indexOf(getById(invoice.getId()).get()) + 1;
-            fileHelper.replaceLine(path, mapper.writeValueAsString(updatedInvoice), index);
-        } catch (IOException e) {
-            String message = "An error occurred during saving invoice.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
+        List<Invoice> invoices = getInvoices();
+        Optional<Invoice> optionalInvoice = invoices
+            .stream()
+            .filter(i -> i.getId().equals(invoice.getId()))
+            .findFirst();
+        if (optionalInvoice.isEmpty()) {
+            throw new DatabaseOperationException("Invoice with following id doesn't exist");
         }
+        fileHelper.replaceLine(filePath, mapper.writeValueAsString(updatedInvoice), invoices.indexOf(optionalInvoice.get()) + 1);
         return updatedInvoice;
     }
 
@@ -120,16 +113,17 @@ public class InFileDatabase implements Database {
             log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        if (!exists(id)) {
-            log.error("Attempt to delete not existing invoice.");
-            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
-        }
         try {
-            int index = fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .collect(Collectors.toList())
-                .indexOf(getById(id).get()) + 1;
-            fileHelper.removeLine(path, index);
+            List<Invoice> invoices = getInvoices();
+            Optional<Invoice> optionalInvoice = invoices
+                .stream()
+                .filter(i -> i.getId().equals(id))
+                .findFirst();
+            if (optionalInvoice.isEmpty()) {
+                log.error("Attempt to delete not existing invoice.");
+                throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+            }
+            fileHelper.removeLine(filePath, invoices.indexOf(optionalInvoice.get()) + 1);
         } catch (IOException e) {
             String message = "An error occurred during deleting invoice.";
             log.error(message, e);
@@ -144,10 +138,9 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .filter(invoice -> invoice.getId().equals(id))
-                .findFirst();
+            return getInvoices().stream()
+                    .filter(invoice -> invoice.getId().equals(id))
+                    .findFirst();
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by id.";
             log.error(message, e);
@@ -162,10 +155,9 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .filter(invoice -> invoice.getNumber().equals(number))
-                .findFirst();
+            return getInvoices().stream()
+                    .filter(invoice -> invoice.getNumber().equals(number))
+                    .findFirst();
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by number.";
             log.error(message, e);
@@ -176,9 +168,7 @@ public class InFileDatabase implements Database {
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
         try {
-            return fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .collect(Collectors.toList());
+            return getInvoices();
         } catch (IOException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
@@ -189,7 +179,7 @@ public class InFileDatabase implements Database {
     @Override
     public synchronized void deleteAll() throws DatabaseOperationException {
         try {
-            fileHelper.clear(path);
+            fileHelper.clear(filePath);
         } catch (IOException e) {
             String message = "An error occurred during deleting all invoices.";
             log.error(message, e);
@@ -204,9 +194,7 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .anyMatch(invoice -> invoice.getId().equals(id));
+            return isInvoiceExist(id);
         } catch (IOException e) {
             String message = "An error occurred during checking if invoice exists.";
             log.error(message, e);
@@ -217,9 +205,7 @@ public class InFileDatabase implements Database {
     @Override
     public long count() throws DatabaseOperationException {
         try {
-            return fileHelper.readLines(path).stream()
-                .map(this::deserialize)
-                .count();
+            return getInvoices().size();
         } catch (IOException e) {
             String message = "An error occurred during getting number of invoices.";
             log.error(message, e);
@@ -227,13 +213,26 @@ public class InFileDatabase implements Database {
         }
     }
 
-    private Invoice deserialize(String invoice) {
+    private Invoice deserializeJsonToInvoice(String json) {
         try {
-            return mapper.readValue(invoice, Invoice.class);
+            return mapper.readValue(json, Invoice.class);
         } catch (IOException e) {
-            String message = "An error occurred during deserializing invoices.";
-            log.error(message, e);
-            throw new DeserializationException(message, e);
+            return null;
         }
+    }
+
+    private boolean isInvoiceExist(long id) throws IOException {
+        List<Invoice> invoices = getInvoices();
+        Optional<Invoice> invoice = invoices
+            .stream()
+            .filter(i -> i.getId().equals(id))
+            .findFirst();
+        return invoice.isPresent();
+    }
+
+    private List<Invoice> getInvoices() throws IOException {
+        return fileHelper.readLines(filePath).stream()
+            .map(this::deserializeJsonToInvoice)
+            .collect(Collectors.toList());
     }
 }
