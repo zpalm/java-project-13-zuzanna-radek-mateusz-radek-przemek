@@ -2,6 +2,8 @@ package pl.coderstrust.database.nosql.model;
 
 import java.util.Objects;
 
+import org.springframework.data.annotation.PersistenceConstructor;
+
 public final class Company {
 
     private final String name;
@@ -10,6 +12,16 @@ public final class Company {
     private final String accountNumber;
     private final String phoneNumber;
     private final String email;
+
+    @PersistenceConstructor
+    private Company(String name, String address, String taxId, String accountNumber, String phoneNumber, String email) {
+        this.name = name;
+        this.address = address;
+        this.taxId = taxId;
+        this.accountNumber = accountNumber;
+        this.phoneNumber = phoneNumber;
+        this.email = email;
+    }
 
     private Company(Builder builder) {
         name = builder.name;

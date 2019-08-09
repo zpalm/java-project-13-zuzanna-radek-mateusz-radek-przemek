@@ -3,6 +3,8 @@ package pl.coderstrust.database.nosql.model;
 import java.math.BigDecimal;
 import java.util.Objects;
 
+import org.springframework.data.annotation.PersistenceConstructor;
+
 public final class InvoiceEntry {
 
     private final String description;
@@ -11,6 +13,16 @@ public final class InvoiceEntry {
     private final BigDecimal netValue;
     private final BigDecimal grossValue;
     private final Vat vatRate;
+
+    @PersistenceConstructor
+    private InvoiceEntry(String description, Long quantity, BigDecimal price, BigDecimal netValue, BigDecimal grossValue, Vat vatRate) {
+        this.description = description;
+        this.quantity = quantity;
+        this.price = price;
+        this.netValue = netValue;
+        this.grossValue = grossValue;
+        this.vatRate = vatRate;
+    }
 
     private InvoiceEntry(Builder builder) {
         description = builder.description;
