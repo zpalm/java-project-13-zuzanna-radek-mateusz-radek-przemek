@@ -60,7 +60,7 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
         try {
-            if (invoice.getId() == null || !exists(invoice.getId())) {
+            if (invoice.getId() == null || !isInvoiceExist(invoice.getId())) {
                 return insertInvoice(invoice);
             }
             return updateInvoice(invoice);
