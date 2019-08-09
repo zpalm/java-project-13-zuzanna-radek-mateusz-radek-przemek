@@ -64,8 +64,8 @@ class InFileDatabaseTest {
     }
 
     @Test
-    void shouldSaveInvoiceWithNullId() throws DatabaseOperationException, IOException {
-        Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithNullId();
+    void shouldSaveInvoice() throws DatabaseOperationException, IOException {
+        Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
 
         Invoice savedInvoice = inFileDatabase.save(invoiceToSave);
 
