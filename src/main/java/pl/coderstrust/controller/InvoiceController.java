@@ -152,11 +152,12 @@ public class InvoiceController {
 
     }
 
-    /*@GetMapping("/test")
-    public void test(){
-        throw new RuntimeException("test exception");
+    @GetMapping("/test")
+    public  ResponseEntity<?> test() throws ServiceOperationException {
+        int a = 10/0;
+        return new ResponseEntity<>(HttpStatus.OK);
     }
-*/
+
     @PutMapping(value = "/{id}", produces = "application/json", consumes = "application/json")
     @ApiOperation(value = "Update invoice", notes = "Update invoice with provided id", response = Invoice.class)
     @ApiResponses({
@@ -219,6 +220,8 @@ public class InvoiceController {
             //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
+
 
     private ResponseEntity<?> createPdfResponse(byte[] array) {
         HttpHeaders responseHeaders = new HttpHeaders();
