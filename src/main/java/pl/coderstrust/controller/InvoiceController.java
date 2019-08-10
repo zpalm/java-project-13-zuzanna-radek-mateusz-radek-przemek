@@ -27,9 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import pl.coderstrust.controller.exceptions.InvoiceIdNotFoundException;
-import pl.coderstrust.controller.exceptions.InvoiceNumberNotFoundException;
-import pl.coderstrust.controller.exceptions.NullInvoiceNumberException;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.service.InvoiceEmailService;
 import pl.coderstrust.service.InvoicePdfService;
@@ -79,7 +76,7 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     @ApiImplicitParam(required = true, name = "id", value = "Id of the invoice to get", dataType = "Long")
-    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException, InvoiceIdNotFoundException {
+    public ResponseEntity<?> getById(@PathVariable("id") Long id, @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
         Optional<Invoice> invoice = invoiceService.getInvoiceById(id);
         if (invoice.isEmpty()) {
             log.error("Attempt to get invoice by id that does not exist in database.");
@@ -102,7 +99,7 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     @ApiImplicitParam(required = true, name = "number", value = "Number of the invoice to get", dataType = "String")
-    public ResponseEntity<?> getByNumber(@RequestParam String number, @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException, InvoiceNumberNotFoundException, NullInvoiceNumberException {
+    public ResponseEntity<?> getByNumber(@RequestParam String number, @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
         if (number == null) {
             log.error("Attempt to get invoice providing null number.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to get invoice providing null number.");
