@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -40,15 +41,19 @@ public class InFileDatabase implements Database {
         if (!fileHelper.exists(filePath)) {
             fileHelper.create(filePath);
         }
+        nextId = new AtomicLong(getLastInvoiceId());
+    }
+
+    private long getLastInvoiceId() throws IOException {
         String lastInvoiceAsJson = fileHelper.readLastLine(filePath);
         if (lastInvoiceAsJson == null) {
-            nextId = new AtomicLong(0);
+            return 0;
         } else {
             Invoice invoice = deserializeJsonToInvoice(lastInvoiceAsJson);
             if (invoice == null) {
-                nextId = new AtomicLong(0);
+                return 0;
             } else {
-                nextId = new AtomicLong(invoice.getId());
+                return invoice.getId();
             }
         }
     }
@@ -86,25 +91,8 @@ public class InFileDatabase implements Database {
     }
 
     private Invoice updateInvoice(Invoice invoice) throws DatabaseOperationException, IOException {
-        Invoice updatedInvoice = Invoice.builder()
-            .withId(invoice.getId())
-            .withNumber(invoice.getNumber())
-            .withIssuedDate(invoice.getIssuedDate())
-            .withDueDate(invoice.getDueDate())
-            .withSeller(invoice.getSeller())
-            .withBuyer(invoice.getBuyer())
-            .withEntries(invoice.getEntries())
-            .build();
-        List<Invoice> invoices = getInvoices();
-        Optional<Invoice> optionalInvoice = invoices
-            .stream()
-            .filter(i -> i.getId().equals(invoice.getId()))
-            .findFirst();
-        if (optionalInvoice.isEmpty()) {
-            throw new DatabaseOperationException("Invoice with following id doesn't exist");
-        }
-        fileHelper.replaceLine(filePath, mapper.writeValueAsString(updatedInvoice), invoices.indexOf(optionalInvoice.get()) + 1);
-        return updatedInvoice;
+        fileHelper.replaceLine(filePath, mapper.writeValueAsString(invoice), getPositionInDatabase(invoice.getId()));
+        return invoice;
     }
 
     @Override
@@ -114,16 +102,7 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            List<Invoice> invoices = getInvoices();
-            Optional<Invoice> optionalInvoice = invoices
-                .stream()
-                .filter(i -> i.getId().equals(id))
-                .findFirst();
-            if (optionalInvoice.isEmpty()) {
-                log.error("Attempt to delete not existing invoice.");
-                throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
-            }
-            fileHelper.removeLine(filePath, invoices.indexOf(optionalInvoice.get()) + 1);
+            fileHelper.removeLine(filePath, getPositionInDatabase(id));
         } catch (IOException e) {
             String message = "An error occurred during deleting invoice.";
             log.error(message, e);
@@ -222,17 +201,28 @@ public class InFileDatabase implements Database {
     }
 
     private boolean isInvoiceExist(long id) throws IOException {
-        List<Invoice> invoices = getInvoices();
-        Optional<Invoice> invoice = invoices
+        return getInvoices()
             .stream()
-            .filter(i -> i.getId().equals(id))
-            .findFirst();
-        return invoice.isPresent();
+            .anyMatch(invoice -> invoice.getId().equals(id));
     }
 
     private List<Invoice> getInvoices() throws IOException {
         return fileHelper.readLines(filePath).stream()
             .map(this::deserializeJsonToInvoice)
+            .filter(Objects::nonNull)
             .collect(Collectors.toList());
+    }
+
+    private int getPositionInDatabase(Long id) throws IOException, DatabaseOperationException {
+        List<Invoice> invoices = getInvoices();
+        Optional<Invoice> optionalInvoice = invoices
+            .stream()
+            .filter(i -> i.getId().equals(id))
+            .findFirst();
+        if (optionalInvoice.isEmpty()) {
+            log.error("Attempt to operate on a non existing invoice.");
+            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+        }
+        return invoices.indexOf(optionalInvoice.get()) + 1;
     }
 }
