@@ -38,15 +38,11 @@ public class MongoDatabase implements Database {
     private void init() {
         Query findQuery = new Query();
         findQuery.with(new Sort(Direction.DESC, "id"));
-        try {
-            Invoice lastInvoice = mongoTemplate.findOne(findQuery, Invoice.class);
-            if (lastInvoice == null) {
-                this.nextId = new AtomicLong(0);
-            } else {
-                this.nextId = new AtomicLong(lastInvoice.getId());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        Invoice lastInvoice = mongoTemplate.findOne(findQuery, Invoice.class);
+        if (lastInvoice == null) {
+            nextId = new AtomicLong(0);
+        } else {
+            nextId = new AtomicLong(lastInvoice.getId());
         }
     }
 
@@ -101,8 +97,8 @@ public class MongoDatabase implements Database {
             .withEntries(noSqlInvoiceToUpdate.getEntries())
             .build();
         try {
-            Invoice updatedInvoice = mongoTemplate.save(updatedNoSqlInvoice);
-            return noSqlModelMapper.toInvoice(updatedInvoice);
+            Invoice savedNoSqlInvoice = mongoTemplate.save(updatedNoSqlInvoice);
+            return noSqlModelMapper.toInvoice(savedNoSqlInvoice);
         } catch (Exception e) {
             String message = "An error occurred during updating invoice.";
             log.error(message, e);
@@ -116,14 +112,14 @@ public class MongoDatabase implements Database {
             log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
-        Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("id").is(id));
-        if (!mongoTemplate.exists(findQuery, Invoice.class)) {
+        Query existsQuery = new Query();
+        existsQuery.addCriteria(Criteria.where("id").is(id));
+        if (!mongoTemplate.exists(existsQuery, Invoice.class)) {
             log.error("Attempt to delete not existing invoice.");
             throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
         }
         try {
-            mongoTemplate.remove(findQuery, Invoice.class);
+            mongoTemplate.remove(existsQuery, Invoice.class);
         } catch (Exception e) {
             String message = "An error occurred during deleting invoice.";
             log.error(message, e);
