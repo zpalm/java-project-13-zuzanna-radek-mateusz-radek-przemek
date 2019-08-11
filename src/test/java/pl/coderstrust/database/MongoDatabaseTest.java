@@ -11,11 +11,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mongodb.MongoException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-
-import com.mongodb.MongoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,9 +45,9 @@ class MongoDatabaseTest {
     void shouldSaveInvoice() throws DatabaseOperationException {
         //given
         Invoice noSqlSavedInvoice = NoSqlInvoiceGenerator.getRandomInvoice();
-        pl.coderstrust.model.Invoice savedInvoice = noSqlModelMapper.toInvoice(noSqlSavedInvoice);
         Query existsQuery = new Query();
         existsQuery.addCriteria(Criteria.where("id").is(noSqlSavedInvoice.getId()));
+        pl.coderstrust.model.Invoice savedInvoice = noSqlModelMapper.toInvoice(noSqlSavedInvoice);
         when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(false);
         when(mongoTemplate.save(any(Invoice.class))).thenReturn(noSqlSavedInvoice);
 
@@ -69,9 +68,9 @@ class MongoDatabaseTest {
     @Test
     void shouldUpdateInvoice() throws DatabaseOperationException {
         Invoice noSqlInvoiceToUpdate = NoSqlInvoiceGenerator.getRandomInvoice();
-        pl.coderstrust.model.Invoice updatedInvoice = noSqlModelMapper.toInvoice(noSqlInvoiceToUpdate);
         Query existsQuery = new Query();
         existsQuery.addCriteria(Criteria.where("id").is(noSqlInvoiceToUpdate.getId()));
+        pl.coderstrust.model.Invoice updatedInvoice = noSqlModelMapper.toInvoice(noSqlInvoiceToUpdate);
         when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(true);
         when(mongoTemplate.findOne(existsQuery, Invoice.class)).thenReturn(noSqlInvoiceToUpdate);
         when(mongoTemplate.save(any(Invoice.class))).thenReturn(noSqlInvoiceToUpdate);
@@ -184,9 +183,9 @@ class MongoDatabaseTest {
     void shouldReturnInvoiceByNumber() throws DatabaseOperationException {
         //given
         Invoice noSqlInvoice = NoSqlInvoiceGenerator.getRandomInvoice();
-        pl.coderstrust.model.Invoice invoice = noSqlModelMapper.toInvoice(noSqlInvoice);
         Query findQuery = new Query();
         findQuery.addCriteria(Criteria.where("number").is("123"));
+        pl.coderstrust.model.Invoice invoice = noSqlModelMapper.toInvoice(noSqlInvoice);
         when(mongoTemplate.findOne(findQuery, Invoice.class)).thenReturn(noSqlInvoice);
 
         //when
