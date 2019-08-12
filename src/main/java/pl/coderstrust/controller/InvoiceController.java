@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.ResponseHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,13 +59,10 @@ public class InvoiceController {
         @ApiResponse(code = 406, message = "Not acceptable format"),
         @ApiResponse(code = 500, message = "Internal server error")
     })
-    public ResponseEntity<?> getAll() {
-        try {
-            return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
-        } catch (Exception e) {
-            log.error("An error occurred during getting all invoices.", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during getting all invoices.");
-        }
+    public ResponseEntity<?> getAll(@RequestHeader HttpHeaders headers) throws ServiceOperationException {
+        return new ResponseEntity<>(invoiceService.getAllInvoices(), HttpStatus.OK);
+        //log.error("An error occurred during getting all invoices.");
+        //throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during getting all invoices.");
     }
 
     @GetMapping(value = "/{id}", produces = {"application/json", "application/pdf"})
@@ -82,6 +80,7 @@ public class InvoiceController {
             log.error("Attempt to get invoice by id that does not exist in database.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by id that does not exist in database.");
         }
+
         if (isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
             return createPdfResponse(invoiceAsPdf);
@@ -127,11 +126,14 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     @ApiImplicitParam(required = true, name = "invoice", value = "New invoice data", dataType = "Invoice")
-    public ResponseEntity<?> add(@RequestBody Invoice invoice) throws ServiceOperationException {
+    public ResponseEntity<?> add(@RequestBody Invoice invoice, @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
+        log.info("Trying to add invoice");
         if (invoice == null) {
             log.error("Attempt to add null invoice.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to add null invoice.");
         }
+
+        log.info("Show the header with MediaType value: {}", httpHeaders.getAccept().toString());
 
         if (invoice.getId() != null && invoiceService.invoiceExists(invoice.getId())) {
             log.error("Attempt to add invoice already existing in database.");
@@ -150,8 +152,8 @@ public class InvoiceController {
     }
 
     @GetMapping("/test")
-    public  ResponseEntity<?> test() throws ServiceOperationException {
-        int a = 10/0;
+    public ResponseEntity<?> test() throws ServiceOperationException {
+        int a = 10 / 0;
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -173,7 +175,6 @@ public class InvoiceController {
         if (invoice == null) {
             log.error("Attempt to update invoice providing null invoice.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to update invoice providing null invoice.");
-            //return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
 
         if (!id.equals(invoice.getId())) {
@@ -201,23 +202,20 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error")
     })
     @ApiImplicitParam(required = true, name = "id", value = "Id of invoice to delete", dataType = "Long")
-    public ResponseEntity<?> remove(@PathVariable("id") Long id) {
-        try {
+    public ResponseEntity<?> remove(@PathVariable("id") Long id) throws ServiceOperationException {
+
             if (!invoiceService.invoiceExists(id)) {
                 log.error("Attempt to delete not existing invoice.");
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to delete not existing invoice.");
-                //return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
             invoiceService.deleteInvoiceById(id);
             log.debug(String.format("Deleted invoice with id %d.", id));
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (Exception e) {
-            log.error("An error occurred during deleting invoice.", e);
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during deleting invoice.");
-            //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
+            //log.error("An error occurred during deleting invoice.", e);
+            //throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "An error occurred during deleting invoice.");
+            //return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
 
 
     private ResponseEntity<?> createPdfResponse(byte[] array) {
