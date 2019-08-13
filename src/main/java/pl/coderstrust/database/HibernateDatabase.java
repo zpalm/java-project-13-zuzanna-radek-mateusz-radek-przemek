@@ -1,6 +1,7 @@
 package pl.coderstrust.database;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
@@ -11,7 +12,8 @@ import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Repository;
 import pl.coderstrust.database.hibernate.InvoiceRepository;
-import pl.coderstrust.model.Invoice;
+import pl.coderstrust.database.sql.model.Invoice;
+import pl.coderstrust.database.sql.model.SqlModelMapper;
 
 @Repository
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "hibernate")
@@ -20,19 +22,23 @@ public class HibernateDatabase implements Database {
     private Logger log = LoggerFactory.getLogger(HibernateDatabase.class);
 
     private final InvoiceRepository invoiceRepository;
+    private SqlModelMapper sqlModelMapper;
 
-    public HibernateDatabase(InvoiceRepository invoiceRepository) {
+    public HibernateDatabase(InvoiceRepository invoiceRepository, SqlModelMapper sqlModelMapper) {
         this.invoiceRepository = invoiceRepository;
+        this.sqlModelMapper = sqlModelMapper;
     }
 
     @Override
-    public Invoice save(Invoice invoice) throws DatabaseOperationException {
+    public pl.coderstrust.model.Invoice save(pl.coderstrust.model.Invoice invoice) throws DatabaseOperationException {
         if (invoice == null) {
             log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
         try {
-            return invoiceRepository.save(invoice);
+            Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
+            Invoice savedInvoice = invoiceRepository.save(sqlInvoice);
+            return sqlModelMapper.toInvoice(savedInvoice);
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during saving invoice.";
             log.error(message, e);
@@ -60,13 +66,18 @@ public class HibernateDatabase implements Database {
     }
 
     @Override
-    public Optional<Invoice> getById(Long id) throws DatabaseOperationException {
+    public Optional<pl.coderstrust.model.Invoice> getById(Long id) throws DatabaseOperationException {
         if (id == null) {
             log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
         try {
-            return invoiceRepository.findById(id);
+            Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
+            if (foundInvoice.isPresent()) {
+                return Optional.of(sqlModelMapper.toInvoice(foundInvoice.get()));
+            } else {
+                return Optional.empty();
+            }
         } catch (NoSuchElementException e) {
             String message = "An error occurred during getting invoice by id.";
             log.error(message, e);
@@ -75,14 +86,19 @@ public class HibernateDatabase implements Database {
     }
 
     @Override
-    public Optional<Invoice> getByNumber(String number) throws DatabaseOperationException {
+    public Optional<pl.coderstrust.model.Invoice> getByNumber(String number) throws DatabaseOperationException {
         if (number == null) {
             log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Number cannot be null.");
         }
         Example<Invoice> example = Example.of(new Invoice.Builder().withNumber(number).build());
         try {
-            return invoiceRepository.findOne(example);
+            Optional<Invoice> foundInvoice = invoiceRepository.findOne(example);
+            if (foundInvoice.isPresent()) {
+                return Optional.of(sqlModelMapper.toInvoice(foundInvoice.get()));
+            } else {
+                return Optional.empty();
+            }
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during getting invoice by number.";
             log.error(message, e);
@@ -91,9 +107,10 @@ public class HibernateDatabase implements Database {
     }
 
     @Override
-    public Collection<Invoice> getAll() throws DatabaseOperationException {
+    public Collection<pl.coderstrust.model.Invoice> getAll() throws DatabaseOperationException {
         try {
-            return invoiceRepository.findAll();
+            List<Invoice> invoices = invoiceRepository.findAll();
+            return sqlModelMapper.mapToInvoices(invoices);
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
