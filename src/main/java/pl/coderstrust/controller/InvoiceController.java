@@ -78,7 +78,6 @@ public class InvoiceController {
             log.error("Attempt to get invoice by id that does not exist in database.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by id that does not exist in database.");
         }
-
         if (PdfHelper.isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
             return PdfHelper.createPdfResponse(invoiceAsPdf);
@@ -129,7 +128,6 @@ public class InvoiceController {
             log.error("Attempt to add null invoice.");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to add null invoice.");
         }
-
         if (invoice.getId() != null && invoiceService.invoiceExists(invoice.getId())) {
             log.error("Attempt to add invoice already existing in database.");
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Attempt to add invoice already existing in database.");
@@ -182,7 +180,6 @@ public class InvoiceController {
     })
     @ApiImplicitParam(required = true, name = "id", value = "Id of invoice to delete", dataType = "Long")
     public ResponseEntity<?> remove(@PathVariable("id") Long id) throws ServiceOperationException {
-
         if (!invoiceService.invoiceExists(id)) {
             log.error("Attempt to delete not existing invoice.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to delete not existing invoice.");

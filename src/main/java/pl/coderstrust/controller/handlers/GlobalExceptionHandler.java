@@ -25,11 +25,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         if (e instanceof ResponseStatusException) {
             return new ResponseEntity<>(createExceptionBody(((ResponseStatusException) e).getStatus(), e, ((ResponseStatusException) e).getReason(), request.getDescription(false)), ((ResponseStatusException) e).getStatus());
         }
-
         if (PdfHelper.isPdfResponse(request.getHeaderValues("accept"))) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
         log.error("Handling {} due to {}", e.getClass().getSimpleName(), e.getMessage());
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         return new ResponseEntity<>(createExceptionBody(status, e, "An unexpected error occured", request.getDescription(false)), status);
