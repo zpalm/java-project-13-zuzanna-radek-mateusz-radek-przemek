@@ -1,10 +1,8 @@
 package pl.coderstrust.database;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,8 +35,7 @@ public class HibernateDatabase implements Database {
         }
         try {
             Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
-            Invoice savedInvoice = invoiceRepository.save(sqlInvoice);
-            return sqlModelMapper.toInvoice(savedInvoice);
+            return sqlModelMapper.toInvoice(invoiceRepository.save(sqlInvoice));
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during saving invoice.";
             log.error(message, e);
@@ -75,9 +72,8 @@ public class HibernateDatabase implements Database {
             Optional<Invoice> foundInvoice = invoiceRepository.findById(id);
             if (foundInvoice.isPresent()) {
                 return Optional.of(sqlModelMapper.toInvoice(foundInvoice.get()));
-            } else {
-                return Optional.empty();
             }
+            return Optional.empty();
         } catch (NoSuchElementException e) {
             String message = "An error occurred during getting invoice by id.";
             log.error(message, e);
@@ -96,9 +92,8 @@ public class HibernateDatabase implements Database {
             Optional<Invoice> foundInvoice = invoiceRepository.findOne(example);
             if (foundInvoice.isPresent()) {
                 return Optional.of(sqlModelMapper.toInvoice(foundInvoice.get()));
-            } else {
-                return Optional.empty();
             }
+            return Optional.empty();
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during getting invoice by number.";
             log.error(message, e);
@@ -109,8 +104,7 @@ public class HibernateDatabase implements Database {
     @Override
     public Collection<pl.coderstrust.model.Invoice> getAll() throws DatabaseOperationException {
         try {
-            List<Invoice> invoices = invoiceRepository.findAll();
-            return sqlModelMapper.mapToInvoices(invoices);
+            return sqlModelMapper.mapToInvoices(invoiceRepository.findAll());
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
