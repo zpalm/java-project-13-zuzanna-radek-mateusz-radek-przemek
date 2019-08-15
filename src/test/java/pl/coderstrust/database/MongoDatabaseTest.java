@@ -89,7 +89,7 @@ class MongoDatabaseTest {
         //given
         pl.coderstrust.model.Invoice invoice = InvoiceGenerator.getRandomInvoice();
         Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("id").is(1L));
+        findQuery.addCriteria(Criteria.where("id").is(invoice.getId()));
         when(mongoTemplate.findOne(findQuery, Invoice.class)).thenThrow(new MongoException(""));
 
         //then
