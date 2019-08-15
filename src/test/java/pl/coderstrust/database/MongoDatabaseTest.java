@@ -130,6 +130,18 @@ class MongoDatabaseTest {
     }
 
     @Test
+    void deleteMethodShouldThrowDatabaseOperationExceptionWhenErrorOccurDuringDeletingInvoice() {
+        //given
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(1L));
+        when(mongoTemplate.findAndRemove(findQuery, Invoice.class)).thenThrow(new MongoException(""));
+
+        //then
+        assertThrows(DatabaseOperationException.class, () -> mongoDatabase.delete(1L));
+        verify(mongoTemplate).findAndRemove(findQuery, Invoice.class);
+    }
+
+    @Test
     void shouldReturnInvoiceById() throws DatabaseOperationException {
         //given
         Invoice noSqlInvoice = NoSqlInvoiceGenerator.getRandomInvoice();
