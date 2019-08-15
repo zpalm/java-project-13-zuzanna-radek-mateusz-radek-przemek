@@ -10,5 +10,4 @@ import org.springframework.context.annotation.Import;
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "mongo")
 @Import({MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 public class MongoConfiguration {
-
 }

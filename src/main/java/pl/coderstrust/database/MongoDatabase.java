@@ -1,10 +1,8 @@
 package pl.coderstrust.database;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,15 +50,20 @@ public class MongoDatabase implements Database {
             log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Invoice cannot be null.");
         }
-        Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("id").is(invoice.getId()));
-        if (invoice.getId() == null || !mongoTemplate.exists(findQuery, Invoice.class)) {
-            return insertInvoice(invoice);
+        try {
+            Invoice invoiceInDatabase = getInvoiceById(invoice.getId());
+            if (invoiceInDatabase == null) {
+                return insertInvoice(invoice);
+            }
+            return updateInvoice(invoice, invoiceInDatabase.getMongoId());
+        } catch (Exception e) {
+            String message = "An error occurred during saving invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return updateInvoice(invoice);
     }
 
-    private pl.coderstrust.model.Invoice insertInvoice(pl.coderstrust.model.Invoice invoice) throws DatabaseOperationException {
+    private pl.coderstrust.model.Invoice insertInvoice(pl.coderstrust.model.Invoice invoice) {
         pl.coderstrust.model.Invoice invoiceToInsert = pl.coderstrust.model.Invoice.builder()
             .withId(nextId.getAndIncrement())
             .withNumber(invoice.getNumber())
@@ -70,40 +73,23 @@ public class MongoDatabase implements Database {
             .withBuyer(invoice.getBuyer())
             .withEntries(invoice.getEntries())
             .build();
-        Invoice noSqlInvoiceToInsert = noSqlModelMapper.toNoSqlInvoice(invoiceToInsert);
-        try {
-            Invoice noSqlInsertedInvoice = mongoTemplate.save(noSqlInvoiceToInsert);
-            return noSqlModelMapper.toInvoice(noSqlInsertedInvoice);
-        } catch (Exception e) {
-            String message = "An error occurred during saving invoice.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
-        }
+        Invoice insertedInvoice = mongoTemplate.save(noSqlModelMapper.toNoSqlInvoice(invoiceToInsert));
+        return noSqlModelMapper.toInvoice(insertedInvoice);
     }
 
-    private pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.model.Invoice invoice) throws DatabaseOperationException {
-        Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("id").is(invoice.getId()));
-        Invoice existingNoSqlInvoice = mongoTemplate.findOne(findQuery, Invoice.class);
-        Invoice noSqlInvoiceToUpdate = noSqlModelMapper.toNoSqlInvoice(invoice);
-        Invoice updatedNoSqlInvoice = Invoice.builder()
-            .withMongoId(existingNoSqlInvoice.getMongoId())
-            .withId(noSqlInvoiceToUpdate.getId())
-            .withNumber(noSqlInvoiceToUpdate.getNumber())
-            .withIssuedDate(noSqlInvoiceToUpdate.getIssuedDate())
-            .withDueDate(noSqlInvoiceToUpdate.getDueDate())
-            .withSeller(noSqlInvoiceToUpdate.getSeller())
-            .withBuyer(noSqlInvoiceToUpdate.getBuyer())
-            .withEntries(noSqlInvoiceToUpdate.getEntries())
+    private pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.model.Invoice invoice, String mongoId) {
+        Invoice mappedInvoice = noSqlModelMapper.toNoSqlInvoice(invoice);
+        Invoice invoiceToUpdate = Invoice.builder()
+            .withMongoId(mongoId)
+            .withId(mappedInvoice.getId())
+            .withNumber(mappedInvoice.getNumber())
+            .withIssuedDate(mappedInvoice.getIssuedDate())
+            .withDueDate(mappedInvoice.getDueDate())
+            .withSeller(mappedInvoice.getSeller())
+            .withBuyer(mappedInvoice.getBuyer())
+            .withEntries(mappedInvoice.getEntries())
             .build();
-        try {
-            Invoice savedNoSqlInvoice = mongoTemplate.save(updatedNoSqlInvoice);
-            return noSqlModelMapper.toInvoice(savedNoSqlInvoice);
-        } catch (Exception e) {
-            String message = "An error occurred during updating invoice.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
-        }
+        return noSqlModelMapper.toInvoice(mongoTemplate.save(invoiceToUpdate));
     }
 
     @Override
@@ -112,18 +98,10 @@ public class MongoDatabase implements Database {
             log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(id));
-        if (!mongoTemplate.exists(existsQuery, Invoice.class)) {
+        Invoice removedInvoice = mongoTemplate.findAndRemove(Query.query(Criteria.where("id").is(id)), Invoice.class);
+        if (removedInvoice == null) {
             log.error("Attempt to delete not existing invoice.");
             throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
-        }
-        try {
-            mongoTemplate.remove(existsQuery, Invoice.class);
-        } catch (Exception e) {
-            String message = "An error occurred during deleting invoice.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
         }
     }
 
@@ -133,10 +111,8 @@ public class MongoDatabase implements Database {
             log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
-        Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("id").is(id));
         try {
-            Invoice invoice = mongoTemplate.findOne(findQuery, Invoice.class);
+            Invoice invoice = getInvoiceById(id);
             if (invoice == null) {
                 return Optional.empty();
             }
@@ -148,16 +124,18 @@ public class MongoDatabase implements Database {
         }
     }
 
+    private Invoice getInvoiceById(Long id) {
+        return mongoTemplate.findOne(Query.query(Criteria.where("id").is(id)), Invoice.class);
+    }
+
     @Override
     public Optional<pl.coderstrust.model.Invoice> getByNumber(String number) throws DatabaseOperationException {
         if (number == null) {
             log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Number cannot be null.");
         }
-        Query findQuery = new Query();
-        findQuery.addCriteria(Criteria.where("number").is(number));
         try {
-            Invoice invoice = mongoTemplate.findOne(findQuery, Invoice.class);
+            Invoice invoice = mongoTemplate.findOne(Query.query(Criteria.where("number").is(number)), Invoice.class);
             if (invoice == null) {
                 return Optional.empty();
             }
@@ -172,8 +150,7 @@ public class MongoDatabase implements Database {
     @Override
     public Collection<pl.coderstrust.model.Invoice> getAll() throws DatabaseOperationException {
         try {
-            List<Invoice> noSqlInvoices = mongoTemplate.findAll(Invoice.class);
-            return noSqlModelMapper.mapToInvoices(noSqlInvoices);
+            return noSqlModelMapper.mapToInvoices(mongoTemplate.findAll(Invoice.class));
         } catch (Exception e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
@@ -198,10 +175,8 @@ public class MongoDatabase implements Database {
             log.error("Attempt to check if invoice exists providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(id));
         try {
-            return mongoTemplate.exists(existsQuery, Invoice.class);
+            return mongoTemplate.exists(Query.query(Criteria.where("id").is(id)), Invoice.class);
         } catch (Exception e) {
             String message = "An error occurred during checking if invoice exists.";
             log.error(message, e);

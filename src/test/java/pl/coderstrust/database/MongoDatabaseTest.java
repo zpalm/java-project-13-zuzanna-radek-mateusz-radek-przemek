@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -26,6 +25,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import pl.coderstrust.database.nosql.model.Invoice;
 import pl.coderstrust.database.nosql.model.NoSqlModelMapper;
 import pl.coderstrust.database.nosql.model.NoSqlModelMapperImpl;
+import pl.coderstrust.generators.InvoiceGenerator;
 import pl.coderstrust.generators.NoSqlInvoiceGenerator;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,10 +45,10 @@ class MongoDatabaseTest {
     void shouldSaveInvoice() throws DatabaseOperationException {
         //given
         Invoice noSqlSavedInvoice = NoSqlInvoiceGenerator.getRandomInvoice();
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(noSqlSavedInvoice.getId()));
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(noSqlSavedInvoice.getId()));
         pl.coderstrust.model.Invoice savedInvoice = noSqlModelMapper.toInvoice(noSqlSavedInvoice);
-        when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(false);
+        when(mongoTemplate.findOne(findQuery, Invoice.class)).thenReturn(null);
         when(mongoTemplate.save(any(Invoice.class))).thenReturn(noSqlSavedInvoice);
 
         //when
@@ -56,7 +56,7 @@ class MongoDatabaseTest {
 
         //then
         assertEquals(savedInvoice, result);
-        verify(mongoTemplate).exists(existsQuery, Invoice.class);
+        verify(mongoTemplate).findOne(findQuery, Invoice.class);
         verify(mongoTemplate).save(any(Invoice.class));
     }
 
@@ -67,12 +67,12 @@ class MongoDatabaseTest {
 
     @Test
     void shouldUpdateInvoice() throws DatabaseOperationException {
+        //given
         Invoice noSqlInvoiceToUpdate = NoSqlInvoiceGenerator.getRandomInvoice();
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(noSqlInvoiceToUpdate.getId()));
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(noSqlInvoiceToUpdate.getId()));
         pl.coderstrust.model.Invoice updatedInvoice = noSqlModelMapper.toInvoice(noSqlInvoiceToUpdate);
-        when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(true);
-        when(mongoTemplate.findOne(existsQuery, Invoice.class)).thenReturn(noSqlInvoiceToUpdate);
+        when(mongoTemplate.findOne(findQuery, Invoice.class)).thenReturn(noSqlInvoiceToUpdate);
         when(mongoTemplate.save(any(Invoice.class))).thenReturn(noSqlInvoiceToUpdate);
 
         //when
@@ -80,23 +80,36 @@ class MongoDatabaseTest {
 
         //then
         assertEquals(updatedInvoice, result);
-        verify(mongoTemplate).exists(existsQuery, Invoice.class);
+        verify(mongoTemplate).findOne(findQuery, Invoice.class);
         verify(mongoTemplate).save(any(Invoice.class));
+    }
+
+    @Test
+    void saveMethodShouldThrowDatabaseOperationExceptionWhenErrorOccurDuringSavingInvoice() {
+        //given
+        pl.coderstrust.model.Invoice invoice = InvoiceGenerator.getRandomInvoice();
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(1L));
+        when(mongoTemplate.findOne(findQuery, Invoice.class)).thenThrow(new MongoException(""));
+
+        //then
+        assertThrows(DatabaseOperationException.class, () -> mongoDatabase.save(invoice));
+        verify(mongoTemplate).findOne(findQuery, Invoice.class);
     }
 
     @Test
     void shouldDeleteInvoice() throws DatabaseOperationException {
         //given
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(1L));
-        when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(true);
+        Invoice invoice = NoSqlInvoiceGenerator.getRandomInvoice();
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(1L));
+        when(mongoTemplate.findAndRemove(findQuery, Invoice.class)).thenReturn(invoice);
 
         //when
         mongoDatabase.delete(1L);
 
         //then
-        verify(mongoTemplate).exists(existsQuery, Invoice.class);
-        verify(mongoTemplate).remove(existsQuery, Invoice.class);
+        verify(mongoTemplate).findAndRemove(findQuery, Invoice.class);
     }
 
     @Test
@@ -107,30 +120,14 @@ class MongoDatabaseTest {
     @Test
     void deleteMethodShouldThrowExceptionDuringDeletingNotExistingInvoice() {
         //given
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(1L));
-        when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(false);
+        Query findQuery = new Query();
+        findQuery.addCriteria(Criteria.where("id").is(1L));
+        when(mongoTemplate.findAndRemove(findQuery, Invoice.class)).thenReturn(null);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> mongoDatabase.delete(1L));
-        verify(mongoTemplate).exists(existsQuery, Invoice.class);
-        verify(mongoTemplate, never()).remove(existsQuery, Invoice.class);
+        verify(mongoTemplate).findAndRemove(findQuery, Invoice.class);
     }
-
-    @Test
-    void deleteMethodShouldThrowDatabaseOperationExceptionWhenErrorOccurDuringDeletingInvoice() {
-        //given
-        Query existsQuery = new Query();
-        existsQuery.addCriteria(Criteria.where("id").is(1L));
-        when(mongoTemplate.exists(existsQuery, Invoice.class)).thenReturn(true);
-        when(mongoTemplate.remove(existsQuery, Invoice.class)).thenThrow(new MongoException(""));
-
-        //then
-        assertThrows(DatabaseOperationException.class, () -> mongoDatabase.delete(1L));
-        verify(mongoTemplate).exists(existsQuery, Invoice.class);
-        verify(mongoTemplate).remove(existsQuery, Invoice.class);
-    }
-
 
     @Test
     void shouldReturnInvoiceById() throws DatabaseOperationException {
