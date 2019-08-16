@@ -48,14 +48,12 @@ public class InFileDatabase implements Database {
         String lastInvoiceAsJson = fileHelper.readLastLine(filePath);
         if (lastInvoiceAsJson == null) {
             return 0;
-        } else {
-            Invoice invoice = deserializeJsonToInvoice(lastInvoiceAsJson);
-            if (invoice == null) {
-                return 0;
-            } else {
-                return invoice.getId();
-            }
         }
+        Invoice invoice = deserializeJsonToInvoice(lastInvoiceAsJson);
+        if (invoice == null) {
+            return 0;
+        }
+        return invoice.getId();
     }
 
     @Override
