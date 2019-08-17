@@ -42,7 +42,7 @@ class MongoDatabaseTest {
     }
 
     @Test
-    void shouldSaveInvoice() throws DatabaseOperationException {
+    void shouldAddInvoice() throws DatabaseOperationException {
         //given
         Invoice noSqlSavedInvoice = NoSqlInvoiceGenerator.getRandomInvoice();
         Query findQuery = new Query();
