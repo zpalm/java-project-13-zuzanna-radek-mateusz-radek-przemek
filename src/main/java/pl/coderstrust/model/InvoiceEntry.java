@@ -32,16 +32,6 @@ public final class InvoiceEntry {
     @ApiModelProperty(value = "Vat tax rate.", example = "VAT_23")
     private final Vat vatRate;
 
-    private InvoiceEntry() {
-        id = null;
-        description = null;
-        quantity = null;
-        price = null;
-        netValue = null;
-        grossValue = null;
-        vatRate = null;
-    }
-
     private InvoiceEntry(Builder builder) {
         id = builder.id;
         description = builder.description;

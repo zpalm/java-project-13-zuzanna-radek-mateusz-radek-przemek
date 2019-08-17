@@ -31,16 +31,6 @@ public final class Company {
     @ApiModelProperty(value = "Company email address.", example = "hello@coderstrust.pl")
     private final String email;
 
-    private Company() {
-        id = null;
-        name = null;
-        address = null;
-        taxId = null;
-        accountNumber = null;
-        phoneNumber = null;
-        email = null;
-    }
-
     private Company(Builder builder) {
         id = builder.id;
         name = builder.name;

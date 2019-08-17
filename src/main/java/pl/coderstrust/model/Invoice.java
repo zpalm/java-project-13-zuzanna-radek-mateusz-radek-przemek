@@ -34,16 +34,6 @@ public final class Invoice {
     @ApiModelProperty(value = "List of items on the invoice.")
     private final List<InvoiceEntry> entries;
 
-    private Invoice() {
-        id = null;
-        number = null;
-        issuedDate = null;
-        dueDate = null;
-        seller = null;
-        buyer = null;
-        entries = null;
-    }
-
     private Invoice(Builder builder) {
         id = builder.id;
         number = builder.number;
