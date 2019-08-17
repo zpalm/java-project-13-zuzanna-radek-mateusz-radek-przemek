@@ -6,18 +6,11 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.math.BigDecimal;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 
-@Entity
 @JsonDeserialize(builder = InvoiceEntry.Builder.class)
 @ApiModel(value = "InvoiceEntry", description = "List of invoice entries.")
 public final class InvoiceEntry {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ApiModelProperty(value = "The unique identifier of the entry.", position = -1, dataType = "Long")
     private final Long id;
 

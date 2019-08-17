@@ -5,18 +5,11 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Objects;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 
-@Entity
 @JsonDeserialize(builder = Company.Builder.class)
 @ApiModel(value = "Company", description = "Company")
 public final class Company {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ApiModelProperty(value = "The unique identifier of the company.", position = -1, dataType = "Long")
     private final Long id;
 

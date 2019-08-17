@@ -8,22 +8,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
 
-@Entity
 @JsonDeserialize(builder = Invoice.Builder.class)
 @ApiModel(value = "Invoice", description = "Invoice")
 public final class Invoice {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @ApiModelProperty(value = "The unique identifier of the invoice.", position = -1, dataType = "Long")
     private final Long id;
 
@@ -36,15 +25,12 @@ public final class Invoice {
     @ApiModelProperty(value = "The date when payment will be required.", example = "2019-07-30")
     private final LocalDate dueDate;
 
-    @ManyToOne(cascade = CascadeType.ALL)
     @ApiModelProperty(value = "The company issuing the invoice.")
     private final Company seller;
 
-    @ManyToOne(cascade = CascadeType.ALL)
     @ApiModelProperty(value = "The company accepting the invoice.")
     private final Company buyer;
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @ApiModelProperty(value = "List of items on the invoice.")
     private final List<InvoiceEntry> entries;
 
