@@ -103,7 +103,6 @@
                         <exclude>/pl/coderstrust/database/hibernate/InvoiceRepository.class</exclude>
                         <exclude>/pl/coderstrust/service/ServiceOperationException.class</exclude>
                         <exclude>/pl/coderstrust/service/InvoiceEmailService.class</exclude>
-                        <exclude>/pl/coderstrust/controller/PdfHelper.class</exclude>
                         <exclude>/pl/coderstrust/helpers/*.class</exclude>
                         <exclude>/pl/coderstrust/soap/InvoiceEndpoint.class</exclude>
                         <exclude>/pl/coderstrust/soap/bindingclasses/*.class</exclude>

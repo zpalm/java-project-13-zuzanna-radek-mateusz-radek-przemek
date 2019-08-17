@@ -78,9 +78,9 @@ public class InvoiceController {
             log.error("Attempt to get invoice by id that does not exist in database.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by id that does not exist in database.");
         }
-        if (PdfHelper.isPdfResponse(httpHeaders)) {
+        if (PdfResponseHelper.isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
-            return PdfHelper.createPdfResponse(invoiceAsPdf);
+            return PdfResponseHelper.createPdfResponse(invoiceAsPdf);
         }
         return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
     }
@@ -105,9 +105,9 @@ public class InvoiceController {
             log.debug("Attempt to get invoice by number that does not exist in database.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by number that does not exist in database.");
         }
-        if (PdfHelper.isPdfResponse(httpHeaders)) {
+        if (PdfResponseHelper.isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
-            return PdfHelper.createPdfResponse(invoiceAsPdf);
+            return PdfResponseHelper.createPdfResponse(invoiceAsPdf);
         }
         return new ResponseEntity<>(invoice.get(), HttpStatus.OK);
     }
