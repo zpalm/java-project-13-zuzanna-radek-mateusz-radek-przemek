@@ -7,37 +7,20 @@ import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
-import pl.coderstrust.controller.InvoiceController;
 import pl.coderstrust.service.ServiceOperationException;
 
-@ExtendWith(SpringExtension.class)
-@WebMvcTest(InvoiceController.class)
-@WithMockUser(roles = "USER")
 class GlobalExceptionHandlerTest {
 
     GlobalExceptionHandler handler;
     WebRequest request;
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private InvoiceController invoiceController;
 
     @BeforeEach
     void setup() {
@@ -47,28 +30,19 @@ class GlobalExceptionHandlerTest {
 
     @ParameterizedTest
     @MethodSource("setOfResponseStatusExceptions")
-    void shouldHandlerReturnJsonWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
+    void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
         Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
-        ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
-        assertEquals(exception.getStatus(), response.getStatusCode());
-    }
-
-    @ParameterizedTest
-    @MethodSource("setOfResponseStatusExceptions")
-    void shouldHandlerReturnJsonWithCorrectMessageWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
+        Mockito.when(request.getContextPath()).thenThrow(exception);
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         String stringBody = response.getBody().toString();
-        assertEquals(exception.getReason(), extractMessageFromResponseBody(stringBody));
+        assertEquals(exception.getReason() + " " + exception.getStatus(), extractMessageFromResponseBody(stringBody) + " " + response.getStatusCode());
     }
 
     @ParameterizedTest
     @MethodSource("setOfResponseStatusExceptions")
-    void shouldHandlerReturnPdfWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
+    void shouldHandlerReturnPdfWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) {
         Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
+        Mockito.when(request.getContextPath()).thenThrow(exception);
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         assertEquals(exception.getStatus(), response.getStatusCode());
     }
@@ -88,29 +62,20 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldHandlerReturnJsonWithCorrectStatusWhenUnexpectedErrorOccur() throws ServiceOperationException {
+    void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenUnexpectedErrorOccur() {
         Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        ServiceOperationException exception = new ServiceOperationException();
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
-        ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    }
-
-    @Test
-    void shouldHandlerReturnJsonWithCorrectMessageWhenUnexpectedErrorOccur() throws ServiceOperationException {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        ServiceOperationException exception = new ServiceOperationException();
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
+        NullPointerException exception = new NullPointerException();
+        Mockito.when(request.getContextPath()).thenThrow(exception);
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         String stringBody = response.getBody().toString();
-        assertEquals("An unexpected error occured", extractMessageFromResponseBody(stringBody));
+        assertEquals("An unexpected error occurred" + HttpStatus.INTERNAL_SERVER_ERROR, extractMessageFromResponseBody(stringBody) + response.getStatusCode());
     }
 
     @Test
-    void shouldHandlerReturnPdfWithCorrectStatusWhenUnexpectedErrorOccur() throws ServiceOperationException {
+    void shouldHandlerReturnPdfWithCorrectStatusWhenUnexpectedErrorOccur() {
         Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        ServiceOperationException exception = new ServiceOperationException();
-        Mockito.when(invoiceController.getAll()).thenThrow(exception);
+        NullPointerException exception = new NullPointerException();
+        Mockito.when(request.getLocale()).thenThrow(exception);
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

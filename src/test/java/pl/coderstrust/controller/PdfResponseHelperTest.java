@@ -56,5 +56,4 @@ class PdfResponseHelperTest {
             Arguments.of(Arrays.asList(MediaType.APPLICATION_PDF))
         );
     }
-
 }
