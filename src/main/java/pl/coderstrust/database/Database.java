@@ -1,7 +1,10 @@
 package pl.coderstrust.database;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
+
+import org.apache.tomcat.jni.Local;
 import pl.coderstrust.model.Invoice;
 
 public interface Database {
@@ -21,4 +24,6 @@ public interface Database {
     boolean exists(Long id) throws DatabaseOperationException;
 
     long count() throws DatabaseOperationException;
+
+    Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException;
 }

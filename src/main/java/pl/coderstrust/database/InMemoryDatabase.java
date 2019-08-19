@@ -1,9 +1,11 @@
 package pl.coderstrust.database;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,5 +129,13 @@ public class InMemoryDatabase implements Database {
     @Override
     public long count() {
         return storage.size();
+    }
+
+    @Override
+    public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+        return storage.values()
+            .stream()
+            .filter(invoice -> invoice.getIssuedDate().compareTo(startDate)>=0 && invoice.getIssuedDate().compareTo(endDate)<=0)
+            .collect(Collectors.toList());
     }
 }

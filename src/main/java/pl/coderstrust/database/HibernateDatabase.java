@@ -1,5 +1,6 @@
 package pl.coderstrust.database;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -147,5 +148,17 @@ public class HibernateDatabase implements Database {
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
         }
+    }
+
+    @Override
+    public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+        try {
+            return invoiceRepository.findAllByIssuedDate(startDate, endDate);
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occured during getting invoices filtered by issue date";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
+
     }
 }
