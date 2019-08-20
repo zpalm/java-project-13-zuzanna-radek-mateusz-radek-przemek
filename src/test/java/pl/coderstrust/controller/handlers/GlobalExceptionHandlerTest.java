@@ -2,9 +2,11 @@ package pl.coderstrust.controller.handlers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.verify;
 
 import java.util.stream.Stream;
 
+import org.aspectj.weaver.patterns.IVerificationRequired;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,10 +34,12 @@ class GlobalExceptionHandlerTest {
     @MethodSource("setOfResponseStatusExceptions")
     void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
         Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        Mockito.when(request.getContextPath()).thenThrow(exception);
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
+
         String stringBody = response.getBody().toString();
+
         assertEquals(exception.getReason() + " " + exception.getStatus(), extractMessageFromResponseBody(stringBody) + " " + response.getStatusCode());
+        verify(request).getHeaderValues("accept");
     }
 
     @ParameterizedTest
