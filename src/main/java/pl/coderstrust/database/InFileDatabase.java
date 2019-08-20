@@ -1,8 +1,7 @@
 package pl.coderstrust.database;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -10,6 +9,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,8 +116,8 @@ public class InFileDatabase implements Database {
         }
         try {
             return getInvoices().stream()
-                    .filter(invoice -> invoice.getId().equals(id))
-                    .findFirst();
+                .filter(invoice -> invoice.getId().equals(id))
+                .findFirst();
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by id.";
             log.error(message, e);
@@ -133,8 +133,8 @@ public class InFileDatabase implements Database {
         }
         try {
             return getInvoices().stream()
-                    .filter(invoice -> invoice.getNumber().equals(number))
-                    .findFirst();
+                .filter(invoice -> invoice.getNumber().equals(number))
+                .findFirst();
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by number.";
             log.error(message, e);
@@ -187,6 +187,33 @@ public class InFileDatabase implements Database {
             String message = "An error occurred during getting number of invoices.";
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
+        }
+    }
+
+    @Override
+    public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+        try {
+            if (startDate == null && endDate == null) {
+                return getAll();
+            } else if (startDate==null) {
+                return getInvoices()
+                    .stream()
+                    .filter(invoice -> invoice.getIssuedDate().compareTo(endDate)<=0)
+                    .collect(Collectors.toList());
+            }else if(endDate==null){
+                return getInvoices()
+                    .stream()
+                    .filter(invoice -> invoice.getIssuedDate().compareTo(startDate)>=0)
+                    .collect(Collectors.toList());
+            }
+            return getInvoices()
+                .stream()
+                .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
+                .collect(Collectors.toList());
+        } catch (IOException e) {
+            String message = "An error occurred during filtering invoices by issued date";
+            log.error(message, e);
+            throw new DatabaseOperationException(message);
         }
     }
 

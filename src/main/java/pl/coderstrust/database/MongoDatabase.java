@@ -1,5 +1,6 @@
 package pl.coderstrust.database;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -199,5 +200,10 @@ public class MongoDatabase implements Database {
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
         }
+    }
+
+    @Override
+    public Collection<pl.coderstrust.model.Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+        return null;
     }
 }
