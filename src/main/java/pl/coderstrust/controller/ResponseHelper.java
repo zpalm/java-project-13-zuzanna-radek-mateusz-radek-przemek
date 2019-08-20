@@ -1,18 +1,33 @@
 package pl.coderstrust.controller;
 
+import java.net.URI;
 import java.util.Optional;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import pl.coderstrust.model.Invoice;
 
-public class PdfResponseHelper {
+public class ResponseHelper {
 
-    public static ResponseEntity<?> createPdfResponse(byte[] array) {
+    static ResponseEntity<?> createPdfResponse(byte[] array) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_PDF);
         return new ResponseEntity<>(array, responseHeaders, HttpStatus.OK);
+    }
+
+    static ResponseEntity<?> createJsonOkResponse(Object responseBody) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(responseBody, responseHeaders, HttpStatus.OK);
+    }
+
+    static ResponseEntity<?> createJsonCreatedResponse(Invoice addedInvoice) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        responseHeaders.setLocation(URI.create(String.format("/invoices/%d", addedInvoice.getId())));
+        return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
     }
 
     public static boolean isPdfResponse(HttpHeaders httpHeaders) {

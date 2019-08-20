@@ -3,10 +3,10 @@ package pl.coderstrust.controller.handlers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
-import org.aspectj.weaver.patterns.IVerificationRequired;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -33,11 +33,9 @@ class GlobalExceptionHandlerTest {
     @ParameterizedTest
     @MethodSource("setOfResponseStatusExceptions")
     void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
+        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
-
         String stringBody = response.getBody().toString();
-
         assertEquals(exception.getReason() + " " + exception.getStatus(), extractMessageFromResponseBody(stringBody) + " " + response.getStatusCode());
         verify(request).getHeaderValues("accept");
     }
@@ -45,10 +43,10 @@ class GlobalExceptionHandlerTest {
     @ParameterizedTest
     @MethodSource("setOfResponseStatusExceptions")
     void shouldHandlerReturnPdfWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        Mockito.when(request.getContextPath()).thenThrow(exception);
+        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         assertEquals(exception.getStatus(), response.getStatusCode());
+        verify(request).getHeaderValues("accept");
     }
 
     private static Stream<Arguments> setOfResponseStatusExceptions() {
@@ -67,28 +65,27 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenUnexpectedErrorOccur() {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
-        NullPointerException exception = new NullPointerException();
-        Mockito.when(request.getContextPath()).thenThrow(exception);
-        ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
+        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
+        ResponseEntity<Object> response = handler.handleUnexpectedException(new NullPointerException(), request);
         String stringBody = response.getBody().toString();
         assertEquals("An unexpected error occurred" + HttpStatus.INTERNAL_SERVER_ERROR, extractMessageFromResponseBody(stringBody) + response.getStatusCode());
+        verify(request).getHeaderValues("accept");
     }
 
     @Test
     void shouldHandlerReturnPdfWithCorrectStatusWhenUnexpectedErrorOccur() {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        NullPointerException exception = new NullPointerException();
-        Mockito.when(request.getLocale()).thenThrow(exception);
-        ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
+        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
+        ResponseEntity<Object> response = handler.handleUnexpectedException(new NullPointerException(), request);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        verify(request).getHeaderValues("accept");
     }
 
     @Test
     void shouldHandlerReturnEmptyBodyWhenPdfIsAcceptedResponseFormat() {
-        Mockito.when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
+        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(new Exception(), request);
         assertNull(response.getBody());
+        verify(request).getHeaderValues("accept");
     }
 
     private String extractMessageFromResponseBody(String body) {

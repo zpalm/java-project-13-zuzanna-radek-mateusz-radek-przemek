@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import pl.coderstrust.controller.PdfResponseHelper;
+import pl.coderstrust.controller.ResponseHelper;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -27,7 +27,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(value = Exception.class)
     public ResponseEntity<Object> handleUnexpectedException(Exception e, WebRequest request) {
         log.error("Handling {} due to {}", e.getClass().getSimpleName(), e.getMessage());
-        if (PdfResponseHelper.isPdfResponse(extractHttpHeaders(request))) {
+        if (ResponseHelper.isPdfResponse(extractHttpHeaders(request))) {
             return createPdfResponse(e);
         }
         return createJsonResponse(e, request);

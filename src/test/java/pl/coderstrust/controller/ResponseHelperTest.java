@@ -14,12 +14,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
-class PdfResponseHelperTest {
+class ResponseHelperTest {
 
     @Test
     void shouldReturnFalseWhenHttpHeadersAreEmpty() {
         HttpHeaders headers = new HttpHeaders();
-        assertFalse(PdfResponseHelper.isPdfResponse(headers));
+        assertFalse(ResponseHelper.isPdfResponse(headers));
     }
 
     @ParameterizedTest
@@ -27,7 +27,7 @@ class PdfResponseHelperTest {
     void shouldReturnFalseWhenPdfIsNotTheFirstAcceptedResponseFormat(List<MediaType> mediaTypes) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(mediaTypes);
-        assertFalse(PdfResponseHelper.isPdfResponse(headers));
+        assertFalse(ResponseHelper.isPdfResponse(headers));
     }
 
     private static Stream<Arguments> setOfMediaTypesWithPdfNotPlacedInTheFirstPosition() {
@@ -45,7 +45,7 @@ class PdfResponseHelperTest {
     void shouldReturnTrueWhenPdfIsTheFirstAcceptedResponseFormat(List<MediaType> mediaTypes) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(mediaTypes);
-        assertTrue(PdfResponseHelper.isPdfResponse(headers));
+        assertTrue(ResponseHelper.isPdfResponse(headers));
     }
 
     private static Stream<Arguments> setOfMediaTypesWithPdfAtFirstPosition() {
