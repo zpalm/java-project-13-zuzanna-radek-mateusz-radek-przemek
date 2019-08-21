@@ -167,6 +167,5 @@ public class HibernateDatabase implements Database {
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
         }
-
     }
 }
