@@ -7,27 +7,26 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import pl.coderstrust.model.Invoice;
 
 public class ResponseHelper {
 
-    static ResponseEntity<?> createPdfResponse(byte[] array) {
+    public static ResponseEntity<?> createPdfOkResponse(byte[] array) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_PDF);
         return new ResponseEntity<>(array, responseHeaders, HttpStatus.OK);
     }
 
-    static ResponseEntity<?> createJsonOkResponse(Object responseBody) {
+    public static ResponseEntity<?> createJsonOkResponse(Object body) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(responseBody, responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(body, responseHeaders, HttpStatus.OK);
     }
 
-    static ResponseEntity<?> createJsonCreatedResponse(Invoice addedInvoice) {
+    public static ResponseEntity<?> createJsonCreatedResponse(Object body, String location) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-        responseHeaders.setLocation(URI.create(String.format("/invoices/%d", addedInvoice.getId())));
-        return new ResponseEntity<>(addedInvoice, responseHeaders, HttpStatus.CREATED);
+        responseHeaders.setLocation(URI.create(location));
+        return new ResponseEntity<>(body, responseHeaders, HttpStatus.CREATED);
     }
 
     public static boolean isPdfResponse(HttpHeaders httpHeaders) {

@@ -79,7 +79,7 @@ public class InvoiceController {
         }
         if (ResponseHelper.isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
-            return ResponseHelper.createPdfResponse(invoiceAsPdf);
+            return ResponseHelper.createPdfOkResponse(invoiceAsPdf);
         }
         return ResponseHelper.createJsonOkResponse(invoice.get());
     }
@@ -106,7 +106,7 @@ public class InvoiceController {
         }
         if (ResponseHelper.isPdfResponse(httpHeaders)) {
             byte[] invoiceAsPdf = invoicePdfService.createPdf(invoice.get());
-            return ResponseHelper.createPdfResponse(invoiceAsPdf);
+            return ResponseHelper.createPdfOkResponse(invoiceAsPdf);
         }
         return ResponseHelper.createJsonOkResponse(invoice.get());
     }
@@ -134,7 +134,7 @@ public class InvoiceController {
         Invoice addedInvoice = invoiceService.addInvoice(invoice);
         invoiceEmailService.sendMailWithInvoice(addedInvoice);
         log.debug("New invoice added with id: {}", addedInvoice.getId());
-        return ResponseHelper.createJsonCreatedResponse(addedInvoice);
+        return ResponseHelper.createJsonCreatedResponse(addedInvoice, String.format("/invoices/%d", addedInvoice.getId()));
     }
 
     @PutMapping(value = "/{id}", produces = "application/json", consumes = "application/json")
