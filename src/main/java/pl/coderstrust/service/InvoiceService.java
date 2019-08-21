@@ -1,5 +1,6 @@
 package pl.coderstrust.service;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -140,6 +141,16 @@ public class InvoiceService {
             return database.count();
         } catch (DatabaseOperationException e) {
             String message = "An error occurred during getting number of invoices.";
+            log.error(message, e);
+            throw new ServiceOperationException(message, e);
+        }
+    }
+
+    public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws ServiceOperationException {
+        try {
+            return database.getByIssueDate(startDate, endDate);
+        } catch (DatabaseOperationException e) {
+            String message = "An error occurred during filtering invoices by issued date.";
             log.error(message, e);
             throw new ServiceOperationException(message, e);
         }

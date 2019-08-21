@@ -2,8 +2,11 @@ package pl.coderstrust.database;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -204,6 +207,23 @@ public class MongoDatabase implements Database {
 
     @Override
     public Collection<pl.coderstrust.model.Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
-        return null;
+        if(startDate==null || endDate==null){
+            log.error("Attempt to get invoices from date interval without providing start date or end date");
+            throw new IllegalArgumentException("Both start date and end date cannot be null");
+        }
+        if(startDate.isAfter(endDate)){
+            log.error("Attempt to get invoices from date interval when passed start date is after end date");
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        try{
+            List<pl.coderstrust.model.Invoice> allInvoices = noSqlModelMapper.mapToInvoices(mongoTemplate.findAll(Invoice.class));
+            return allInvoices.stream()
+                .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
+                .collect(Collectors.toList());
+        }catch (Exception e){
+            String message = "An error occurred during filtering invoices by issued date.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
     }
 }

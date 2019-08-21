@@ -192,20 +192,15 @@ public class InFileDatabase implements Database {
 
     @Override
     public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+        if (startDate == null || endDate == null) {
+            log.error("Attempt to get invoices from date interval without providing start date or end date");
+            throw new IllegalArgumentException("Both start date and end date cannot be null");
+        }
+        if(startDate.isAfter(endDate)){
+            log.error("Attempt to get invoices from date interval when passed start date is after end date");
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
         try {
-            if (startDate == null && endDate == null) {
-                return getAll();
-            } else if (startDate==null) {
-                return getInvoices()
-                    .stream()
-                    .filter(invoice -> invoice.getIssuedDate().compareTo(endDate)<=0)
-                    .collect(Collectors.toList());
-            }else if(endDate==null){
-                return getInvoices()
-                    .stream()
-                    .filter(invoice -> invoice.getIssuedDate().compareTo(startDate)>=0)
-                    .collect(Collectors.toList());
-            }
             return getInvoices()
                 .stream()
                 .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
