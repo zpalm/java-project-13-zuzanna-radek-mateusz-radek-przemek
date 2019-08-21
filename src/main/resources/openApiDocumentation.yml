@@ -1,0 +1,329 @@
+openapi: 3.0.0
+info:
+  title: Invoice REST API
+  description: "REST API documentation for Online Invoicing System"
+  version: 1.0.0
+servers:
+  - url: localhost:8080
+tags:
+  - name: invoice-controller
+    description: Invoice Controler
+
+paths:
+  /invoices:
+    get:
+      summary: Get all invoices
+      description: Retrieving the collection of invoices in database
+      operationId: getAll
+      tags:
+        - invoice-controller
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '406':
+          description: Not acceptable format
+        '500':
+          description: Internal server error
+    post:
+      summary: Add new invoice
+      description: Add new invoice to database
+      operationId: add
+      tags:
+        - invoice-controller
+      requestBody:
+        description: New invoice data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+        '406':
+          description: Not acceptable format
+        '409':
+          description: Invoice exists
+        '415':
+          description: Wrong invoice format
+        '500':
+          description: Internal server error
+  /invoices/{id}:
+    get:
+      summary: Get invoice by id
+      description: Retrieving the invoice by provided id in json or pdf format
+      operationId: getById
+      tags:
+        - invoice-controller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id of the invoice to get
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Invoice not found
+        '406':
+          description: Not acceptable format
+        '500':
+          description: Internal server error
+    put:
+      summary: Update invoice
+      description: Update invoice with provided id
+      operationId: update
+      tags:
+        - invoice-controller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id of the invoice to update
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Invoice with updated data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Invoice'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '201':
+          description: Created
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Invoice not found
+        '406':
+          description: Not acceptable format
+        '415':
+          description: Wrong invoice format
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete invoice
+      description: Delete invoice with provided id
+      operationId: remove
+      tags:
+        - invoice-controller
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id of the invoice to delete
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+        '204':
+          description: No content
+          content:
+            application/json:
+              schema:
+                type: object
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Invoice not found
+        '500':
+          description: Internal server error
+  /invoices/byNumber:
+    get:
+      summary: Get invoice by number
+      description: Retrieving the invoice by provided number in json or pdf format
+      operationId: getByNumber
+      tags:
+        - invoice-controller
+      parameters:
+        - name: number
+          in: query
+          required: true
+          description: Number of the invoice to get
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+            application/pdf:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Invoice not found
+        '406':
+          description: Not acceptable format
+        '500':
+          description: Internal server error
+components:
+  schemas:
+    Company:
+      type: object
+      description: Company
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The unique identifier of the company
+        accountNumber:
+          type: string
+          example: 27 1030 0019 0109 8503 0014 2668
+          description: Company bank account number
+        address:
+          type: string
+          example: ul. Bukowińska 24d/7, 02-703 Warszawa
+          description: Company address
+        email:
+          type: string
+          example: hello@coderstrust.pl
+          description: Company email address
+        name:
+          type: string
+          example: CodersTrust
+          description: CompanyName
+        phoneNumber:
+          type: string
+          example: 691 950 343
+          description: Company phone number
+        taxId:
+          type: string
+          example: 701-041-63-84
+          description: Company tax id
+    Invoice:
+      type: object
+      description: Invoice
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The unique identifier of the invoice
+        buyer:
+          $ref: "#/components/schemas/Company"
+        dueDate:
+          type: string
+          format: date
+          example: '2019-07-30'
+          description: The date when payment will be required
+        entries:
+          $ref: '#/components/schemas/InvoiceEntry'
+        issueDate:
+          type: string
+          format: date
+          example: '2019-07-16'
+          description: The date when invoice was created
+        number:
+          type: string
+          example: 1/2/3
+          description: The number of the invoice
+        seller:
+          $ref: "#/components/schemas/Company"
+    InvoiceEntry:
+      type: object
+      description: List of items on the invoice
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: The unique identifier of the entry
+        description:
+          type: string
+          example: Kurs
+          description: Description of the entry
+        grossValue:
+          type: number
+          example: 1230
+          description: Price with tax
+        netValue:
+          type: number
+          example: 1000
+          description: Price without tax
+        price:
+          type: number
+          example: 1000
+          description: Unit price of the entry
+        quantity:
+          type: integer
+          format: int64
+          example: 1
+          description: Number of units of the entry
+        vatRate:
+          type: string
+          example: VAT_23
+          description: Vat tax rate
+          enum:
+            - Vat{value=0.0}
+            - Vat{value=0.05}
+            - Vat{value=0.08}
+            - Vat{value=0.23}
+            
