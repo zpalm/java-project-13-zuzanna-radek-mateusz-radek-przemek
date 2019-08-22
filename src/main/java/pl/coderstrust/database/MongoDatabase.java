@@ -216,10 +216,8 @@ public class MongoDatabase implements Database {
             throw new IllegalArgumentException("Start date cannot be after end date");
         }
         try{
-            List<pl.coderstrust.model.Invoice> allInvoices = noSqlModelMapper.mapToInvoices(mongoTemplate.findAll(Invoice.class));
-            return allInvoices.stream()
-                .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
-                .collect(Collectors.toList());
+            List<Invoice> filteredInvoices = mongoTemplate.find(Query.query(Criteria.where("issuedDate").gte(startDate).lte(endDate)), Invoice.class);
+            return noSqlModelMapper.mapToInvoices(filteredInvoices);
         }catch (Exception e){
             String message = "An error occurred during filtering invoices by issued date.";
             log.error(message, e);
