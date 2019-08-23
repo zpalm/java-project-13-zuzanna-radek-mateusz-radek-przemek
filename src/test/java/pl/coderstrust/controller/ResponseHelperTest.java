@@ -28,9 +28,9 @@ class ResponseHelperTest {
     void shouldCreatePdfResponse() {
         byte[] bytes = new byte[100];
         Arrays.fill(bytes, Byte.valueOf("1"));
+        ResponseEntity<?> expected = createExpectedResponse(bytes, MediaType.APPLICATION_PDF, HttpStatus.OK);
         ResponseEntity<?> response = ResponseHelper.createPdfOkResponse(bytes);
-        assertEquals(bytes + "|" + MediaType.APPLICATION_PDF + "|" + HttpStatus.OK,
-            response.getBody() + "|" + response.getHeaders().getContentType() + "|" + response.getStatusCode());
+        assertEquals(expected, response);
     }
 
     @Test
@@ -44,9 +44,9 @@ class ResponseHelperTest {
     @ParameterizedTest
     @MethodSource("setOfObjectsToCreateOkResponse")
     void shouldCreateJsonResponseWithOkStatus(Object body) {
+        ResponseEntity<?> expected = createExpectedResponse(body, MediaType.APPLICATION_JSON, HttpStatus.OK);
         ResponseEntity<?> response = ResponseHelper.createJsonOkResponse(body);
-        assertEquals(body + "|" + MediaType.APPLICATION_JSON + "|" + HttpStatus.OK,
-            response.getBody() + "|" + response.getHeaders().getContentType() + "|" + response.getStatusCode());
+        assertEquals(expected, response);
     }
 
     private static Stream<Arguments> setOfObjectsToCreateOkResponse() {
@@ -70,11 +70,9 @@ class ResponseHelperTest {
     @ParameterizedTest
     @MethodSource("setOfObjectsAndLocationsToCreateJsonCreatedResponse")
     void shouldCreateJsonResponseWithCreatedStatus(Object body, String location) {
+        ResponseEntity<?> expected = createExpectedResponseWithLocation(body, MediaType.APPLICATION_JSON, HttpStatus.CREATED, location);
         ResponseEntity<?> response = ResponseHelper.createJsonCreatedResponse(body, location);
-        MediaType responseContentType = response.getHeaders().getContentType();
-        URI responseLocation = response.getHeaders().getLocation();
-        assertEquals(body + "|" + MediaType.APPLICATION_JSON + "|" + HttpStatus.CREATED + "|" + location,
-            response.getBody() + "|" + responseContentType + "|" + response.getStatusCode() + "|" + responseLocation);
+        assertEquals(expected, response);
     }
 
     private static Stream<Arguments> setOfObjectsAndLocationsToCreateJsonCreatedResponse() {
@@ -94,12 +92,23 @@ class ResponseHelperTest {
         assertEquals("Response body cannot be null", exception.getMessage());
     }
 
-    @Test
-    void shouldCreateJsonCreatedResponseThrowExceptionWhenLocationContainsWhitespaces() {
+    @ParameterizedTest
+    @MethodSource("setOfIncorrectLocations")
+    void shouldCreateJsonCreatedResponseThrowExceptionWhenLocationContainsWhitespaces(String location) {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ResponseHelper.createJsonCreatedResponse(InvoiceGenerator.getRandomInvoice(), "invoices/ 1");
+            ResponseHelper.createJsonCreatedResponse(InvoiceGenerator.getRandomInvoice(), location);
         });
         assertEquals("Passed location cannot contain whitespaces", exception.getMessage());
+    }
+
+    private static Stream<Arguments> setOfIncorrectLocations() {
+        return Stream.of(
+            Arguments.of("    "),
+            Arguments.of(" invoices/1"),
+            Arguments.of("invoices/1 "),
+            Arguments.of(" in voi ce s/ 1 "),
+            Arguments.of("invoices/ 1")
+        );
     }
 
     @Test
@@ -141,5 +150,18 @@ class ResponseHelperTest {
             Arguments.of(Arrays.asList(MediaType.APPLICATION_XML, MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON)),
             Arguments.of(Arrays.asList(MediaType.APPLICATION_PDF))
         );
+    }
+
+    private ResponseEntity<?> createExpectedResponse(Object body, MediaType mediaType, HttpStatus status) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(mediaType);
+        return new ResponseEntity<>(body, responseHeaders, status);
+    }
+
+    private ResponseEntity<?> createExpectedResponseWithLocation(Object body, MediaType mediaType, HttpStatus status, String location) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(mediaType);
+        responseHeaders.setLocation(URI.create(location));
+        return new ResponseEntity<>(body, responseHeaders, status);
     }
 }
