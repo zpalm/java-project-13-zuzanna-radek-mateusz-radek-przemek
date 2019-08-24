@@ -34,22 +34,20 @@ class ResponseHelperTest {
     }
 
     @Test
-    void shouldCreatePdfResponseThrowExceptionWhenNullIsPassed() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ResponseHelper.createPdfOkResponse(null);
-        });
-        assertEquals("Passed byte array is null", exception.getMessage());
+    void createPdfResponseMethodShouldThrowExceptionWhenNullIsPassed() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createPdfOkResponse(null));
+        assertEquals("Response body cannot be null", exception.getMessage());
     }
 
     @ParameterizedTest
-    @MethodSource("setOfObjectsToCreateOkResponse")
+    @MethodSource("jsonOkResponseArguments")
     void shouldCreateJsonResponseWithOkStatus(Object body) {
         ResponseEntity<?> expected = createExpectedResponse(body, MediaType.APPLICATION_JSON, HttpStatus.OK);
         ResponseEntity<?> response = ResponseHelper.createJsonOkResponse(body);
         assertEquals(expected, response);
     }
 
-    private static Stream<Arguments> setOfObjectsToCreateOkResponse() {
+    private static Stream<Arguments> jsonOkResponseArguments() {
         return Stream.of(
             Arguments.of(InvoiceGenerator.getRandomInvoice()),
             Arguments.of(InvoiceGenerator.getRandomInvoiceWithSpecificId(45L)),
@@ -60,22 +58,20 @@ class ResponseHelperTest {
     }
 
     @Test
-    void shouldCreateJsonOkResponseThrowExceptionWhenNullIsPassedAsArgument() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ResponseHelper.createJsonOkResponse(null);
-        });
+    void createJsonOkResponseMethodShouldThrowExceptionWhenNullIsPassed() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createJsonOkResponse(null));
         assertEquals("Response body cannot be null", exception.getMessage());
     }
 
     @ParameterizedTest
-    @MethodSource("setOfObjectsAndLocationsToCreateJsonCreatedResponse")
+    @MethodSource("jsonCreatedResponseArguments")
     void shouldCreateJsonResponseWithCreatedStatus(Object body, String location) {
-        ResponseEntity<?> expected = createExpectedResponseWithLocation(body, MediaType.APPLICATION_JSON, HttpStatus.CREATED, location);
+        ResponseEntity<?> expected = createExpectedResponse(body, MediaType.APPLICATION_JSON, HttpStatus.CREATED, location);
         ResponseEntity<?> response = ResponseHelper.createJsonCreatedResponse(body, location);
         assertEquals(expected, response);
     }
 
-    private static Stream<Arguments> setOfObjectsAndLocationsToCreateJsonCreatedResponse() {
+    private static Stream<Arguments> jsonCreatedResponseArguments() {
         return Stream.of(
             Arguments.of(InvoiceGenerator.getRandomInvoiceWithSpecificId(3564324L), "invoices/1"),
             Arguments.of(InvoiceGenerator.getRandomInvoice(), "invoices/356"),
@@ -85,23 +81,19 @@ class ResponseHelperTest {
     }
 
     @Test
-    void shouldCreateJsonCreatedResponseThrowExceptionWhenNullIsPassedAsArgument() {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ResponseHelper.createJsonCreatedResponse(null, "invoices/1");
-        });
+    void createJsonCreatedResponseMethodShouldThrowExceptionWhenNullIsPassedAsBody() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createJsonCreatedResponse(null, "invoices/1"));
         assertEquals("Response body cannot be null", exception.getMessage());
     }
 
     @ParameterizedTest
-    @MethodSource("setOfIncorrectLocations")
-    void shouldCreateJsonCreatedResponseThrowExceptionWhenLocationContainsWhitespaces(String location) {
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            ResponseHelper.createJsonCreatedResponse(InvoiceGenerator.getRandomInvoice(), location);
-        });
+    @MethodSource("invalidLocationArguments")
+    void createJsonCreatedResponseMethodShouldThrowExceptionWhenLocationContainsWhitespaces(String location) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createJsonCreatedResponse(InvoiceGenerator.getRandomInvoice(), location));
         assertEquals("Passed location cannot contain whitespaces", exception.getMessage());
     }
 
-    private static Stream<Arguments> setOfIncorrectLocations() {
+    private static Stream<Arguments> invalidLocationArguments() {
         return Stream.of(
             Arguments.of("    "),
             Arguments.of(" invoices/1"),
@@ -118,14 +110,14 @@ class ResponseHelperTest {
     }
 
     @ParameterizedTest
-    @MethodSource("setOfMediaTypesWithPdfNotPlacedInTheFirstPosition")
+    @MethodSource("mediaTypesWithPdfNotPlacedInTheFirstPosition")
     void shouldReturnFalseWhenPdfIsNotTheFirstAcceptedResponseFormat(List<MediaType> mediaTypes) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(mediaTypes);
         assertFalse(ResponseHelper.isPdfResponse(headers));
     }
 
-    private static Stream<Arguments> setOfMediaTypesWithPdfNotPlacedInTheFirstPosition() {
+    private static Stream<Arguments> mediaTypesWithPdfNotPlacedInTheFirstPosition() {
         return Stream.of(
             Arguments.of(Arrays.asList(MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF, MediaType.APPLICATION_XML)),
             Arguments.of(Arrays.asList(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF)),
@@ -136,14 +128,14 @@ class ResponseHelperTest {
     }
 
     @ParameterizedTest
-    @MethodSource("setOfMediaTypesWithPdfAtFirstPosition")
+    @MethodSource("mediaTypesWithPdfAtFirstPosition")
     void shouldReturnTrueWhenPdfIsTheFirstAcceptedResponseFormat(List<MediaType> mediaTypes) {
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(mediaTypes);
         assertTrue(ResponseHelper.isPdfResponse(headers));
     }
 
-    private static Stream<Arguments> setOfMediaTypesWithPdfAtFirstPosition() {
+    private static Stream<Arguments> mediaTypesWithPdfAtFirstPosition() {
         return Stream.of(
             Arguments.of(Arrays.asList(MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON)),
             Arguments.of(Arrays.asList(MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML)),
@@ -158,7 +150,7 @@ class ResponseHelperTest {
         return new ResponseEntity<>(body, responseHeaders, status);
     }
 
-    private ResponseEntity<?> createExpectedResponseWithLocation(Object body, MediaType mediaType, HttpStatus status, String location) {
+    private ResponseEntity<?> createExpectedResponse(Object body, MediaType mediaType, HttpStatus status, String location) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(mediaType);
         responseHeaders.setLocation(URI.create(location));

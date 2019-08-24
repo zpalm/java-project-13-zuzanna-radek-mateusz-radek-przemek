@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
-import pl.coderstrust.service.ServiceOperationException;
 
 class GlobalExceptionHandlerTest {
 
@@ -31,25 +30,26 @@ class GlobalExceptionHandlerTest {
     }
 
     @ParameterizedTest
-    @MethodSource("setOfResponseStatusExceptions")
-    void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) throws ServiceOperationException {
+    @MethodSource("statusExceptionsArguments")
+    void shouldReturnJsonResponseWithCorrectStatusAndBodyWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) {
         when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         String stringBody = response.getBody().toString();
-        assertEquals(exception.getReason() + " " + exception.getStatus(), extractMessageFromResponseBody(stringBody) + " " + response.getStatusCode());
+        assertEquals(exception.getReason(), extractMessageFromResponseBody(stringBody));
+        assertEquals(exception.getStatus(), response.getStatusCode());
         verify(request).getHeaderValues("accept");
     }
 
     @ParameterizedTest
-    @MethodSource("setOfResponseStatusExceptions")
-    void shouldHandlerReturnPdfWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) {
+    @MethodSource("statusExceptionsArguments")
+    void shouldReturnPdfResponseWithCorrectStatusWhenResponseStatusExceptionIsThrown(ResponseStatusException exception) {
         when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(exception, request);
         assertEquals(exception.getStatus(), response.getStatusCode());
         verify(request).getHeaderValues("accept");
     }
 
-    private static Stream<Arguments> setOfResponseStatusExceptions() {
+    private static Stream<Arguments> statusExceptionsArguments() {
         return Stream.of(
             Arguments.of(new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to get invoice by id that does not exist in database.")),
             Arguments.of(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Attempt to get invoice providing null number.")),
@@ -64,26 +64,20 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void shouldHandlerReturnJsonWithCorrectStatusAndMessageWhenUnexpectedErrorOccur() {
+    void shouldReturnJsonResponseWithCorrectStatusAndBodyWhenUnexpectedErrorOccur() {
         when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/json"});
         ResponseEntity<Object> response = handler.handleUnexpectedException(new NullPointerException(), request);
         String stringBody = response.getBody().toString();
-        assertEquals("An unexpected error occurred" + HttpStatus.INTERNAL_SERVER_ERROR, extractMessageFromResponseBody(stringBody) + response.getStatusCode());
-        verify(request).getHeaderValues("accept");
-    }
-
-    @Test
-    void shouldHandlerReturnPdfWithCorrectStatusWhenUnexpectedErrorOccur() {
-        when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        ResponseEntity<Object> response = handler.handleUnexpectedException(new NullPointerException(), request);
+        assertEquals("An unexpected error occurred", extractMessageFromResponseBody(stringBody));
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         verify(request).getHeaderValues("accept");
     }
 
     @Test
-    void shouldHandlerReturnEmptyBodyWhenPdfIsAcceptedResponseFormat() {
+    void shouldReturnPdfResponseWithCorrectStatusWhenUnexpectedErrorOccur() {
         when(request.getHeaderValues("accept")).thenReturn(new String[]{"application/pdf"});
-        ResponseEntity<Object> response = handler.handleUnexpectedException(new Exception(), request);
+        ResponseEntity<Object> response = handler.handleUnexpectedException(new NullPointerException(), request);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNull(response.getBody());
         verify(request).getHeaderValues("accept");
     }

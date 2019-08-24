@@ -10,13 +10,13 @@ import org.springframework.http.ResponseEntity;
 
 public class ResponseHelper {
 
-    public static ResponseEntity<?> createPdfOkResponse(byte[] array) {
-        if (array == null) {
-            throw new IllegalArgumentException("Passed byte array is null");
+    public static ResponseEntity<?> createPdfOkResponse(Object body) {
+        if (body == null) {
+            throw new IllegalArgumentException("Response body cannot be null");
         }
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_PDF);
-        return new ResponseEntity<>(array, responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(body, responseHeaders, HttpStatus.OK);
     }
 
     public static ResponseEntity<?> createJsonOkResponse(Object body) {
