@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.util.ArrayList;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,14 +52,17 @@ class InMemoryDatabaseTest {
 
         assertNotNull(addedInvoice.getId());
         assertEquals(1, (long) addedInvoice.getId());
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(invoiceToAdd.getId())), addedInvoice);
     }
 
     @Test
     void shouldAddInvoiceWithNullId() {
-        pl.coderstrust.model.Invoice addedInvoice = database.save(InvoiceGenerator.getRandomInvoiceWithNullId());
+        pl.coderstrust.model.Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoiceWithNullId();
+        pl.coderstrust.model.Invoice addedInvoice = database.save(invoiceToAdd);
 
         assertNotNull(addedInvoice.getId());
         assertEquals(1, (long) addedInvoice.getId());
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(1L)), addedInvoice);
     }
 
     @Test
@@ -69,7 +73,7 @@ class InMemoryDatabaseTest {
 
         pl.coderstrust.model.Invoice updatedInvoice = database.save(invoiceToUpdate);
 
-        //assertEquals(invoiceToUpdate, updatedInvoice);
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(invoiceInDatabase.getId())), updatedInvoice);
     }
 
     @Test
@@ -110,7 +114,7 @@ class InMemoryDatabaseTest {
         Optional<pl.coderstrust.model.Invoice> optionalInvoice = database.getById(invoice1.getId());
 
         assertTrue(optionalInvoice.isPresent());
-        //assertEquals(invoice1, optionalInvoice.get());
+        assertEquals(optionalInvoice.get(), noSqlModelMapper.toInvoice(storage.get(invoice1.getId())));
     }
 
     @Test
@@ -139,7 +143,7 @@ class InMemoryDatabaseTest {
         Optional<pl.coderstrust.model.Invoice> optionalInvoice = database.getByNumber(invoice1.getNumber());
 
         assertTrue(optionalInvoice.isPresent());
-        //assertEquals(invoice1, optionalInvoice.get());
+        assertEquals(optionalInvoice.get(), noSqlModelMapper.toInvoice(storage.get(invoice1.getId())));
     }
 
     @Test
@@ -167,7 +171,7 @@ class InMemoryDatabaseTest {
 
         Collection<pl.coderstrust.model.Invoice> invoices = database.getAll();
 
-        //assertEquals(storage.values(), invoices);
+        assertEquals(noSqlModelMapper.mapToInvoices(new ArrayList<>(storage.values())), invoices);
     }
 
     @Test
