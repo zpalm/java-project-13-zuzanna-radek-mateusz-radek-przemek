@@ -10,10 +10,13 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.mongodb.MongoException;
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+
+import com.mongodb.MongoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -346,5 +349,31 @@ class MongoDatabaseTest {
         //then
         assertThrows(DatabaseOperationException.class, () -> mongoDatabase.count());
         verify(mongoTemplate).count(countQuery, Invoice.class);
+    }
+
+    @Test
+    void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
+        Query findQuery = new Query();
+        LocalDate startDate = LocalDate.of(2019, 8, 24);
+        LocalDate endDate = LocalDate.of(2019, 8, 25);
+        findQuery.addCriteria(Criteria.where("issuedDate").gte(startDate).lte(endDate));
+
+        Invoice invoice1 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
+        Invoice invoice2 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
+        Invoice invoice3 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
+        Invoice invoice4 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
+
+        List<Invoice> allNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3, invoice4);
+        List<Invoice> filteredNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3);
+        List<pl.coderstrust.model.Invoice> filteredInvoices = noSqlModelMapper.mapToInvoices(filteredNoSqlInvoices);
+
+        when(mongoTemplate.findAll(Invoice.class)).thenReturn(allNoSqlInvoices);
+        //when(mongoTemplate.find(findQuery, Invoice.class)).thenReturn(filteredNoSqlInvoices);
+
+        Collection<pl.coderstrust.model.Invoice> result = mongoDatabase.getByIssueDate(startDate, endDate);
+
+        assertEquals(filteredInvoices, result);
+
+        verify(mongoTemplate).findAll(Invoice.class);
     }
 }

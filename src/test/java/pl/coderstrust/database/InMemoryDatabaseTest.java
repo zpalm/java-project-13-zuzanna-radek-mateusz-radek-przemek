@@ -8,8 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -207,5 +210,26 @@ class InMemoryDatabaseTest {
         long result = database.count();
 
         assertEquals(4, result);
+    }
+
+    @Test
+    void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
+        Invoice invoice1 = Invoice.builder().withId(1L).withIssuedDate(LocalDate.of(2019, 8, 24)).build();
+        Invoice invoice2 = Invoice.builder().withId(2L).withIssuedDate(LocalDate.of(2019, 8, 25)).build();
+        Invoice invoice3 = Invoice.builder().withId(3L).withIssuedDate(LocalDate.of(2019, 8, 26)).build();
+        Invoice invoice4 = Invoice.builder().withId(4L).withIssuedDate(LocalDate.of(2019, 8, 27)).build();
+
+        storage.put(invoice1.getId(), invoice1);
+        storage.put(invoice2.getId(), invoice2);
+        storage.put(invoice3.getId(), invoice3);
+        storage.put(invoice4.getId(), invoice4);
+
+        LocalDate startDate = LocalDate.of(2019,8,24);
+        LocalDate endDate = LocalDate.of(2019,8,26);
+
+        List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
+        Collection<Invoice> result = database.getByIssueDate(startDate, endDate);
+
+        assertEquals(expected, result);
     }
 }
