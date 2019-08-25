@@ -1,6 +1,7 @@
 package pl.coderstrust.database;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -11,7 +12,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
-import pl.coderstrust.model.Invoice;
+import pl.coderstrust.database.nosql.model.Invoice;
+import pl.coderstrust.database.nosql.model.NoSqlModelMapper;
 
 @Repository
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "in-memory")
@@ -21,28 +23,31 @@ public class InMemoryDatabase implements Database {
 
     private Map<Long, Invoice> storage;
     private AtomicLong nextId = new AtomicLong(0);
+    private NoSqlModelMapper noSqlModelMapper;
 
-    public InMemoryDatabase(Map<Long, Invoice> storage) {
+    public InMemoryDatabase(Map<Long, Invoice> storage, NoSqlModelMapper noSqlModelMapper) {
         if (storage == null) {
             log.error("Attempt to set null storage.");
             throw new IllegalArgumentException("Storage cannot be null.");
         }
         this.storage = storage;
+        this.noSqlModelMapper = noSqlModelMapper;
     }
 
     @Override
-    public synchronized Invoice save(Invoice invoice) {
+    public synchronized pl.coderstrust.model.Invoice save(pl.coderstrust.model.Invoice invoice) {
         if (invoice == null) {
             log.error("Attempt to save null invoice.");
             throw new IllegalArgumentException("Passed invoice cannot be null.");
         }
-        if (invoice.getId() == null || !storage.containsKey(invoice.getId())) {
-            return insertInvoice(invoice);
+        Invoice noSqlInvoice = noSqlModelMapper.toNoSqlInvoice(invoice);
+        if (noSqlInvoice.getId() == null || !storage.containsKey(noSqlInvoice.getId())) {
+            return insertInvoice(noSqlInvoice);
         }
-        return updateInvoice(invoice);
+        return updateInvoice(noSqlInvoice);
     }
 
-    private Invoice insertInvoice(Invoice invoice) {
+    private pl.coderstrust.model.Invoice insertInvoice(Invoice invoice) {
         Long id = nextId.incrementAndGet();
         Invoice insertedInvoice = Invoice.builder()
             .withId(id)
@@ -55,10 +60,10 @@ public class InMemoryDatabase implements Database {
             .build();
 
         storage.put(id, insertedInvoice);
-        return insertedInvoice;
+        return noSqlModelMapper.toInvoice(insertedInvoice);
     }
 
-    private Invoice updateInvoice(Invoice invoice) {
+    private pl.coderstrust.model.Invoice updateInvoice(Invoice invoice) {
         Invoice updatedInvoice = Invoice.builder()
             .withId(invoice.getId())
             .withNumber(invoice.getNumber())
@@ -70,7 +75,7 @@ public class InMemoryDatabase implements Database {
             .build();
 
         storage.put(invoice.getId(), updatedInvoice);
-        return updatedInvoice;
+        return noSqlModelMapper.toInvoice(updatedInvoice);
     }
 
     @Override
@@ -87,29 +92,33 @@ public class InMemoryDatabase implements Database {
     }
 
     @Override
-    public Optional<Invoice> getById(Long id) {
+    public Optional<pl.coderstrust.model.Invoice> getById(Long id) {
         if (id == null) {
             log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        return Optional.ofNullable(storage.get(id));
+        return Optional.ofNullable(noSqlModelMapper.toInvoice(storage.get(id)));
     }
 
     @Override
-    public Optional<Invoice> getByNumber(String number) {
+    public Optional<pl.coderstrust.model.Invoice> getByNumber(String number) {
         if (number == null) {
             log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
-        return storage.values()
+        Optional<Invoice> foundInvoice = storage.values()
             .stream()
             .filter(invoice -> invoice.getNumber().equals(number))
             .findFirst();
+        if (foundInvoice.isPresent()) {
+            return Optional.of(noSqlModelMapper.toInvoice(foundInvoice.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
-    public Collection<Invoice> getAll() {
-        return storage.values();
+    public Collection<pl.coderstrust.model.Invoice> getAll() {
+        return noSqlModelMapper.mapToInvoices(new ArrayList<>(storage.values()));
     }
 
     @Override
