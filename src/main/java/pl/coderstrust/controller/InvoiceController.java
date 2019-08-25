@@ -8,7 +8,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import pl.coderstrust.model.Invoice;
@@ -112,6 +112,7 @@ public class InvoiceController {
     }
 
     @PostMapping(produces = "application/json", consumes = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
     @ApiOperation(value = "Add new invoice", notes = "Add new invoice to database", response = Invoice.class)
     @ApiResponses({
         @ApiResponse(code = 201, message = "Created", response = Invoice.class),
@@ -169,6 +170,7 @@ public class InvoiceController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @ApiOperation(value = "Delete invoice", notes = "Delete invoice with provided id")
     @ApiResponses({
         @ApiResponse(code = 204, message = "No content"),
