@@ -1,15 +1,16 @@
 package pl.coderstrust.database;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,9 +116,10 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return getInvoices().stream()
-                .filter(invoice -> invoice.getId().equals(id))
-                .findFirst();
+            try (Stream<Invoice> stream = getInvoices()) {
+                return stream.filter(invoice -> invoice.getId().equals(id))
+                    .findFirst();
+            }
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by id.";
             log.error(message, e);
@@ -132,7 +134,7 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return getInvoices().stream()
+            return getInvoices()
                 .filter(invoice -> invoice.getNumber().equals(number))
                 .findFirst();
         } catch (IOException e) {
@@ -145,7 +147,7 @@ public class InFileDatabase implements Database {
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
         try {
-            return getInvoices();
+            return getInvoices().collect(Collectors.toList());
         } catch (IOException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
@@ -182,7 +184,7 @@ public class InFileDatabase implements Database {
     @Override
     public long count() throws DatabaseOperationException {
         try {
-            return getInvoices().size();
+            return getInvoices().count();
         } catch (IOException e) {
             String message = "An error occurred during getting number of invoices.";
             log.error(message, e);
@@ -206,7 +208,6 @@ public class InFileDatabase implements Database {
         }
         try {
             return getInvoices()
-                .stream()
                 .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
                 .collect(Collectors.toList());
         } catch (IOException e) {
@@ -226,27 +227,30 @@ public class InFileDatabase implements Database {
 
     private boolean isInvoiceExist(long id) throws IOException {
         return getInvoices()
-            .stream()
             .anyMatch(invoice -> invoice.getId().equals(id));
     }
 
-    private List<Invoice> getInvoices() throws IOException {
-        return fileHelper.readLines(filePath).stream()
+    private Stream<Invoice> getInvoices() throws IOException {
+        return fileHelper.readLines(filePath)
             .map(this::deserializeJsonToInvoice)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+            .filter(Objects::nonNull);
     }
 
     private int getPositionInDatabase(Long id) throws IOException, DatabaseOperationException {
-        List<Invoice> invoices = getInvoices();
-        Optional<Invoice> optionalInvoice = invoices
-            .stream()
-            .filter(i -> i.getId().equals(id))
+        AtomicInteger index = new AtomicInteger();
+        Optional<Invoice> optionalInvoice = getInvoices()
+            .filter(i -> {
+                if (!i.getId().equals(id)) {
+                    index.getAndIncrement();
+                    return false;
+                }
+                return true;
+            })
             .findFirst();
         if (optionalInvoice.isEmpty()) {
             log.error("Attempt to operate on a non existing invoice.");
             throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
         }
-        return invoices.indexOf(optionalInvoice.get()) + 1;
+        return index.incrementAndGet();
     }
 }

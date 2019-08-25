@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -17,14 +18,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -74,11 +73,8 @@ class InFileDatabaseTest {
             .withBuyer(invoiceToAdd.getBuyer())
             .withEntries(invoiceToAdd.getEntries())
             .build();
-        List<String> invoicesInDatabase = new ArrayList<>();
-        invoicesInDatabase.add(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()));
-        invoicesInDatabase.add(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()));
         doNothing().when(fileHelper).writeLine(DATABASE_FILE, objectMapper.writeValueAsString(expectedInvoice));
-        doReturn(invoicesInDatabase).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
 
         Invoice addedInvoice = inFileDatabase.save(invoiceToAdd);
 
@@ -99,7 +95,7 @@ class InFileDatabaseTest {
             .withBuyer(invoiceInDatabase.getBuyer())
             .withEntries(invoiceInDatabase.getEntries())
             .build();
-        doReturn(List.of(objectMapper.writeValueAsString(invoiceInDatabase))).when(fileHelper).readLines(DATABASE_FILE);
+        doAnswer(invocation -> Stream.of(objectMapper.writeValueAsString(invoiceInDatabase))).when(fileHelper).readLines(DATABASE_FILE);
         doNothing().when(fileHelper).replaceLine(DATABASE_FILE, objectMapper.writeValueAsString(invoiceToUpdate), 1);
 
         Invoice updatedInvoice = inFileDatabase.save(invoiceToUpdate);
@@ -126,7 +122,7 @@ class InFileDatabaseTest {
             .withBuyer(invoiceToAdd.getBuyer())
             .withEntries(invoiceToAdd.getEntries())
             .build();
-        doReturn(List.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
         doThrow(IOException.class).when(fileHelper).writeLine(DATABASE_FILE, objectMapper.writeValueAsString(expectedInvoice));
 
         assertThrows(DatabaseOperationException.class, () -> inFileDatabase.save(invoiceToAdd));
@@ -146,7 +142,7 @@ class InFileDatabaseTest {
             .withBuyer(invoiceInDatabase.getBuyer())
             .withEntries(invoiceInDatabase.getEntries())
             .build();
-        doReturn(List.of(objectMapper.writeValueAsString(invoiceInDatabase))).when(fileHelper).readLines(DATABASE_FILE);
+        doAnswer(invocation -> Stream.of(objectMapper.writeValueAsString(invoiceInDatabase))).when(fileHelper).readLines(DATABASE_FILE);
         doThrow(IOException.class).when(fileHelper).replaceLine(DATABASE_FILE, objectMapper.writeValueAsString(invoiceToUpdate), 1);
 
         assertThrows(DatabaseOperationException.class, () -> inFileDatabase.save(invoiceToUpdate));
@@ -157,7 +153,7 @@ class InFileDatabaseTest {
     @Test
     void shouldDeleteInvoice() throws DatabaseOperationException, IOException {
         Invoice invoiceToDelete = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoiceToDelete))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoiceToDelete), objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
         doNothing().when(fileHelper).removeLine(DATABASE_FILE, 1);
 
         inFileDatabase.delete(invoiceToDelete.getId());
@@ -174,7 +170,7 @@ class InFileDatabaseTest {
     @Test
     void deleteMethodShouldThrowExceptionForNonExistingInvoice() throws IOException {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
 
         assertThrows(DatabaseOperationException.class, () -> inFileDatabase.delete(invoice.getId() + 1L));
         verify(fileHelper).readLines(DATABASE_FILE);
@@ -184,7 +180,7 @@ class InFileDatabaseTest {
     @Test
     void deleteMethodShouldThrowExceptionWhenFileHelperThrowsException() throws IOException {
         Invoice invoiceToDelete = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoiceToDelete))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoiceToDelete))).when(fileHelper).readLines(DATABASE_FILE);
         doThrow(IOException.class).when(fileHelper).removeLine(DATABASE_FILE, 1);
 
         assertThrows(DatabaseOperationException.class, () -> inFileDatabase.delete(invoiceToDelete.getId()));
@@ -195,7 +191,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnInvoiceById() throws DatabaseOperationException, IOException {
         Invoice invoiceToGet = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(invoiceToGet))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(invoiceToGet))).when(fileHelper).readLines(DATABASE_FILE);
 
         Optional<Invoice> optionalInvoice = inFileDatabase.getById(invoiceToGet.getId());
 
@@ -207,7 +203,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnEmptyOptionalWhenGettingNonExistingInvoiceById() throws IOException, DatabaseOperationException {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
 
         Optional<Invoice> optionalInvoice = inFileDatabase.getById(invoice.getId() + 1L);
 
@@ -232,7 +228,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnInvoiceByNumber() throws DatabaseOperationException, IOException {
         Invoice invoiceToGet = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(invoiceToGet))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(invoiceToGet))).when(fileHelper).readLines(DATABASE_FILE);
 
         Optional<Invoice> optionalInvoice = inFileDatabase.getByNumber(invoiceToGet.getNumber());
 
@@ -244,7 +240,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnEmptyOptionalWhenGettingNonExistingInvoiceByNumber() throws IOException, DatabaseOperationException {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
 
         Optional<Invoice> optionalInvoice = inFileDatabase.getByNumber(invoice.getNumber() + "sd");
 
@@ -271,7 +267,7 @@ class InFileDatabaseTest {
         Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
         Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
         List<Invoice> expected = Arrays.asList(invoice1, invoice2);
-        doReturn(List.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2))).when(fileHelper).readLines(DATABASE_FILE);
 
         Collection<Invoice> result = inFileDatabase.getAll();
 
@@ -281,7 +277,7 @@ class InFileDatabaseTest {
 
     @Test
     void getAllMethodShouldReturnEmptyListWhenDatabaseIsEmpty() throws IOException, DatabaseOperationException {
-        doReturn(Collections.emptyList()).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.empty()).when(fileHelper).readLines(DATABASE_FILE);
 
         Collection<Invoice> result = inFileDatabase.getAll();
 
@@ -317,7 +313,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnTrueWhenInvoiceExists() throws IOException, DatabaseOperationException {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
 
         boolean result = inFileDatabase.exists(invoice.getId());
 
@@ -328,7 +324,7 @@ class InFileDatabaseTest {
     @Test
     void shouldReturnFalseWhenInvoiceDoesNotExist() throws IOException, DatabaseOperationException {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
-        doReturn(List.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice))).when(fileHelper).readLines(DATABASE_FILE);
 
         boolean result = inFileDatabase.exists(invoice.getId() + 1L);
 
@@ -352,7 +348,7 @@ class InFileDatabaseTest {
 
     @Test
     void shouldReturnNumberOfInvoices() throws IOException, DatabaseOperationException {
-        doReturn(List.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()), objectMapper.writeValueAsString(InvoiceGenerator.getRandomInvoice()))).when(fileHelper).readLines(DATABASE_FILE);
 
         long result = inFileDatabase.count();
 
@@ -379,7 +375,7 @@ class InFileDatabaseTest {
 
 
         List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
-        doReturn(List.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2), objectMapper.writeValueAsString(invoice3), objectMapper.writeValueAsString(invoice4), objectMapper.writeValueAsString(invoice5))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(Stream.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2), objectMapper.writeValueAsString(invoice3), objectMapper.writeValueAsString(invoice4), objectMapper.writeValueAsString(invoice5))).when(fileHelper).readLines(DATABASE_FILE);
 
         Collection<Invoice> result = inFileDatabase.getByIssueDate(startDate, startDate.plusDays(2L));
 

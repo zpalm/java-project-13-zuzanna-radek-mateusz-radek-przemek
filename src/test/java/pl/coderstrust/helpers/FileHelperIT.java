@@ -1,5 +1,6 @@
 package pl.coderstrust.helpers;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -15,7 +17,8 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +27,7 @@ class FileHelperIT {
 
     private static final String INPUT_FILE = "src/test/resources/helpers/input_file.txt";
     private static final String EXPECTED_FILE = "src/test/resources/helpers/expected_file.txt";
-    private static final String ENCODING = "UTF-8";
+    private static final Charset ENCODING = UTF_8;
     private FileHelper fileHelper;
     private File inputFile;
     private File expectedFile;
@@ -56,15 +59,15 @@ class FileHelperIT {
 
     @Test
     void shouldWriteLineToFile() throws IOException {
-        FileUtils.writeLines(expectedFile, ENCODING, Collections.singleton("test test"), true);
+        FileUtils.writeLines(expectedFile, ENCODING.name(), Collections.singleton("test test"), true);
         fileHelper.writeLine(INPUT_FILE, "test test");
         assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
     }
 
     @Test
     void shouldReplaceLineInFile() throws IOException {
-        FileUtils.writeLines(inputFile, ENCODING, Arrays.asList("bla1", "blabla", "bla3"), true);
-        FileUtils.writeLines(expectedFile, ENCODING, Arrays.asList("bla1", "bla2", "bla3"), true);
+        FileUtils.writeLines(inputFile, ENCODING.name(), Arrays.asList("bla1", "blabla", "bla3"), true);
+        FileUtils.writeLines(expectedFile, ENCODING.name(), Arrays.asList("bla1", "bla2", "bla3"), true);
         fileHelper.replaceLine(INPUT_FILE, "bla2", 2);
         assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
     }
@@ -77,15 +80,15 @@ class FileHelperIT {
 
     @Test
     void shouldReadLastLineFromFile() throws IOException {
-        FileUtils.writeLines(inputFile, ENCODING, Arrays.asList("Seller's details", "2019-06-25", "Buyer's details"), false);
+        FileUtils.writeLines(inputFile, ENCODING.name(), Arrays.asList("Seller's details", "2019-06-25", "Buyer's details"), false);
         String result = fileHelper.readLastLine(INPUT_FILE);
         assertEquals("Buyer's details", result);
     }
 
     @Test
     void shouldRemoveLineFromFile() throws IOException {
-        FileUtils.writeLines(inputFile, ENCODING, Arrays.asList("bla1", "bla2", "bla3"), true);
-        FileUtils.writeLines(expectedFile, ENCODING, Arrays.asList("bla1", "bla3"), true);
+        FileUtils.writeLines(inputFile, ENCODING.name(), Arrays.asList("bla1", "bla2", "bla3"), true);
+        FileUtils.writeLines(expectedFile, ENCODING.name(), Arrays.asList("bla1", "bla3"), true);
         fileHelper.removeLine(INPUT_FILE, 2);
         assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
     }
@@ -100,15 +103,18 @@ class FileHelperIT {
             "Seller's details",
             "Buyer's details"
         );
-        FileUtils.writeLines(inputFile, ENCODING, lines, true);
-        List<String> result = fileHelper.readLines(INPUT_FILE);
+        FileUtils.writeLines(inputFile, ENCODING.name(), lines, true);
+        List<String> result;
+        try (Stream<String> stream = fileHelper.readLines(INPUT_FILE)) {
+            result = stream.collect(Collectors.toList());
+        }
         assertEquals(lines, result);
     }
 
     @Test
     void shouldClearFile() throws IOException {
         expectedFile.createNewFile();
-        FileUtils.writeLines(inputFile, Collections.singleton("bla bla bla"), ENCODING, true);
+        FileUtils.writeLines(inputFile, Collections.singleton("bla bla bla"), ENCODING.name(), true);
         fileHelper.clear(INPUT_FILE);
         assertTrue(FileUtils.contentEquals(expectedFile, inputFile));
     }

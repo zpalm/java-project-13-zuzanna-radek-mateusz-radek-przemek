@@ -1,5 +1,7 @@
 package pl.coderstrust.helpers;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -8,7 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
-
+import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.ReversedLinesFileReader;
 import org.springframework.stereotype.Component;
@@ -16,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FileHelper {
 
-    private static final String ENCODING = "UTF-8";
+    private static final Charset ENCODING = UTF_8;
 
     public void create(String filePath) throws IOException {
         if (filePath == null) {
@@ -63,14 +65,14 @@ public class FileHelper {
         if (line == null) {
             throw new IllegalArgumentException("Line cannot be null.");
         }
-        FileUtils.writeLines(new File(filePath), ENCODING, Collections.singleton(line), true);
+        FileUtils.writeLines(new File(filePath), ENCODING.name(), Collections.singleton(line), true);
     }
 
-    public List<String> readLines(String filePath) throws IOException {
+    public Stream<String> readLines(String filePath) throws IOException {
         if (filePath == null) {
             throw new IllegalArgumentException("File's path cannot be null.");
         }
-        return FileUtils.readLines(new File(filePath), ENCODING);
+        return Files.lines(Paths.get(filePath), ENCODING);
     }
 
     public String readLastLine(String filePath) throws IOException {
@@ -92,7 +94,7 @@ public class FileHelper {
         File file = new File(filePath);
         List<String> lines = FileUtils.readLines(file, ENCODING);
         lines.remove(lineNumber - 1);
-        FileUtils.writeLines(file, ENCODING, lines, false);
+        FileUtils.writeLines(file, ENCODING.name(), lines, false);
     }
 
     public void replaceLine(String filePath, String line, int lineNumber) throws IOException {
@@ -108,6 +110,6 @@ public class FileHelper {
         File file = new File(filePath);
         List<String> lines = FileUtils.readLines(file, ENCODING);
         lines.set(lineNumber - 1, line);
-        FileUtils.writeLines(file, ENCODING, lines, false);
+        FileUtils.writeLines(file, ENCODING.name(), lines, false);
     }
 }
