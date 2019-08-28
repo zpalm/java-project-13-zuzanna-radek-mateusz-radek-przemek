@@ -74,4 +74,26 @@ public class InvoiceGenerator {
             .withEntries(entries)
             .build();
     }
+
+    public static Invoice getRandomInvoiceWithSpecificIssuedDate(LocalDate issuedDate) {
+        Long id = IdGenerator.getNextId();
+        String number = WordGenerator.getRandomWord();
+        LocalDate dueDate = issuedDate.plusDays(2);
+        Company seller = CompanyGenerator.getRandomCompany();
+        Company buyer = CompanyGenerator.getRandomCompany();
+        List<InvoiceEntry> entries = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            entries.add(InvoiceEntryGenerator.getRandomEntry());
+        }
+
+        return Invoice.builder()
+            .withId(id)
+            .withNumber(number)
+            .withIssuedDate(issuedDate)
+            .withDueDate(dueDate)
+            .withSeller(seller)
+            .withBuyer(buyer)
+            .withEntries(entries)
+            .build();
+    }
 }

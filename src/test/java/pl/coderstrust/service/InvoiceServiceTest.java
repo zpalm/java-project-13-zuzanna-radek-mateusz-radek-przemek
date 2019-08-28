@@ -11,11 +11,17 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -357,5 +363,56 @@ class InvoiceServiceTest {
         //then
         assertThrows(ServiceOperationException.class, () -> invoiceService.invoicesCount());
         verify(database).count();
+    }
+
+    @Test
+    void shouldReturnInvoicesFilteredByIssuedDate() throws ServiceOperationException, DatabaseOperationException {
+        //given
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        LocalDate endDate = startDate.plusDays(2L);
+
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
+        Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate);
+
+        List<Invoice> invoices = List.of(invoice1, invoice2, invoice3);
+        when(database.getByIssueDate(startDate, endDate)).thenReturn(invoices);
+
+        //when
+        Collection<Invoice> result = invoiceService.getByIssueDate(startDate, startDate.plusDays(2L));
+
+        //then
+        assertEquals(invoices, result);
+        verify(database).getByIssueDate(startDate, endDate);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
+    void getByIssuedDateMethodShouldThrowExceptionWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate, String message) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> invoiceService.getByIssueDate(startDate, endDate));
+        assertEquals(message, exception.getMessage());
+    }
+
+    private static Stream<Arguments> invalidIssuedDateArgumentsAndExceptionMessages() {
+        return Stream.of(
+            Arguments.of(null, null, "Start date cannot be null"),
+            Arguments.of(null, LocalDate.of(2018, 8, 31), "Start date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), null, "End date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
+        );
+    }
+
+    @Test
+    void getByIssuedDateMethodShouldThrowExceptionWhenDatabaseOperationExceptionOccurs() throws DatabaseOperationException {
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        LocalDate endDate = startDate.plusDays(2L);
+        doThrow(new DatabaseOperationException()).when(database).getByIssueDate(startDate, endDate);
+
+        ServiceOperationException exception = assertThrows(ServiceOperationException.class, () -> invoiceService.getByIssueDate(startDate, endDate));
+        assertEquals("An error occurred during filtering invoices by issued date.", exception.getMessage());
+
+        verify(database).getByIssueDate(startDate, endDate);
     }
 }

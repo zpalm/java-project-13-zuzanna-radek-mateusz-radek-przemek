@@ -147,6 +147,18 @@ public class InvoiceService {
     }
 
     public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws ServiceOperationException {
+        if (startDate == null) {
+            log.error("Attempt to get invoices from date interval without providing start date");
+            throw new IllegalArgumentException("Start date cannot be null");
+        }
+        if (endDate == null) {
+            log.error("Attempt to get invoices from date interval without providing end date");
+            throw new IllegalArgumentException("End date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            log.error("Attempt to get invoices from date interval when passed start date is after end date");
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
         try {
             return database.getByIssueDate(startDate, endDate);
         } catch (DatabaseOperationException e) {

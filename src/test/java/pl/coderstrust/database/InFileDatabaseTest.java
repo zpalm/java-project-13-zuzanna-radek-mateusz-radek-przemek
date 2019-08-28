@@ -16,16 +16,21 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.coderstrust.configuration.ApplicationConfiguration;
@@ -360,6 +365,51 @@ class InFileDatabaseTest {
         doThrow(IOException.class).when(fileHelper).readLines(DATABASE_FILE);
 
         assertThrows(DatabaseOperationException.class, () -> inFileDatabase.count());
+        verify(fileHelper).readLines(DATABASE_FILE);
+    }
+
+    @Test
+    void shouldReturnInvoicesByIssuedDate() throws IOException, DatabaseOperationException {
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
+        Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
+
+        List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
+        doReturn(List.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2), objectMapper.writeValueAsString(invoice3))).when(fileHelper).readLines(DATABASE_FILE);
+
+        Collection<Invoice> result = inFileDatabase.getByIssueDate(startDate, startDate.plusDays(2L));
+
+        assertEquals(expected, result);
+        verify(fileHelper).readLines(DATABASE_FILE);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
+    void getByIssueDateMethodShouldThrowExceptionWhenArgumentsAreInvalid(LocalDate startDate, LocalDate endDate, String message) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> inFileDatabase.getByIssueDate(startDate, endDate));
+        assertEquals(message, exception.getMessage());
+    }
+
+    private static Stream<Arguments> invalidIssuedDateArgumentsAndExceptionMessages() {
+        return Stream.of(
+            Arguments.of(null, null, "Start date cannot be null"),
+            Arguments.of(null, LocalDate.of(2018, 8, 31), "Start date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), null, "End date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
+        );
+    }
+
+    @Test
+    void getByIssueDateMethodShouldThrowExceptionWhenIoExceptionIsCaught() throws IOException {
+        LocalDate startDate = LocalDate.now();
+        doThrow(IOException.class).when(fileHelper).readLines(DATABASE_FILE);
+
+        DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> inFileDatabase.getByIssueDate(startDate, startDate.plusDays(2L)));
+        assertEquals("An error occurred during filtering invoices by issued date", exception.getMessage());
+
         verify(fileHelper).readLines(DATABASE_FILE);
     }
 }

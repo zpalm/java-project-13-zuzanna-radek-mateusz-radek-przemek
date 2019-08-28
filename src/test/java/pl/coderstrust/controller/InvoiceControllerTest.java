@@ -16,13 +16,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -622,5 +629,102 @@ class InvoiceControllerTest {
 
         verify(invoiceService).getInvoiceByNumber(invoice.getNumber());
         verify(invoicePdfService).createPdf(invoice);
+    }
+
+    @Test
+    public void shouldReturnInvoicesFilteredByIssuedDates() throws Exception {
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        LocalDate endDate = startDate.plusDays(2L);
+        Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
+        Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
+        Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate);
+        List<Invoice> invoices = List.of(invoice1, invoice2, invoice3);
+
+        when(invoiceService.getByIssueDate(startDate, endDate)).thenReturn(invoices);
+
+        String url = getUrlWithIssuedDateParameters(startDate, endDate);
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(mapper.writeValueAsString(invoices)));
+
+        verify(invoiceService).getByIssueDate(startDate, endDate);
+    }
+
+    @ParameterizedTest
+    @MethodSource("startDatesLaterThanEndDates")
+    void getByIssuedDateMethodShouldReturnBadRequestStatusWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate) throws Exception {
+        String url = getUrlWithIssuedDateParameters(startDate, endDate);
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+
+        verify(invoiceService, never()).getByIssueDate(startDate, endDate);
+    }
+
+    private static Stream<Arguments> startDatesLaterThanEndDates() {
+        return Stream.of(
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31)),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31)),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("nullIssuedDates")
+    void getByIssuedDateMethodShouldReturnBadRequestStatusWhenIssuedDateIsNull(LocalDate startDate, LocalDate endDate, String url) throws Exception {
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest());
+
+        verify(invoiceService, never()).getByIssueDate(startDate, endDate);
+    }
+
+    private static Stream<Arguments> nullIssuedDates() {
+        return Stream.of(
+            Arguments.of(null, null, "/invoices/byIssuedDate"),
+            Arguments.of(LocalDate.of(2019, 2, 28), null, "/invoices/byIssuedDate?startDate=2019-02-28"),
+            Arguments.of(null, LocalDate.of(2009, 3, 31), "/invoices/byIssuedDate?endDate=2019-03-31")
+        );
+    }
+
+    @Test
+    void getByIssuedDateMethodShouldReturnInternalServerErrorWhenSomethingWentWrongOnServer() throws Exception {
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        LocalDate endDate = startDate.plusDays(2L);
+        String url = getUrlWithIssuedDateParameters(startDate, endDate);
+
+        when(invoiceService.getByIssueDate(startDate, endDate)).thenThrow(new ServiceOperationException());
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isInternalServerError());
+
+        verify(invoiceService).getByIssueDate(startDate, endDate);
+    }
+
+    @Test
+    void getByIssuedDateMethodShouldReturnNotAcceptableStatusWhenNotSupportedMediaTypeRequested() throws Exception {
+        LocalDate startDate = LocalDate.of(2019, 8, 26);
+        LocalDate endDate = startDate.plusDays(2L);
+        String url = getUrlWithIssuedDateParameters(startDate, endDate);
+
+        mockMvc.perform(get(url)
+            .accept(MediaType.APPLICATION_XML))
+            .andExpect(status().isNotAcceptable());
+
+        verify(invoiceService, never()).getByIssueDate(startDate, endDate);
+    }
+
+    private String getUrlWithIssuedDateParameters(LocalDate startDate, LocalDate endDate) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String startDateString = formatter.format(startDate);
+        String endDateString = formatter.format(endDate);
+        return String.format("/invoices/byIssuedDate?startDate=%s&endDate=%s", startDateString, endDateString);
     }
 }

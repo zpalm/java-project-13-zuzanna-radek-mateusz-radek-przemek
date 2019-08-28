@@ -6,20 +6,26 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.mongodb.MongoException;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-import com.mongodb.MongoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -355,25 +361,52 @@ class MongoDatabaseTest {
     void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
         Query findQuery = new Query();
         LocalDate startDate = LocalDate.of(2019, 8, 24);
-        LocalDate endDate = LocalDate.of(2019, 8, 25);
-        findQuery.addCriteria(Criteria.where("issuedDate").gte(startDate).lte(endDate));
+        findQuery = findQuery.addCriteria(Criteria.where("issuedDate").gte(startDate).lte(startDate.plusDays(2L)));
 
         Invoice invoice1 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
-        Invoice invoice4 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
 
-        List<Invoice> allNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3, invoice4);
         List<Invoice> filteredNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3);
         List<pl.coderstrust.model.Invoice> filteredInvoices = noSqlModelMapper.mapToInvoices(filteredNoSqlInvoices);
 
-        when(mongoTemplate.findAll(Invoice.class)).thenReturn(allNoSqlInvoices);
-        //when(mongoTemplate.find(findQuery, Invoice.class)).thenReturn(filteredNoSqlInvoices);
+        doReturn(filteredNoSqlInvoices).when(mongoTemplate).find(findQuery, Invoice.class);
 
-        Collection<pl.coderstrust.model.Invoice> result = mongoDatabase.getByIssueDate(startDate, endDate);
+        Collection<pl.coderstrust.model.Invoice> result = mongoDatabase.getByIssueDate(startDate, startDate.plusDays(2L));
 
         assertEquals(filteredInvoices, result);
 
-        verify(mongoTemplate).findAll(Invoice.class);
+        verify(mongoTemplate).find(findQuery, Invoice.class);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
+    void getByIssueDateMethodShouldThrowException(LocalDate startDate, LocalDate endDate, String message) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> mongoDatabase.getByIssueDate(startDate, endDate));
+        assertEquals(message, exception.getMessage());
+    }
+
+    private static Stream<Arguments> invalidIssuedDateArgumentsAndExceptionMessages() {
+        return Stream.of(
+            Arguments.of(null, null, "Start date cannot be null"),
+            Arguments.of(null, LocalDate.of(2018, 8, 31), "Start date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), null, "End date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
+        );
+    }
+
+    @Test
+    void getByIssueDateMethodShouldThrowExceptionWhenUnexpectedErrorOccur() {
+        LocalDate startDate = LocalDate.now();
+        Query findQuery = Query.query(Criteria.where("issuedDate").gte(startDate).lte(startDate.plusDays(2L)));
+
+        doThrow(new MongoException("")).when(mongoTemplate).find(findQuery, Invoice.class);
+
+        DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> mongoDatabase.getByIssueDate(startDate, startDate.plusDays(2L)));
+        assertEquals("An error occurred during filtering invoices by issued date.", exception.getMessage());
+
+        verify(mongoTemplate).find(findQuery, Invoice.class);
     }
 }

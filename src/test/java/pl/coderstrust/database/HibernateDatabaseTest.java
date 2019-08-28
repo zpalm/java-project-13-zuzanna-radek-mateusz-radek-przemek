@@ -11,13 +11,19 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.NonTransientDataAccessException;
@@ -67,7 +73,8 @@ class HibernateDatabaseTest {
         //given
         pl.coderstrust.model.Invoice invoice = InvoiceGenerator.getRandomInvoice();
         Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).save(sqlInvoice);
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).save(sqlInvoice);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.save(invoice));
@@ -108,7 +115,8 @@ class HibernateDatabaseTest {
     void deleteMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringDeletingInvoice() {
         //given
         when(invoiceRepository.existsById(1L)).thenReturn(true);
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).deleteById(1L);
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).deleteById(1L);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.delete(1L));
@@ -203,7 +211,8 @@ class HibernateDatabaseTest {
     @Test
     void getByNumberMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingInvoiceByNumber() {
         //given
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).findOne(any(Example.class));
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).findOne(any(Example.class));
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.getByNumber("1/1/1"));
@@ -228,7 +237,8 @@ class HibernateDatabaseTest {
     @Test
     void getAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingAllInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).findAll();
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).findAll();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.getAll());
@@ -263,7 +273,8 @@ class HibernateDatabaseTest {
     @Test
     void existsMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringCheckingInvoiceExists() {
         //given
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).existsById(1L);
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).existsById(1L);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.exists(1L));
@@ -286,7 +297,8 @@ class HibernateDatabaseTest {
     @Test
     void countMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingNumberOfInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).count();
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).count();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.count());
@@ -308,10 +320,61 @@ class HibernateDatabaseTest {
     @Test
     void deleteAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringDeletingAllInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).deleteAll();
+        doThrow(new NonTransientDataAccessException("") {
+        }).when(invoiceRepository).deleteAll();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.deleteAll());
         verify(invoiceRepository).deleteAll();
+    }
+
+    @Test
+    void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
+        //given
+        LocalDate startDate = LocalDate.of(2019, 8, 24);
+        Invoice invoice1 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
+        Invoice invoice2 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1));
+        Invoice invoice3 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2));
+
+        List<Invoice> sqlInvoices = List.of(invoice1, invoice2, invoice3);
+        List<pl.coderstrust.model.Invoice> invoices = sqlModelMapper.mapToInvoices(sqlInvoices);
+        when(invoiceRepository.findAllByIssuedDate(startDate, startDate.plusDays(2L))).thenReturn(sqlInvoices);
+
+        //when
+        Collection<pl.coderstrust.model.Invoice> result = database.getByIssueDate(startDate, startDate.plusDays(2L));
+
+        //then
+        assertEquals(invoices, result);
+        verify(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
+    void getByIssuedDateMethodShouldThrowException(LocalDate startDate, LocalDate endDate, String message) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> database.getByIssueDate(startDate, endDate));
+        assertEquals(message, exception.getMessage());
+    }
+
+    private static Stream<Arguments> invalidIssuedDateArgumentsAndExceptionMessages() {
+        return Stream.of(
+            Arguments.of(null, null, "Start date cannot be null"),
+            Arguments.of(null, LocalDate.of(2018, 8, 31), "Start date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), null, "End date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
+        );
+    }
+
+    @Test
+    void getByIssuedDateShouldThrowExceptionWhenNonTransientDataAccessExceptionOccurDuringFilteringInvoicesByIssuedDate() {
+        LocalDate startDate = LocalDate.now();
+        doThrow(new NonTransientDataAccessException(" ") {
+        }).when(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
+
+        DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> database.getByIssueDate(startDate, startDate.plusDays(2L)));
+        assertEquals("An error occurred during getting invoices filtered by issue date", exception.getMessage());
+
+        verify(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
     }
 }

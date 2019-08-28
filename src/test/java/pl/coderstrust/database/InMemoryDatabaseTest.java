@@ -15,8 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import pl.coderstrust.generators.InvoiceGenerator;
 import pl.coderstrust.model.Invoice;
 
@@ -224,12 +229,30 @@ class InMemoryDatabaseTest {
         storage.put(invoice3.getId(), invoice3);
         storage.put(invoice4.getId(), invoice4);
 
-        LocalDate startDate = LocalDate.of(2019,8,24);
-        LocalDate endDate = LocalDate.of(2019,8,26);
+        LocalDate startDate = LocalDate.of(2019, 8, 24);
+        LocalDate endDate = LocalDate.of(2019, 8, 26);
 
         List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
         Collection<Invoice> result = database.getByIssueDate(startDate, endDate);
 
         assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
+    void getByIssuedDateShouldThrowExceptionWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate, String message) {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> database.getByIssueDate(startDate, endDate));
+        assertEquals(message, exception.getMessage());
+    }
+
+    private static Stream<Arguments> invalidIssuedDateArgumentsAndExceptionMessages() {
+        return Stream.of(
+            Arguments.of(null, null, "Start date cannot be null"),
+            Arguments.of(null, LocalDate.of(2018, 8, 31), "Start date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), null, "End date cannot be null"),
+            Arguments.of(LocalDate.of(2019, 8, 22), LocalDate.of(2018, 8, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2019, 1, 31), "Start date cannot be after end date"),
+            Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
+        );
     }
 }

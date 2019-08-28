@@ -133,11 +133,15 @@ public class InMemoryDatabase implements Database {
 
     @Override
     public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
-        if (startDate == null || endDate == null) {
-            log.error("Attempt to get invoices from date interval without providing start date or end date");
-            throw new IllegalArgumentException("Both start date and end date cannot be null");
+        if (startDate == null) {
+            log.error("Attempt to get invoices from date interval without providing start date");
+            throw new IllegalArgumentException("Start date cannot be null");
         }
-        if(startDate.isAfter(endDate)){
+        if (endDate == null) {
+            log.error("Attempt to get invoices from date interval without providing end date");
+            throw new IllegalArgumentException("End date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
             log.error("Attempt to get invoices from date interval when passed start date is after end date");
             throw new IllegalArgumentException("Start date cannot be after end date");
         }

@@ -7,10 +7,14 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 
+import java.time.LocalDate;
 import java.util.Optional;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -87,7 +91,7 @@ public class InvoiceController {
     @GetMapping(value = "/byNumber", produces = {"application/json", "application/pdf"})
     @ApiOperation(value = "Get invoice by number", notes = "Retrieving the invoice by provided number in json or pdf format", produces = "application/json, application/pdf", response = Invoice.class)
     @ApiResponses({
-        @ApiResponse(code = 200, message = "OK", response = Invoice.class),
+        @ApiResponse(code = 200, message = "OK", response = Invoice[].class),
         @ApiResponse(code = 400, message = "Bad request"),
         @ApiResponse(code = 404, message = "Invoice not found"),
         @ApiResponse(code = 406, message = "Not acceptable format"),
@@ -109,6 +113,34 @@ public class InvoiceController {
             return ResponseHelper.createPdfOkResponse(invoiceAsPdf);
         }
         return ResponseHelper.createJsonOkResponse(invoice.get());
+    }
+
+    @GetMapping(value = "byIssuedDate", produces = "application/json")
+    @ApiOperation(value = "filter invoices by issue date", notes = "get invoices from the limited date interval", response = Invoice.class)
+    @ApiResponses({
+        @ApiResponse(code = 200, message = "OK", response = Invoice.class),
+        @ApiResponse(code = 400, message = "Bad request"),
+        @ApiResponse(code = 500, message = "Internal server error"),
+    })
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, name = "startDate", value = "Beginning of date interval respective for filtered invoices", dataType = "LocalDate"),
+        @ApiImplicitParam(required = true, name = "endDate", value = "End of date interval respective for filtered invoices", dataType = "LocalDate")
+    })
+    public ResponseEntity<?> getByIssuedDate(@RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate startDate, @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
+        @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
+        if (startDate == null) {
+            log.error("Attempt to get invoices from date interval without providing start date");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be null");
+        }
+        if (endDate == null) {
+            log.error("Attempt to get invoices from date interval without providing end date");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "End date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
+            log.error("Attempt to get invoices from date interval when passed start date is after end date");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be after end date");
+        }
+        return ResponseHelper.createJsonOkResponse(invoiceService.getByIssueDate(startDate, endDate));
     }
 
     @PostMapping(produces = "application/json", consumes = "application/json")

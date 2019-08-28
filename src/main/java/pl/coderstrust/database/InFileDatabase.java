@@ -1,5 +1,6 @@
 package pl.coderstrust.database;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -9,7 +10,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -192,11 +192,15 @@ public class InFileDatabase implements Database {
 
     @Override
     public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
-        if (startDate == null || endDate == null) {
-            log.error("Attempt to get invoices from date interval without providing start date or end date");
-            throw new IllegalArgumentException("Both start date and end date cannot be null");
+        if (startDate == null) {
+            log.error("Attempt to get invoices from date interval without providing start date");
+            throw new IllegalArgumentException("Start date cannot be null");
         }
-        if(startDate.isAfter(endDate)){
+        if (endDate == null) {
+            log.error("Attempt to get invoices from date interval without providing end date");
+            throw new IllegalArgumentException("End date cannot be null");
+        }
+        if (startDate.isAfter(endDate)) {
             log.error("Attempt to get invoices from date interval when passed start date is after end date");
             throw new IllegalArgumentException("Start date cannot be after end date");
         }
