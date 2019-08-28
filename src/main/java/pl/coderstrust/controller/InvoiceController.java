@@ -91,7 +91,7 @@ public class InvoiceController {
     @GetMapping(value = "/byNumber", produces = {"application/json", "application/pdf"})
     @ApiOperation(value = "Get invoice by number", notes = "Retrieving the invoice by provided number in json or pdf format", produces = "application/json, application/pdf", response = Invoice.class)
     @ApiResponses({
-        @ApiResponse(code = 200, message = "OK", response = Invoice[].class),
+        @ApiResponse(code = 200, message = "OK", response = Invoice.class),
         @ApiResponse(code = 400, message = "Bad request"),
         @ApiResponse(code = 404, message = "Invoice not found"),
         @ApiResponse(code = 406, message = "Not acceptable format"),
@@ -118,7 +118,7 @@ public class InvoiceController {
     @GetMapping(value = "byIssuedDate", produces = "application/json")
     @ApiOperation(value = "filter invoices by issue date", notes = "get invoices from the limited date interval", response = Invoice.class)
     @ApiResponses({
-        @ApiResponse(code = 200, message = "OK", response = Invoice.class),
+        @ApiResponse(code = 200, message = "OK", response = Invoice[].class),
         @ApiResponse(code = 400, message = "Bad request"),
         @ApiResponse(code = 500, message = "Internal server error"),
     })
