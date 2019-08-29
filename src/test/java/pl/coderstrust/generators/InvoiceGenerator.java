@@ -96,4 +96,47 @@ public class InvoiceGenerator {
             .withEntries(entries)
             .build();
     }
+
+    public static Invoice getRandomInvoiceWithFixedIdsAndIssuedDate(Long id, LocalDate issuedDate) {
+        String number = WordGenerator.getRandomWord();
+        LocalDate dueDate = issuedDate.plusDays(2);
+        Company seller = CompanyGenerator.getRandomCompanyWithIdEqualZero();
+        Company buyer = CompanyGenerator.getRandomCompanyWithIdEqualZero();
+        List<InvoiceEntry> entries = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            entries.add(InvoiceEntryGenerator.getRandomEntryWithIdEqualZero());
+        }
+
+        return Invoice.builder()
+            .withId(id)
+            .withNumber(number)
+            .withIssuedDate(issuedDate)
+            .withDueDate(dueDate)
+            .withSeller(seller)
+            .withBuyer(buyer)
+            .withEntries(entries)
+            .build();
+    }
+
+    public static Invoice getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithIdsEqualZero(Long id) {
+        String number = WordGenerator.getRandomWord();
+        LocalDate issuedDate = LocalDate.now();
+        LocalDate dueDate = issuedDate.plusDays(2);
+        Company seller = CompanyGenerator.getRandomCompanyWithIdEqualZero();
+        Company buyer = CompanyGenerator.getRandomCompanyWithIdEqualZero();
+        List<InvoiceEntry> entries = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            entries.add(InvoiceEntryGenerator.getRandomEntryWithIdEqualZero());
+        }
+
+        return Invoice.builder()
+            .withId(id)
+            .withNumber(number)
+            .withIssuedDate(issuedDate)
+            .withDueDate(dueDate)
+            .withSeller(seller)
+            .withBuyer(buyer)
+            .withEntries(entries)
+            .build();
+    }
 }

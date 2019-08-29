@@ -29,3 +29,7 @@ hs_err_pid*
 src/main/resources/static/built/bundle.js
 src/main/resources/static/built/bundle.js.map
 node_modules/
+src/test/resources/rest-integration-test/expected.pdf
+src/test/resources/rest-integration-test/received.pdf
+#soap-binding-classes
+src/main/java/pl/coderstrust/soap/bindingclasses/**

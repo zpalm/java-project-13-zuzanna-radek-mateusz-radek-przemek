@@ -23,4 +23,23 @@ public class CompanyGenerator {
             .withEmail(email)
             .build();
     }
+
+    public static Company getRandomCompanyWithIdEqualZero() {
+        String name = WordGenerator.getRandomWord();
+        String address = WordGenerator.getRandomWord();
+        String taxId = WordGenerator.getRandomWord();
+        String accountNumber = WordGenerator.getRandomWord();
+        String phoneNumber = WordGenerator.getRandomWord();
+        String email = WordGenerator.getRandomWord();
+
+        return Company.builder()
+            .withId(0L)
+            .withName(name)
+            .withAddress(address)
+            .withTaxId(taxId)
+            .withAccountNumber(accountNumber)
+            .withPhoneNumber(phoneNumber)
+            .withEmail(email)
+            .build();
+    }
 }

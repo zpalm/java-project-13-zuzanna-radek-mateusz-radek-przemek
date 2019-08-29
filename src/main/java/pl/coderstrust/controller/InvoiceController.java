@@ -127,7 +127,7 @@ public class InvoiceController {
         @ApiImplicitParam(required = true, name = "endDate", value = "End of date interval respective for filtered invoices", dataType = "String", format = "Date")
     })
     public ResponseEntity<?> getByIssuedDate(@RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate startDate, @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
-        @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
+                                             @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {
         if (startDate == null) {
             log.error("Attempt to get invoices from date interval without providing start date");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date cannot be null");
