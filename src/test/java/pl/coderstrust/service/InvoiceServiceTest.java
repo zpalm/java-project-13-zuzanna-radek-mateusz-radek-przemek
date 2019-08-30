@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -374,15 +375,22 @@ class InvoiceServiceTest {
         Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate);
+        Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate.plusDays(1L));
+        Invoice invoice5 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
 
-        List<Invoice> invoices = List.of(invoice1, invoice2, invoice3);
-        when(database.getByIssueDate(startDate, endDate)).thenReturn(invoices);
+        List<Invoice> allInvoices = List.of(invoice1, invoice2, invoice3, invoice4, invoice5);
+        List<Invoice> filteredInvoices = List.of(invoice1, invoice2, invoice3);
+
+        when(database.getAll()).thenReturn(allInvoices);
+        when(database.getByIssueDate(startDate, endDate)).thenReturn(filteredInvoices);
 
         //when
         Collection<Invoice> result = invoiceService.getByIssueDate(startDate, startDate.plusDays(2L));
 
         //then
-        assertEquals(invoices, result);
+        assertEquals(filteredInvoices, result);
+        assertEquals(allInvoices, database.getAll());
+        verify(database).getAll();
         verify(database).getByIssueDate(startDate, endDate);
     }
 
@@ -411,7 +419,7 @@ class InvoiceServiceTest {
         doThrow(new DatabaseOperationException()).when(database).getByIssueDate(startDate, endDate);
 
         ServiceOperationException exception = assertThrows(ServiceOperationException.class, () -> invoiceService.getByIssueDate(startDate, endDate));
-        assertEquals("An error occurred during filtering invoices by issued date.", exception.getMessage());
+        assertEquals("An error occurred during getting invoices filtered by issued date.", exception.getMessage());
 
         verify(database).getByIssueDate(startDate, endDate);
     }

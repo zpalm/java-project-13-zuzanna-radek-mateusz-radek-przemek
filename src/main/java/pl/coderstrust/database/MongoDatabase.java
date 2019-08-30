@@ -222,7 +222,7 @@ public class MongoDatabase implements Database {
             List<Invoice> filteredInvoices = mongoTemplate.find(Query.query(Criteria.where("issuedDate").gte(startDate).lte(endDate)), Invoice.class);
             return noSqlModelMapper.mapToInvoices(filteredInvoices);
         } catch (Exception e) {
-            String message = "An error occurred during filtering invoices by issued date.";
+            String message = "An error occurred during getting invoices filtered by issued date.";
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
         }

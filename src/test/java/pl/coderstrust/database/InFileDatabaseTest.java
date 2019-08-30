@@ -374,9 +374,12 @@ class InFileDatabaseTest {
         Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
+        Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
+        Invoice invoice5 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
+
 
         List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
-        doReturn(List.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2), objectMapper.writeValueAsString(invoice3))).when(fileHelper).readLines(DATABASE_FILE);
+        doReturn(List.of(objectMapper.writeValueAsString(invoice1), objectMapper.writeValueAsString(invoice2), objectMapper.writeValueAsString(invoice3), objectMapper.writeValueAsString(invoice4), objectMapper.writeValueAsString(invoice5))).when(fileHelper).readLines(DATABASE_FILE);
 
         Collection<Invoice> result = inFileDatabase.getByIssueDate(startDate, startDate.plusDays(2L));
 
@@ -403,12 +406,12 @@ class InFileDatabaseTest {
     }
 
     @Test
-    void getByIssueDateMethodShouldThrowExceptionWhenIoExceptionIsCaught() throws IOException {
+    void getByIssueDateMethodShouldThrowExceptionWhenFileHelperThrowsIoException() throws IOException {
         LocalDate startDate = LocalDate.now();
         doThrow(IOException.class).when(fileHelper).readLines(DATABASE_FILE);
 
         DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> inFileDatabase.getByIssueDate(startDate, startDate.plusDays(2L)));
-        assertEquals("An error occurred during filtering invoices by issued date", exception.getMessage());
+        assertEquals("An error occurred during getting invoices filtered by issued date", exception.getMessage());
 
         verify(fileHelper).readLines(DATABASE_FILE);
     }

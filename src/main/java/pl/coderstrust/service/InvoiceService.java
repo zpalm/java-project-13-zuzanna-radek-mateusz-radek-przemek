@@ -162,7 +162,7 @@ public class InvoiceService {
         try {
             return database.getByIssueDate(startDate, endDate);
         } catch (DatabaseOperationException e) {
-            String message = "An error occurred during filtering invoices by issued date.";
+            String message = "An error occurred during getting invoices filtered by issued date.";
             log.error(message, e);
             throw new ServiceOperationException(message, e);
         }

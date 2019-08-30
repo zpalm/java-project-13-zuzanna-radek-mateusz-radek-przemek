@@ -116,7 +116,7 @@ public class InvoiceController {
     }
 
     @GetMapping(value = "byIssuedDate", produces = "application/json")
-    @ApiOperation(value = "filter invoices by issue date", notes = "get invoices from the limited date interval", response = Invoice.class)
+    @ApiOperation(value = "Filter invoices by issue date", notes = "Get invoices from the limited date interval", response = Invoice.class)
     @ApiResponses({
         @ApiResponse(code = 200, message = "OK", response = Invoice[].class),
         @ApiResponse(code = 400, message = "Bad request"),

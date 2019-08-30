@@ -210,7 +210,7 @@ public class InFileDatabase implements Database {
                 .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
                 .collect(Collectors.toList());
         } catch (IOException e) {
-            String message = "An error occurred during filtering invoices by issued date";
+            String message = "An error occurred during getting invoices filtered by issued date";
             log.error(message, e);
             throw new DatabaseOperationException(message);
         }

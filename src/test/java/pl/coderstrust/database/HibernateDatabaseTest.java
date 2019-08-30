@@ -330,27 +330,34 @@ class HibernateDatabaseTest {
 
     @Test
     void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
-        //given
         LocalDate startDate = LocalDate.of(2019, 8, 24);
         Invoice invoice1 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
-        Invoice invoice2 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1));
-        Invoice invoice3 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2));
+        Invoice invoice2 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
+        Invoice invoice3 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
+        Invoice invoice4 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
+        Invoice invoice5 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
 
-        List<Invoice> sqlInvoices = List.of(invoice1, invoice2, invoice3);
-        List<pl.coderstrust.model.Invoice> invoices = sqlModelMapper.mapToInvoices(sqlInvoices);
-        when(invoiceRepository.findAllByIssuedDate(startDate, startDate.plusDays(2L))).thenReturn(sqlInvoices);
+        List<Invoice> allSqlInvoices = List.of(invoice1, invoice2, invoice3, invoice4, invoice5);
+        List<Invoice> filteredSqlInvoices = List.of(invoice1, invoice2, invoice3);
 
-        //when
-        Collection<pl.coderstrust.model.Invoice> result = database.getByIssueDate(startDate, startDate.plusDays(2L));
+        when(invoiceRepository.findAll()).thenReturn(allSqlInvoices);
+        when(invoiceRepository.findAllByIssuedDate(startDate, startDate.plusDays(2L))).thenReturn(filteredSqlInvoices);
 
-        //then
-        assertEquals(invoices, result);
+        List<pl.coderstrust.model.Invoice> allInvoices = sqlModelMapper.mapToInvoices(allSqlInvoices);
+        List<pl.coderstrust.model.Invoice> filteredInvoices = sqlModelMapper.mapToInvoices(filteredSqlInvoices);
+        Collection<pl.coderstrust.model.Invoice> allInvoicesResult = database.getAll();
+        Collection<pl.coderstrust.model.Invoice> filteredInvoicesResult = database.getByIssueDate(startDate, startDate.plusDays(2L));
+
+        assertEquals(allInvoices, allInvoicesResult);
+        assertEquals(filteredInvoices, filteredInvoicesResult);
+
+        verify(invoiceRepository).findAll();
         verify(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
     }
 
     @ParameterizedTest
     @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
-    void getByIssuedDateMethodShouldThrowException(LocalDate startDate, LocalDate endDate, String message) {
+    void getByIssuedDateMethodShouldThrowExceptionWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate, String message) {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> database.getByIssueDate(startDate, endDate));
         assertEquals(message, exception.getMessage());
     }
