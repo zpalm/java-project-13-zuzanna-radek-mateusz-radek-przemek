@@ -1,12 +1,12 @@
 <gs:updateInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
-    <gs:id>1</gs:id>
+    <gs:id>2</gs:id>
     <gs:invoice>
         <gs:id>1</gs:id>
         <gs:number>25/FA/456</gs:number>
         <gs:issuedDate>2019-06-30</gs:issuedDate>
         <gs:dueDate>2019-08-31</gs:dueDate>
         <gs:seller>
-            <gs:id>1</gs:id>
+            <gs:id>0</gs:id>
             <gs:name>abc</gs:name>
             <gs:address>ul. Warszawska 15, 06-456 Kraków</gs:address>
             <gs:taxId>523-02-44324</gs:taxId>
@@ -15,7 +15,7 @@
             <gs:email>abc@gmail.com</gs:email>
         </gs:seller>
         <gs:buyer>
-            <gs:id>2</gs:id>
+            <gs:id>0</gs:id>
             <gs:name>xyz</gs:name>
             <gs:address>ul. Krakowska 32/1, 02-786 Warszawa</gs:address>
             <gs:taxId>935-78-43-209</gs:taxId>
@@ -25,7 +25,7 @@
         </gs:buyer>
         <gs:entries>
             <gs:entry>
-                <gs:id>1</gs:id>
+                <gs:id>0</gs:id>
                 <gs:description>Pencils and scissors</gs:description>
                 <gs:quantity>10</gs:quantity>
                 <gs:price>25</gs:price>
@@ -34,7 +34,7 @@
                 <gs:vatRate>VAT_0</gs:vatRate>
             </gs:entry>
             <gs:entry>
-                <gs:id>2</gs:id>
+                <gs:id>0</gs:id>
                 <gs:description>FKZ/1573/N/Department</gs:description>
                 <gs:quantity>5</gs:quantity>
                 <gs:price>10</gs:price>

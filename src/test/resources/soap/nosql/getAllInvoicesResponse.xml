@@ -7,7 +7,7 @@
         <ns2:issuedDate>2019-06-30</ns2:issuedDate>
         <ns2:dueDate>2019-07-31</ns2:dueDate>
         <ns2:seller>
-            <ns2:id>1</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>abc</ns2:name>
             <ns2:address>ul. Warszawska 15, 06-456 Kraków</ns2:address>
             <ns2:taxId>523-02-44324</ns2:taxId>
@@ -16,7 +16,7 @@
             <ns2:email>abc@yandex.ru</ns2:email>
         </ns2:seller>
         <ns2:buyer>
-            <ns2:id>2</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>xyz</ns2:name>
             <ns2:address>ul. Krakowska 32/1, 02-786 Warszawa</ns2:address>
             <ns2:taxId>935-78-43-209</ns2:taxId>
@@ -26,7 +26,7 @@
         </ns2:buyer>
         <ns2:entries>
             <ns2:entry>
-                <ns2:id>1</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>Pencils and scissors</ns2:description>
                 <ns2:quantity>10</ns2:quantity>
                 <ns2:price>24.50</ns2:price>
@@ -35,7 +35,7 @@
                 <ns2:vatRate>VAT_23</ns2:vatRate>
             </ns2:entry>
             <ns2:entry>
-                <ns2:id>2</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>FKZ/1573/N/Department</ns2:description>
                 <ns2:quantity>5</ns2:quantity>
                 <ns2:price>10</ns2:price>
@@ -51,7 +51,7 @@
         <ns2:issuedDate>2019-07-15</ns2:issuedDate>
         <ns2:dueDate>2019-08-10</ns2:dueDate>
         <ns2:seller>
-            <ns2:id>3</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>example_company</ns2:name>
             <ns2:address>ul. Poznańska 15, 06-456 Wrocław</ns2:address>
             <ns2:taxId>555-05-44-333</ns2:taxId>
@@ -60,7 +60,7 @@
             <ns2:email>example@google.com</ns2:email>
         </ns2:seller>
         <ns2:buyer>
-            <ns2:id>4</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>qwerty</ns2:name>
             <ns2:address>ul. Wrocławska 32/1, 02-786 Poznań</ns2:address>
             <ns2:taxId>987-78-87-678</ns2:taxId>
@@ -70,7 +70,7 @@
         </ns2:buyer>
         <ns2:entries>
             <ns2:entry>
-                <ns2:id>5</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>ABC - FGZ - 12345</ns2:description>
                 <ns2:quantity>10</ns2:quantity>
                 <ns2:price>10</ns2:price>
@@ -79,7 +79,7 @@
                 <ns2:vatRate>VAT_23</ns2:vatRate>
             </ns2:entry>
             <ns2:entry>
-                <ns2:id>7</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>5 литров нефти</ns2:description>
                 <ns2:quantity>5</ns2:quantity>
                 <ns2:price>200</ns2:price>
@@ -95,7 +95,7 @@
         <ns2:issuedDate>2019-06-30</ns2:issuedDate>
         <ns2:dueDate>2019-07-31</ns2:dueDate>
         <ns2:seller>
-            <ns2:id>1</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>abc</ns2:name>
             <ns2:address>ul. Warszawska 15, 06-456 Kraków</ns2:address>
             <ns2:taxId>523-02-44324</ns2:taxId>
@@ -104,7 +104,7 @@
             <ns2:email>abc@yandex.ru</ns2:email>
         </ns2:seller>
         <ns2:buyer>
-            <ns2:id>2</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>xyz</ns2:name>
             <ns2:address>ul. Krakowska 32/1, 02-786 Warszawa</ns2:address>
             <ns2:taxId>935-78-43-209</ns2:taxId>
@@ -114,7 +114,7 @@
         </ns2:buyer>
         <ns2:entries>
             <ns2:entry>
-                <ns2:id>1</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>Pencils and scissors</ns2:description>
                 <ns2:quantity>10</ns2:quantity>
                 <ns2:price>24.50</ns2:price>
@@ -123,7 +123,7 @@
                 <ns2:vatRate>VAT_23</ns2:vatRate>
             </ns2:entry>
             <ns2:entry>
-                <ns2:id>2</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>FKZ/1573/N/Department</ns2:description>
                 <ns2:quantity>5</ns2:quantity>
                 <ns2:price>10</ns2:price>

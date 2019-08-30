@@ -2,7 +2,6 @@ package pl.coderstrust.database;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -50,9 +49,8 @@ class InMemoryDatabaseTest {
         pl.coderstrust.model.Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
         pl.coderstrust.model.Invoice addedInvoice = database.save(invoiceToAdd);
 
-        assertNotNull(addedInvoice.getId());
-        assertEquals(1, (long) addedInvoice.getId());
-        assertEquals(noSqlModelMapper.toInvoice(storage.get(invoiceToAdd.getId())), addedInvoice);
+        assertEquals(1L, (long) addedInvoice.getId());
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(1L)), addedInvoice);
     }
 
     @Test
@@ -60,8 +58,7 @@ class InMemoryDatabaseTest {
         pl.coderstrust.model.Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoiceWithNullId();
         pl.coderstrust.model.Invoice addedInvoice = database.save(invoiceToAdd);
 
-        assertNotNull(addedInvoice.getId());
-        assertEquals(1, (long) addedInvoice.getId());
+        assertEquals(1L, (long) addedInvoice.getId());
         assertEquals(noSqlModelMapper.toInvoice(storage.get(1L)), addedInvoice);
     }
 
@@ -183,7 +180,7 @@ class InMemoryDatabaseTest {
 
         database.deleteAll();
 
-        assertEquals(new HashMap<Long, Invoice>(), storage);
+        assertEquals(new HashMap<>(), storage);
     }
 
     @Test

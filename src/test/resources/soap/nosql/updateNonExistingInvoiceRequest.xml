@@ -1,11 +1,12 @@
-<gs:addInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
+<gs:updateInvoiceRequest xmlns:gs="http://project-13-zuzanna-radek-mateusz-radek-przemek">
+    <gs:id>123456789</gs:id>
     <gs:invoice>
-        <gs:id>2</gs:id>
+        <gs:id>123456789</gs:id>
         <gs:number>44/FA/231</gs:number>
         <gs:issuedDate>2019-07-15</gs:issuedDate>
         <gs:dueDate>2019-08-10</gs:dueDate>
         <gs:seller>
-            <gs:id>3</gs:id>
+            <gs:id>0</gs:id>
             <gs:name>example_company</gs:name>
             <gs:address>ul. Poznańska 15, 06-456 Wrocław</gs:address>
             <gs:taxId>555-05-44-333</gs:taxId>
@@ -14,7 +15,7 @@
             <gs:email>example@google.com</gs:email>
         </gs:seller>
         <gs:buyer>
-            <gs:id>4</gs:id>
+            <gs:id>0</gs:id>
             <gs:name>qwerty</gs:name>
             <gs:address>ul. Wrocławska 32/1, 02-786 Poznań</gs:address>
             <gs:taxId>987-78-87-678</gs:taxId>
@@ -24,7 +25,7 @@
         </gs:buyer>
         <gs:entries>
             <gs:entry>
-                <gs:id>5</gs:id>
+                <gs:id>0</gs:id>
                 <gs:description>ABC - FGZ - 12345</gs:description>
                 <gs:quantity>10</gs:quantity>
                 <gs:price>10</gs:price>
@@ -33,7 +34,7 @@
                 <gs:vatRate>VAT_23</gs:vatRate>
             </gs:entry>
             <gs:entry>
-                <gs:id>7</gs:id>
+                <gs:id>0</gs:id>
                 <gs:description>5 литров нефти</gs:description>
                 <gs:quantity>5</gs:quantity>
                 <gs:price>200</gs:price>
@@ -43,4 +44,4 @@
             </gs:entry>
         </gs:entries>
     </gs:invoice>
-</gs:addInvoiceRequest>
+</gs:updateInvoiceRequest>

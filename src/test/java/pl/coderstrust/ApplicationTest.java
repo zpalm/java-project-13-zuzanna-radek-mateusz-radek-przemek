@@ -12,7 +12,7 @@ import pl.coderstrust.controller.InvoiceController;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-nosql-test.properties")
 class ApplicationTest {
 
     @Autowired

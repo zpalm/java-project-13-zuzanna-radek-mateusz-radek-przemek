@@ -7,7 +7,7 @@
         <ns2:issuedDate>2019-06-30</ns2:issuedDate>
         <ns2:dueDate>2019-08-31</ns2:dueDate>
         <ns2:seller>
-            <ns2:id>1</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>abc</ns2:name>
             <ns2:address>ul. Warszawska 15, 06-456 Kraków</ns2:address>
             <ns2:taxId>523-02-44324</ns2:taxId>
@@ -16,7 +16,7 @@
             <ns2:email>abc@gmail.com</ns2:email>
         </ns2:seller>
         <ns2:buyer>
-            <ns2:id>2</ns2:id>
+            <ns2:id>0</ns2:id>
             <ns2:name>xyz</ns2:name>
             <ns2:address>ul. Krakowska 32/1, 02-786 Warszawa</ns2:address>
             <ns2:taxId>935-78-43-209</ns2:taxId>
@@ -26,7 +26,7 @@
         </ns2:buyer>
         <ns2:entries>
             <ns2:entry>
-                <ns2:id>1</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>Pencils and scissors</ns2:description>
                 <ns2:quantity>10</ns2:quantity>
                 <ns2:price>25</ns2:price>
@@ -35,7 +35,7 @@
                 <ns2:vatRate>VAT_0</ns2:vatRate>
             </ns2:entry>
             <ns2:entry>
-                <ns2:id>2</ns2:id>
+                <ns2:id>0</ns2:id>
                 <ns2:description>FKZ/1573/N/Department</ns2:description>
                 <ns2:quantity>5</ns2:quantity>
                 <ns2:price>10</ns2:price>

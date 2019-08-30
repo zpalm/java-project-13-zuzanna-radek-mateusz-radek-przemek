@@ -25,8 +25,8 @@ import org.springframework.ws.test.server.MockWebServiceClient;
 
 @SpringBootTest
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
-class InvoiceEndpointIT {
+@TestPropertySource(locations = "classpath:application-nosql-test.properties")
+class NoSqlInvoiceEndpointIT {
 
     @Autowired
     private WebApplicationContext applicationContext;
@@ -133,8 +133,8 @@ class InvoiceEndpointIT {
     }
 
     private void testComplianceOfRequestAndResponse(String requestFile, String responseFile) throws IOException {
-        Resource requestPayload = applicationContext.getResource("classpath:soap/" + requestFile + ".xml");
-        Resource responsePayload = applicationContext.getResource("classpath:soap/" + responseFile + ".xml");
+        Resource requestPayload = applicationContext.getResource("classpath:soap/nosql/" + requestFile + ".xml");
+        Resource responsePayload = applicationContext.getResource("classpath:soap/nosql/" + responseFile + ".xml");
 
         mockClient
             .sendRequest(withPayload(requestPayload))
