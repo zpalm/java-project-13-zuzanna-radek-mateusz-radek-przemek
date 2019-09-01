@@ -366,25 +366,17 @@ class MongoDatabaseTest {
         Invoice invoice1 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
-        Invoice invoice4 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
-        Invoice invoice5 = NoSqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
 
         List<Invoice> filteredNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3);
-        List<Invoice> allNoSqlInvoices = Arrays.asList(invoice1, invoice2, invoice3, invoice4, invoice5);
 
         doReturn(filteredNoSqlInvoices).when(mongoTemplate).find(findQuery, Invoice.class);
-        doReturn(allNoSqlInvoices).when(mongoTemplate).findAll(Invoice.class);
 
         List<pl.coderstrust.model.Invoice> filteredInvoices = noSqlModelMapper.mapToInvoices(filteredNoSqlInvoices);
-        List<pl.coderstrust.model.Invoice> allInvoices = noSqlModelMapper.mapToInvoices(allNoSqlInvoices);
         Collection<pl.coderstrust.model.Invoice> filteredInvoicesResult = mongoDatabase.getByIssueDate(startDate, startDate.plusDays(2L));
-        Collection<pl.coderstrust.model.Invoice> allInvoicesResult = mongoDatabase.getAll();
 
         assertEquals(filteredInvoices, filteredInvoicesResult);
-        assertEquals(allInvoices, allInvoicesResult);
 
         verify(mongoTemplate).find(findQuery, Invoice.class);
-        verify(mongoTemplate).findAll(Invoice.class);
     }
 
     @ParameterizedTest

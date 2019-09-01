@@ -375,13 +375,9 @@ class InvoiceServiceTest {
         Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate);
-        Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate.plusDays(1L));
-        Invoice invoice5 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
 
-        List<Invoice> allInvoices = List.of(invoice1, invoice2, invoice3, invoice4, invoice5);
         List<Invoice> filteredInvoices = List.of(invoice1, invoice2, invoice3);
 
-        when(database.getAll()).thenReturn(allInvoices);
         when(database.getByIssueDate(startDate, endDate)).thenReturn(filteredInvoices);
 
         //when
@@ -389,8 +385,6 @@ class InvoiceServiceTest {
 
         //then
         assertEquals(filteredInvoices, result);
-        assertEquals(allInvoices, database.getAll());
-        verify(database).getAll();
         verify(database).getByIssueDate(startDate, endDate);
     }
 

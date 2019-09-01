@@ -123,8 +123,8 @@ public class InvoiceController {
         @ApiResponse(code = 500, message = "Internal server error"),
     })
     @ApiImplicitParams({
-        @ApiImplicitParam(required = true, name = "startDate", value = "Beginning of date interval respective for filtered invoices", dataType = "LocalDate"),
-        @ApiImplicitParam(required = true, name = "endDate", value = "End of date interval respective for filtered invoices", dataType = "LocalDate")
+        @ApiImplicitParam(required = true, name = "startDate", value = "Beginning of date interval respective for filtered invoices", dataType = "String", format = "Date"),
+        @ApiImplicitParam(required = true, name = "endDate", value = "End of date interval respective for filtered invoices", dataType = "String", format = "Date")
     })
     public ResponseEntity<?> getByIssuedDate(@RequestParam(name = "startDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate startDate, @RequestParam(name = "endDate", required = false) @DateTimeFormat(iso = ISO.DATE) LocalDate endDate,
         @RequestHeader HttpHeaders httpHeaders) throws ServiceOperationException {

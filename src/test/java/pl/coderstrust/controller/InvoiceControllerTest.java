@@ -638,12 +638,8 @@ class InvoiceControllerTest {
         Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate);
-        Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(endDate.plusDays(1L));
-        Invoice invoice5 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
-        List<Invoice> invoices = List.of(invoice1, invoice2, invoice3, invoice4, invoice5);
         List<Invoice> filteredInvoices = List.of(invoice1, invoice2, invoice3);
 
-        when(invoiceService.getAllInvoices()).thenReturn(invoices);
         when(invoiceService.getByIssueDate(startDate, endDate)).thenReturn(filteredInvoices);
 
         String url = "/invoices/byIssuedDate";
@@ -656,14 +652,6 @@ class InvoiceControllerTest {
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(content().json(mapper.writeValueAsString(filteredInvoices)));
 
-        mockMvc.perform(get("/invoices")
-            .accept(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk())
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-            .andExpect(content().json(mapper.writeValueAsString(invoices)));
-
-
-        verify(invoiceService).getAllInvoices();
         verify(invoiceService).getByIssueDate(startDate, endDate);
     }
 

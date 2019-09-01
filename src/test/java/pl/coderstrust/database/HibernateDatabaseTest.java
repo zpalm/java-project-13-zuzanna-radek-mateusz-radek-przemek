@@ -73,8 +73,7 @@ class HibernateDatabaseTest {
         //given
         pl.coderstrust.model.Invoice invoice = InvoiceGenerator.getRandomInvoice();
         Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).save(sqlInvoice);
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).save(sqlInvoice);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.save(invoice));
@@ -115,8 +114,7 @@ class HibernateDatabaseTest {
     void deleteMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringDeletingInvoice() {
         //given
         when(invoiceRepository.existsById(1L)).thenReturn(true);
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).deleteById(1L);
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).deleteById(1L);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.delete(1L));
@@ -211,8 +209,7 @@ class HibernateDatabaseTest {
     @Test
     void getByNumberMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingInvoiceByNumber() {
         //given
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).findOne(any(Example.class));
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).findOne(any(Example.class));
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.getByNumber("1/1/1"));
@@ -237,8 +234,7 @@ class HibernateDatabaseTest {
     @Test
     void getAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingAllInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).findAll();
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).findAll();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.getAll());
@@ -273,8 +269,7 @@ class HibernateDatabaseTest {
     @Test
     void existsMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringCheckingInvoiceExists() {
         //given
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).existsById(1L);
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).existsById(1L);
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.exists(1L));
@@ -297,8 +292,7 @@ class HibernateDatabaseTest {
     @Test
     void countMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringGettingNumberOfInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).count();
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).count();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.count());
@@ -320,8 +314,7 @@ class HibernateDatabaseTest {
     @Test
     void deleteAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccurDuringDeletingAllInvoices() {
         //given
-        doThrow(new NonTransientDataAccessException("") {
-        }).when(invoiceRepository).deleteAll();
+        doThrow(new NonTransientDataAccessException("") {}).when(invoiceRepository).deleteAll();
 
         //then
         assertThrows(DatabaseOperationException.class, () -> database.deleteAll());
@@ -334,24 +327,16 @@ class HibernateDatabaseTest {
         Invoice invoice1 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
         Invoice invoice2 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
         Invoice invoice3 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
-        Invoice invoice4 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(3L));
-        Invoice invoice5 = SqlInvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.minusDays(1L));
 
-        List<Invoice> allSqlInvoices = List.of(invoice1, invoice2, invoice3, invoice4, invoice5);
         List<Invoice> filteredSqlInvoices = List.of(invoice1, invoice2, invoice3);
 
-        when(invoiceRepository.findAll()).thenReturn(allSqlInvoices);
         when(invoiceRepository.findAllByIssuedDate(startDate, startDate.plusDays(2L))).thenReturn(filteredSqlInvoices);
 
-        List<pl.coderstrust.model.Invoice> allInvoices = sqlModelMapper.mapToInvoices(allSqlInvoices);
         List<pl.coderstrust.model.Invoice> filteredInvoices = sqlModelMapper.mapToInvoices(filteredSqlInvoices);
-        Collection<pl.coderstrust.model.Invoice> allInvoicesResult = database.getAll();
         Collection<pl.coderstrust.model.Invoice> filteredInvoicesResult = database.getByIssueDate(startDate, startDate.plusDays(2L));
 
-        assertEquals(allInvoices, allInvoicesResult);
         assertEquals(filteredInvoices, filteredInvoicesResult);
 
-        verify(invoiceRepository).findAll();
         verify(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
     }
 
@@ -376,8 +361,7 @@ class HibernateDatabaseTest {
     @Test
     void getByIssuedDateShouldThrowExceptionWhenNonTransientDataAccessExceptionOccurDuringFilteringInvoicesByIssuedDate() {
         LocalDate startDate = LocalDate.now();
-        doThrow(new NonTransientDataAccessException(" ") {
-        }).when(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
+        doThrow(new NonTransientDataAccessException(" ") {}).when(invoiceRepository).findAllByIssuedDate(startDate, startDate.plusDays(2L));
 
         DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> database.getByIssueDate(startDate, startDate.plusDays(2L)));
         assertEquals("An error occurred during getting invoices filtered by issue date", exception.getMessage());
