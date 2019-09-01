@@ -214,6 +214,45 @@ paths:
           description: Not acceptable format
         '500':
           description: Internal server error
+  /invoices/byIssuedDate:
+    get:
+      summary: Filter invoices by issue date
+      description: Get invoices from the limited date interval
+      operationId: getByIssuedDate
+      tags:
+        - invoice-controller
+      parameters:
+        - name: startDate
+          in: query
+          required: true
+          description: Beginning of date interval respective for filtered invoices
+          schema:
+            type: string
+            format: date
+        - name: endDate
+            in: query
+            required: true
+            description: End of date interval respective for filtered invoices
+            schema:
+              type: string
+              format: date
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+        '400':
+          description: Bad request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '406':
+          description: Not acceptable format
+        '500':
+          description: Internal server error
 components:
   schemas:
     Company:
