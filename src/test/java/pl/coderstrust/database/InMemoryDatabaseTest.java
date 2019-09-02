@@ -111,7 +111,7 @@ class InMemoryDatabaseTest {
         Optional<pl.coderstrust.model.Invoice> optionalInvoice = database.getById(invoice1.getId());
 
         assertTrue(optionalInvoice.isPresent());
-        assertEquals(optionalInvoice.get(), noSqlModelMapper.toInvoice(storage.get(invoice1.getId())));
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(invoice1.getId())), optionalInvoice.get());
     }
 
     @Test
@@ -140,7 +140,7 @@ class InMemoryDatabaseTest {
         Optional<pl.coderstrust.model.Invoice> optionalInvoice = database.getByNumber(invoice1.getNumber());
 
         assertTrue(optionalInvoice.isPresent());
-        assertEquals(optionalInvoice.get(), noSqlModelMapper.toInvoice(storage.get(invoice1.getId())));
+        assertEquals(noSqlModelMapper.toInvoice(storage.get(invoice1.getId())), optionalInvoice.get());
     }
 
     @Test
