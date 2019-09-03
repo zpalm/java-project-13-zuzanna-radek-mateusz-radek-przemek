@@ -230,12 +230,12 @@ paths:
             type: string
             format: date
         - name: endDate
-            in: query
-            required: true
-            description: End of date interval respective for filtered invoices
-            schema:
-              type: string
-              format: date
+          in: query
+          required: true
+          description: End of date interval respective for filtered invoices
+          schema:
+            type: string
+            format: date
       responses:
         '200':
           description: OK

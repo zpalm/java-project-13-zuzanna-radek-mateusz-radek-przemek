@@ -28,3 +28,4 @@ hs_err_pid*
 # Frontend files
 src/main/resources/static/built/bundle.js
 src/main/resources/static/built/bundle.js.map
+node_modules/
