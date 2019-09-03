@@ -107,7 +107,7 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnUnauthorizedWhenNoTokenProvided() throws Exception {
-        mockMvc.perform(get("/invoices")
+        mockMvc.perform(get("/invoices").header("Authorization", "Bearer")
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isUnauthorized());
     }

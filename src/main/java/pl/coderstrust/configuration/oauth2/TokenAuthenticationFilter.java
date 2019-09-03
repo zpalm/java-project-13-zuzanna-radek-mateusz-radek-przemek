@@ -41,14 +41,20 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     if (authentication != null) {
                         if (authentication.getPrincipal() instanceof UserDetails) {
                             SecurityContextHolder.clearContext();
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         }
+                    }
+                    if (isRequestWithTokenAuthorization(request)) {
+                        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     }
                 }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
         }
-        filterChain.doFilter(request, response);
+        if (response.getStatus() != 401) {
+            filterChain.doFilter(request, response);
+        }
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
@@ -57,5 +63,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private boolean isRequestWithTokenAuthorization(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        return StringUtils.hasText(request.getHeader("Authorization")) && bearerToken.startsWith("Bearer");
     }
 }

@@ -1,6 +1,5 @@
 package pl.coderstrust.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,9 +31,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("${spring.security.user.password}")
     private String password;
 
-    @Autowired
-    private AuthenticationEntryPointConfiguration authenticationEntryPointConfiguration;
-
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -42,9 +38,6 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .and()
             .csrf()
             .disable()
-            .exceptionHandling()
-            .authenticationEntryPoint(authenticationEntryPointConfiguration)
-            .and()
             .authorizeRequests().antMatchers("/auth/**", "/oauth/**").permitAll()
             .anyRequest().authenticated()
             .anyRequest()
