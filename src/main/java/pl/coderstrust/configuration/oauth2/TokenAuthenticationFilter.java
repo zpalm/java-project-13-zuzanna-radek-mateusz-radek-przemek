@@ -27,10 +27,10 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String requestURI = request.getRequestURI();
+        String requestUri = request.getRequestURI();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         try {
-            if (!requestURI.equals("/auth/login")) {
+            if (!requestUri.equals("/auth/login")) {
                 String jwt = getJwtFromRequest(request);
                 if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
                     UserPrincipal userPrincipal = new UserPrincipal(tokenProvider.getUserNameFromToken(jwt), "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
