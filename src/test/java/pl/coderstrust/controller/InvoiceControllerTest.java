@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
@@ -31,12 +32,20 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.json.JacksonJsonParser;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.web.FilterChainProxy;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
+import pl.coderstrust.configuration.oauth2.TokenAuthenticationFilter;
 import pl.coderstrust.generators.InvoiceGenerator;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.service.InvoiceEmailService;
@@ -45,8 +54,8 @@ import pl.coderstrust.service.InvoiceService;
 import pl.coderstrust.service.ServiceOperationException;
 
 @ExtendWith(SpringExtension.class)
-@WebMvcTest(InvoiceController.class)
-@WithMockUser(roles = "USER")
+@WebAppConfiguration
+@SpringBootTest
 class InvoiceControllerTest {
 
     @MockBean
@@ -58,20 +67,60 @@ class InvoiceControllerTest {
     @MockBean
     private InvoiceEmailService invoiceEmailService;
 
-    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private ObjectMapper mapper;
 
+    @Autowired
+    private WebApplicationContext wac;
+
+    @Autowired
+    private TokenAuthenticationFilter tokenAuthenticationFilter;
+
+    @Autowired
+    private FilterChainProxy springSecurityFilterChain;
+
+    @BeforeEach
+    void setup() {
+        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.wac)
+            .addFilter(springSecurityFilterChain)
+            .addFilter(tokenAuthenticationFilter)
+            .build();
+    }
+
+    private String obtainAccessToken() throws Exception {
+        MockHttpServletRequestBuilder builder = MockMvcRequestBuilders.post("/auth/login")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("{\n" + "\t\"name\": \"user\",\n" + "\t\"password\": \"pass\"\n" + "}");
+
+        ResultActions result
+            = mockMvc.perform(builder)
+            .andExpect(status().isOk())
+            .andExpect(content().contentType("application/json;charset=UTF-8"));
+
+        String resultString = result.andReturn().getResponse().getContentAsString();
+
+        JacksonJsonParser jsonParser = new JacksonJsonParser();
+        return jsonParser.parseMap(resultString).get("accessToken").toString();
+    }
+
     @Test
-    public void shouldReturnAllInvoices() throws Exception {
+    void shouldReturnUnauthorizedWhenNoTokenProvided() throws Exception {
+        mockMvc.perform(get("/invoices")
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void shouldReturnAllInvoices() throws Exception {
+        String accessToken = obtainAccessToken();
         Collection<Invoice> invoices = Arrays.asList(InvoiceGenerator.getRandomInvoice(), InvoiceGenerator.getRandomInvoice());
         when(invoiceService.getAllInvoices()).thenReturn(invoices);
 
         String url = "/invoices";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -81,13 +130,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnEmptyListOfInvoicesWhenThereAreNoInvoicesInTheDatabase() throws Exception {
+    void shouldReturnEmptyListOfInvoicesWhenThereAreNoInvoicesInTheDatabase() throws Exception {
+        String accessToken = obtainAccessToken();
         Collection<Invoice> invoices = new ArrayList<>();
         when(invoiceService.getAllInvoices()).thenReturn(invoices);
 
         String url = "/invoices";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -98,9 +148,10 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnNotAcceptableStatusDuringGettingAllInvoicesWithNotSupportedMediaType() throws Exception {
+        String accessToken = obtainAccessToken();
         String url = "/invoices";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML))
             .andExpect(status().isNotAcceptable());
 
@@ -108,12 +159,13 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringGettingAllInvoicesWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringGettingAllInvoicesWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         when(invoiceService.getAllInvoices()).thenThrow(new ServiceOperationException());
 
         String url = "/invoices";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError());
@@ -122,13 +174,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInvoiceById() throws Exception {
+    void shouldReturnInvoiceById() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -138,13 +191,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInvoiceByIdAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+    void shouldReturnInvoiceByIdAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -155,10 +209,11 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnNotAcceptableStatusDuringGettingInvoiceByIdWithNotSupportedMediaType() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML))
             .andExpect(status().isNotAcceptable());
 
@@ -166,13 +221,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundStatusDuringGettingInvoiceByIdWhenInvoiceWithSpecificIdDoesNotExist() throws Exception {
+    void shouldReturnNotFoundStatusDuringGettingInvoiceByIdWhenInvoiceWithSpecificIdDoesNotExist() throws Exception {
+        String accessToken = obtainAccessToken();
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
 
         String url = String.format("/invoices/%d", id);
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -181,13 +237,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringGettingInvoiceByIdWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringGettingInvoiceByIdWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenThrow(new ServiceOperationException());
 
         String url = String.format("/invoices/%d", id);
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError());
@@ -196,10 +253,11 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestStatusDuringGettingInvoiceByNumberWhenNumberIsNull() throws Exception {
+    void shouldReturnBadRequestStatusDuringGettingInvoiceByNumberWhenNumberIsNull() throws Exception {
+        String accessToken = obtainAccessToken();
         String url = "/invoices/byNumber";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
@@ -208,13 +266,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInvoiceByNumber() throws Exception {
+    void shouldReturnInvoiceByNumber() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
 
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -224,13 +283,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInvoiceByNumberAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+    void shouldReturnInvoiceByNumberAsJsonIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
 
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON, MediaType.APPLICATION_PDF))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -241,10 +301,11 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnNotAcceptableStatusDuringGettingInvoiceByNumberWithNotSupportedMediaType() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML))
             .andExpect(status().isNotAcceptable());
 
@@ -252,13 +313,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundStatusDuringGettingInvoiceByNumberWhenInvoiceWithSpecificNumberDoesNotExist() throws Exception {
+    void shouldReturnNotFoundStatusDuringGettingInvoiceByNumberWhenInvoiceWithSpecificNumberDoesNotExist() throws Exception {
+        String accessToken = obtainAccessToken();
         String number = "1a";
         when(invoiceService.getInvoiceByNumber(number)).thenReturn(Optional.empty());
 
         String url = String.format("/invoices/byNumber?number=%s", number);
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -267,13 +329,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringGettingInvoiceByNumberWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringGettingInvoiceByNumberWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         String number = "1a";
         when(invoiceService.getInvoiceByNumber(number)).thenThrow(new ServiceOperationException());
 
         String url = String.format("/invoices/byNumber?number=%s", number);
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError());
@@ -282,7 +345,8 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldAddInvoice() throws Exception {
+    void shouldAddInvoice() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
         Invoice addedInvoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoiceToAdd.getId())).thenReturn(false);
@@ -291,7 +355,7 @@ class InvoiceControllerTest {
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url)
+        mockMvc.perform(post(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoiceToAdd))
             .accept(MediaType.APPLICATION_JSON))
@@ -307,10 +371,11 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnUnsupportedMediaTypeStatusDuringAddingInvoiceWithNotSupportedMediaType() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
         String url = "/invoices";
 
-        mockMvc.perform(post(url)
+        mockMvc.perform(post(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_XML)
             .content(mapper.writeValueAsBytes(invoiceToAdd))
             .accept(MediaType.APPLICATION_JSON))
@@ -320,13 +385,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnConflictStatusDuringAddingInvoiceWhenInvoiceExistsInDatabase() throws Exception {
+    void shouldReturnConflictStatusDuringAddingInvoiceWhenInvoiceExistsInDatabase() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url)
+        mockMvc.perform(post(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -338,10 +404,11 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestStatusDuringAddingNullAsInvoice() throws Exception {
+    void shouldReturnBadRequestStatusDuringAddingNullAsInvoice() throws Exception {
+        String accessToken = obtainAccessToken();
         String url = "/invoices";
 
-        mockMvc.perform(post(url)
+        mockMvc.perform(post(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(null))
             .accept(MediaType.APPLICATION_JSON))
@@ -353,14 +420,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringAddingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringAddingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(false);
         when(invoiceService.addInvoice(invoice)).thenThrow(new ServiceOperationException());
 
         String url = "/invoices";
 
-        mockMvc.perform(post(url)
+        mockMvc.perform(post(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -372,14 +440,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldUpdateInvoice() throws Exception {
+    void shouldUpdateInvoice() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
         when(invoiceService.updateInvoice(invoice)).thenReturn(invoice);
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -393,10 +462,11 @@ class InvoiceControllerTest {
 
     @Test
     void shouldReturnUnsupportedMediaTypeStatusDuringUpdatingInvoiceWithNotSupportedMediaType() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_XML)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -406,10 +476,11 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestStatusDuringUpdatingNullAsInvoice() throws Exception {
+    void shouldReturnBadRequestStatusDuringUpdatingNullAsInvoice() throws Exception {
+        String accessToken = obtainAccessToken();
         String url = "/invoices/1";
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(null))
             .accept(MediaType.APPLICATION_JSON))
@@ -421,12 +492,13 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnBadRequestStatusDuringUpdatingInvoiceWhenPassedIdIsDifferentThanInvoiceId() throws Exception {
+    void shouldReturnBadRequestStatusDuringUpdatingInvoiceWhenPassedIdIsDifferentThanInvoiceId() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
 
         String url = String.format("/invoices/%d", Long.valueOf(invoice.getId() + "1"));
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -438,13 +510,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundStatusDuringUpdatingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
+    void shouldReturnNotFoundStatusDuringUpdatingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(false);
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -456,14 +529,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringUpdatingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringUpdatingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
         when(invoiceService.updateInvoice(invoice)).thenThrow(new ServiceOperationException());
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(put(url)
+        mockMvc.perform(put(url).header("Authorization", "Bearer " + accessToken)
             .contentType(MediaType.APPLICATION_JSON)
             .content(mapper.writeValueAsBytes(invoice))
             .accept(MediaType.APPLICATION_JSON))
@@ -475,14 +549,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldRemoveInvoice() throws Exception {
+    void shouldRemoveInvoice() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.invoiceExists(invoice.getId())).thenReturn(true);
         doNothing().when(invoiceService).deleteInvoiceById(invoice.getId());
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(delete(url)
+        mockMvc.perform(delete(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(status().isNoContent());
 
@@ -491,12 +566,13 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundStatusDuringRemovingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
+    void shouldReturnNotFoundStatusDuringRemovingInvoiceWhenInvoiceDoesNotExistInDatabase() throws Exception {
+        String accessToken = obtainAccessToken();
         when(invoiceService.invoiceExists(1L)).thenReturn(false);
 
         String url = "/invoices/1";
 
-        mockMvc.perform(delete(url)
+        mockMvc.perform(delete(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isNotFound());
@@ -506,14 +582,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringRemovingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringRemovingInvoiceWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         Long invoiceId = 1L;
         when(invoiceService.invoiceExists(invoiceId)).thenReturn(true);
         doThrow(ServiceOperationException.class).when(invoiceService).deleteInvoiceById(invoiceId);
 
         String url = String.format("/invoices/%d", invoiceId);
 
-        mockMvc.perform(delete(url)
+        mockMvc.perform(delete(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isInternalServerError());
@@ -523,7 +600,8 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void gettingInvoiceByIdShouldReturnInvoiceAsPdf() throws Exception {
+    void gettingInvoiceByIdShouldReturnInvoiceAsPdf() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
@@ -531,7 +609,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_PDF))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -542,7 +620,8 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void gettingInvoiceByIdShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+    void gettingInvoiceByIdShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.of(invoice));
@@ -550,7 +629,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -561,13 +640,14 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnNotFoundDuringGettingInvoiceAsPdfWhenInvoiceDoesNotExist() throws Exception {
+    void shouldReturnNotFoundDuringGettingInvoiceAsPdfWhenInvoiceDoesNotExist() throws Exception {
+        String accessToken = obtainAccessToken();
         Long id = 1L;
         when(invoiceService.getInvoiceById(id)).thenReturn(Optional.empty());
 
         String url = String.format("/invoices/%d", id);
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_PDF))
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
             .andExpect(status().isNotFound());
@@ -577,14 +657,15 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void shouldReturnInternalServerErrorDuringGettingInvoiceAsPdfWhenSomethingWentWrongOnServer() throws Exception {
+    void shouldReturnInternalServerErrorDuringGettingInvoiceAsPdfWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         when(invoiceService.getInvoiceById(invoice.getId())).thenReturn(Optional.ofNullable(invoice));
         when(invoicePdfService.createPdf(invoice)).thenThrow(ServiceOperationException.class);
 
         String url = String.format("/invoices/%d", invoice.getId());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_PDF))
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
             .andExpect(status().isInternalServerError());
@@ -594,7 +675,8 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void gettingInvoiceByNumberShouldReturnInvoiceAsPdf() throws Exception {
+    void gettingInvoiceByNumberShouldReturnInvoiceAsPdf() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
@@ -602,7 +684,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_PDF))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -613,7 +695,8 @@ class InvoiceControllerTest {
     }
 
     @Test
-    public void gettingInvoiceByNumberShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+    void gettingInvoiceByNumberShouldReturnInvoiceAsPdfIfIsPriorToOtherAcceptedHeaders() throws Exception {
+        String accessToken = obtainAccessToken();
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         byte[] expectedByteArray = new byte[10];
         when(invoiceService.getInvoiceByNumber(invoice.getNumber())).thenReturn(Optional.of(invoice));
@@ -621,7 +704,7 @@ class InvoiceControllerTest {
 
         String url = String.format("/invoices/byNumber?number=%s", invoice.getNumber());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_XML, MediaType.APPLICATION_PDF, MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_PDF))

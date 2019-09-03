@@ -14,9 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
 
-@Service
 public class TokenProvider {
     private Logger log = LoggerFactory.getLogger(TokenProvider.class);
     private AppProperties appProperties;

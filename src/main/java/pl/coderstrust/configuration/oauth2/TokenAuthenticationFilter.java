@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,13 +27,23 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String requestURI = request.getRequestURI();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         try {
-            String jwt = getJwtFromRequest(request);
-            if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                UserPrincipal userPrincipal = new UserPrincipal(tokenProvider.getUserNameFromToken(jwt), "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
-                UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, ((UserDetails) userPrincipal).getAuthorities());
-                usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+            if (!requestURI.equals("/auth/login")) {
+                String jwt = getJwtFromRequest(request);
+                if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
+                    UserPrincipal userPrincipal = new UserPrincipal(tokenProvider.getUserNameFromToken(jwt), "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+                    UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, ((UserDetails) userPrincipal).getAuthorities());
+                    usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+                } else {
+                    if (authentication != null) {
+                        if (authentication.getPrincipal() instanceof UserDetails) {
+                            SecurityContextHolder.clearContext();
+                        }
+                    }
+                }
             }
         } catch (Exception ex) {
             log.error("Could not set user authentication in security context", ex);
@@ -43,7 +54,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7, bearerToken.length());
+            return bearerToken.substring(7);
         }
         return null;
     }

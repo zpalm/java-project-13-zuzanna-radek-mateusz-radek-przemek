@@ -1,5 +1,6 @@
 package pl.coderstrust.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,7 +14,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import pl.coderstrust.configuration.oauth2.AppProperties;
 import pl.coderstrust.configuration.oauth2.TokenAuthenticationFilter;
+import pl.coderstrust.configuration.oauth2.TokenProvider;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +32,9 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Value("${spring.security.user.password}")
     private String password;
 
+    @Autowired
+    private AuthenticationEntryPointConfiguration authenticationEntryPointConfiguration;
+
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -36,7 +42,10 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .and()
             .csrf()
             .disable()
-            .authorizeRequests().antMatchers("/auth/**", "/oauth2/**").permitAll()
+            .exceptionHandling()
+            .authenticationEntryPoint(authenticationEntryPointConfiguration)
+            .and()
+            .authorizeRequests().antMatchers("/auth/**", "/oauth/**").permitAll()
             .anyRequest().authenticated()
             .anyRequest()
             .hasRole("USER")
@@ -60,6 +69,11 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public TokenProvider getTokenProvider(AppProperties appProperties) {
+        return new TokenProvider(appProperties);
     }
 
     @Bean
