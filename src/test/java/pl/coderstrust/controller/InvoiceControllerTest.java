@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -23,9 +22,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
 import java.util.stream.Stream;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -716,6 +714,7 @@ class InvoiceControllerTest {
 
     @Test
     public void shouldReturnInvoicesFilteredByIssuedDates() throws Exception {
+        String accessToken = obtainAccessToken();
         LocalDate startDate = LocalDate.of(2019, 8, 26);
         LocalDate endDate = startDate.plusDays(2L);
         Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
@@ -727,7 +726,7 @@ class InvoiceControllerTest {
 
         String url = "/invoices/byIssuedDate";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .param("startDate", startDate.format(DateTimeFormatter.ISO_DATE))
             .param("endDate", endDate.format(DateTimeFormatter.ISO_DATE))
             .accept(MediaType.APPLICATION_JSON))
@@ -741,8 +740,9 @@ class InvoiceControllerTest {
     @ParameterizedTest
     @MethodSource("startDatesLaterThanEndDates")
     void getByIssuedDateMethodShouldReturnBadRequestStatusWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate) throws Exception {
+        String accessToken = obtainAccessToken();
         String url = "/invoices/byIssuedDate";
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .param("startDate", startDate.format(DateTimeFormatter.ISO_DATE))
             .param("endDate", endDate.format(DateTimeFormatter.ISO_DATE))
             .accept(MediaType.APPLICATION_JSON))
@@ -763,7 +763,8 @@ class InvoiceControllerTest {
     @ParameterizedTest
     @MethodSource("nullIssuedDates")
     void getByIssuedDateMethodShouldReturnBadRequestStatusWhenIssuedDateIsNull(LocalDate startDate, LocalDate endDate, String url) throws Exception {
-        mockMvc.perform(get(url)
+        String accessToken = obtainAccessToken();
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .accept(MediaType.APPLICATION_JSON))
             .andExpect(content().contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest());
@@ -781,13 +782,14 @@ class InvoiceControllerTest {
 
     @Test
     void getByIssuedDateMethodShouldReturnInternalServerErrorWhenSomethingWentWrongOnServer() throws Exception {
+        String accessToken = obtainAccessToken();
         LocalDate startDate = LocalDate.of(2019, 8, 26);
         LocalDate endDate = startDate.plusDays(2L);
         String url = "/invoices/byIssuedDate";
 
         when(invoiceService.getByIssueDate(startDate, endDate)).thenThrow(new ServiceOperationException());
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .param("startDate", startDate.format(DateTimeFormatter.ISO_DATE))
             .param("endDate", endDate.format(DateTimeFormatter.ISO_DATE))
             .accept(MediaType.APPLICATION_JSON))
@@ -799,11 +801,12 @@ class InvoiceControllerTest {
 
     @Test
     void getByIssuedDateMethodShouldReturnNotAcceptableStatusWhenNotSupportedMediaTypeRequested() throws Exception {
+        String accessToken = obtainAccessToken();
         LocalDate startDate = LocalDate.of(2019, 8, 26);
         LocalDate endDate = startDate.plusDays(2L);
         String url = "/invoices/byIssuedDate";
 
-        mockMvc.perform(get(url)
+        mockMvc.perform(get(url).header("Authorization", "Bearer " + accessToken)
             .param("startDate", startDate.format(DateTimeFormatter.ISO_DATE))
             .param("endDate", endDate.format(DateTimeFormatter.ISO_DATE))
             .accept(MediaType.APPLICATION_XML))
