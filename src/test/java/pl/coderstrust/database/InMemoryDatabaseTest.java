@@ -6,9 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.common.collect.ImmutableMap;
-
-import java.util.ArrayList;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -222,10 +221,10 @@ class InMemoryDatabaseTest {
 
     @Test
     void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
-        Invoice invoice1 = Invoice.builder().withId(1L).withIssuedDate(LocalDate.of(2019, 8, 24)).build();
-        Invoice invoice2 = Invoice.builder().withId(2L).withIssuedDate(LocalDate.of(2019, 8, 25)).build();
-        Invoice invoice3 = Invoice.builder().withId(3L).withIssuedDate(LocalDate.of(2019, 8, 26)).build();
-        Invoice invoice4 = Invoice.builder().withId(4L).withIssuedDate(LocalDate.of(2019, 8, 27)).build();
+        Invoice invoice1 = noSqlModelMapper.toNoSqlInvoice(InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(LocalDate.of(2019, 8, 24)));
+        Invoice invoice2 = noSqlModelMapper.toNoSqlInvoice(InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(LocalDate.of(2019, 8, 25)));
+        Invoice invoice3 = noSqlModelMapper.toNoSqlInvoice(InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(LocalDate.of(2019, 8, 26)));
+        Invoice invoice4 = noSqlModelMapper.toNoSqlInvoice(InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(LocalDate.of(2019, 8, 27)));
 
         storage.put(invoice1.getId(), invoice1);
         storage.put(invoice2.getId(), invoice2);
@@ -235,10 +234,11 @@ class InMemoryDatabaseTest {
         LocalDate startDate = LocalDate.of(2019, 8, 24);
         LocalDate endDate = LocalDate.of(2019, 8, 26);
 
-        List<Invoice> expected = Arrays.asList(invoice1, invoice2, invoice3);
-        Collection<Invoice> result = database.getByIssueDate(startDate, endDate);
+        List<pl.coderstrust.model.Invoice> expected = noSqlModelMapper.mapToInvoices(Arrays.asList(invoice1, invoice2, invoice3));
+        Collection<pl.coderstrust.model.Invoice> result = database.getByIssueDate(startDate, endDate);
 
-        assertEquals(expected, result);
+        assertEquals(result.size(), expected.size());
+        assertTrue(result.containsAll(expected));
     }
 
     @ParameterizedTest
