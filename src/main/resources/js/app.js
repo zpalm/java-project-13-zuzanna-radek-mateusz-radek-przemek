@@ -3,6 +3,7 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 const client = require('./client');
+const axios = require('axios');
 
 class App extends React.Component {
 
@@ -36,6 +37,7 @@ class InvoiceList extends React.Component{
                     <th scope="col">Number</th>
                     <th scope="col">Seller</th>
                     <th scope="col">Buyer</th>
+                    <th scope="col">Actions</th>
                 </tr>
                 {invoices}
                 </tbody>
@@ -45,12 +47,26 @@ class InvoiceList extends React.Component{
 }
 
 class Invoice extends React.Component{
+    getPdf(id) {
+        axios.get('/invoices/' + id, {
+            responseType: 'arraybuffer',
+            headers: {'Accept': 'application/pdf'}
+        }).then(response => {
+            const blob = new Blob([response.data], {type: 'application/pdf'});
+            const url = URL.createObjectURL(blob);
+            window.open(url);
+        });
+    }
+
     render() {
         return (
             <tr>
                 <td>{this.props.invoice.number}</td>
                 <td>{this.props.invoice.seller.name}</td>
                 <td>{this.props.invoice.buyer.name}</td>
+                <td>
+                  <button type="button" class="btn btn-success" onClick={() => this.getPdf(this.props.invoice.id)}>Pdf</button>
+                </td>
             </tr>
         )
     }
