@@ -58,6 +58,9 @@ class Pdf extends React.Component{
             a.href = url;
             a.download = 'Invoice.pdf';
             a.click();
+            $.notify("Pdf file has been downloaded.", "success");
+        }).catch(function (error) {
+            $.notify("An error occurred during download pdf file.", "error");
         });
     }
 
