@@ -46,7 +46,7 @@ class InvoiceList extends React.Component{
     }
 }
 
-class Invoice extends React.Component{
+class Pdf extends React.Component{
     getPdf(id) {
         axios.get('/invoices/' + id, {
             responseType: 'arraybuffer',
@@ -54,19 +54,28 @@ class Invoice extends React.Component{
         }).then(response => {
             const blob = new Blob([response.data], {type: 'application/pdf'});
             const url = URL.createObjectURL(blob);
-            window.open(url);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'Invoice.pdf';
+            a.click();
         });
     }
 
+    render() {
+        return(
+            <button type="button" class="btn btn-success" onClick={() => this.getPdf(this.props.invoiceId)}>Pdf</button>
+        )
+    }
+}
+
+class Invoice extends React.Component{
     render() {
         return (
             <tr>
                 <td>{this.props.invoice.number}</td>
                 <td>{this.props.invoice.seller.name}</td>
                 <td>{this.props.invoice.buyer.name}</td>
-                <td>
-                  <button type="button" class="btn btn-success" onClick={() => this.getPdf(this.props.invoice.id)}>Pdf</button>
-                </td>
+                <td><Pdf invoiceId={this.props.invoice.id} /></td>
             </tr>
         )
     }
