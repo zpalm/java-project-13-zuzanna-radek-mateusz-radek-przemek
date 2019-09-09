@@ -46,7 +46,7 @@ class InvoiceList extends React.Component{
     }
 }
 
-class Pdf extends React.Component{
+class PdfButton extends React.Component{
     getPdf(id) {
         axios.get('/invoices/' + id, {
             responseType: 'arraybuffer',
@@ -54,13 +54,13 @@ class Pdf extends React.Component{
         }).then(response => {
             const blob = new Blob([response.data], {type: 'application/pdf'});
             const url = URL.createObjectURL(blob);
-            let a = document.createElement('a');
-            a.href = url;
-            a.download = 'Invoice.pdf';
-            a.click();
+            let link = document.createElement('a');
+            link.href = url;
+            link.download = 'Invoice.pdf';
+            link.click();
             $.notify("Pdf file has been downloaded.", "success");
         }).catch(function (error) {
-            $.notify("An error occurred during download pdf file.", "error");
+            $.notify("An error occurred during downloading pdf file.", "error");
         });
     }
 
