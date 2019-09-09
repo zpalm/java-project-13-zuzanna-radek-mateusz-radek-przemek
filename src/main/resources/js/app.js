@@ -46,6 +46,24 @@ class InvoiceList extends React.Component{
     }
 }
 
+class DeleteButton extends React.Component{
+    deleteInvoice(id) {
+        axios.delete('/invoices/' + id, {
+        }).then(response => {
+            window.location.reload();
+            $.notify("Invoice deleted.", "success");
+        }).catch(function (error) {
+            $.notify("An error occurred during deleting invoice.", "error");
+        });
+    }
+
+    render() {
+        return(
+            <button type="button" class="btn btn-danger" onClick={() => {if (window.confirm('Are you sure you want to delete this invoice?')) this.deleteInvoice(this.props.invoiceId)}}>Delete</button>
+        )
+    }
+}
+
 class PdfButton extends React.Component{
     getPdf(id) {
         axios.get('/invoices/' + id, {
@@ -78,7 +96,11 @@ class Invoice extends React.Component{
                 <td>{this.props.invoice.number}</td>
                 <td>{this.props.invoice.seller.name}</td>
                 <td>{this.props.invoice.buyer.name}</td>
-                <td><PdfButton invoiceId={this.props.invoice.id} /></td>
+                <td>
+                    <DeleteButton invoiceId={this.props.invoice.id} />
+                    {' '}
+                    <PdfButton invoiceId={this.props.invoice.id} />
+                 </td>
             </tr>
         )
     }
