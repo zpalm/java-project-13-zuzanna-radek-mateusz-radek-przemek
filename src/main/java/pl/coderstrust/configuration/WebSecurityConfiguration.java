@@ -43,8 +43,8 @@ public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
             .anyRequest()
             .hasRole("USER")
             .and()
-            .httpBasic().disable()
-            .formLogin().disable()
+            .httpBasic().and()
+            .formLogin().permitAll().and()
             .oauth2Login()
             .permitAll();
         http.addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

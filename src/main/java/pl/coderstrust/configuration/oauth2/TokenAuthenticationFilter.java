@@ -39,12 +39,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                 } else {
                     if (authentication != null) {
-                        if (authentication.getPrincipal() instanceof UserDetails) {
+                        if (authentication.getPrincipal() instanceof UserDetails && !isRequestFromBrowserUserAgent(request)) {
                             SecurityContextHolder.clearContext();
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         }
                     }
-                    if (isRequestWithTokenAuthorization(request)) {
+                    if (isRequestWithTokenAuthorization(request) || !isRequestFromBrowserUserAgent(request)) {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     }
                 }
@@ -68,5 +68,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     private boolean isRequestWithTokenAuthorization(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         return StringUtils.hasText(request.getHeader("Authorization")) && bearerToken.startsWith("Bearer");
+    }
+
+    private boolean isRequestFromBrowserUserAgent(HttpServletRequest request) {
+        return request.getHeader("User-Agent").contains("Mozilla");
     }
 }
