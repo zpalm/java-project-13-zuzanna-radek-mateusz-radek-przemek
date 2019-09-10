@@ -78,7 +78,7 @@ class Invoice extends React.Component{
                 <td>{this.props.invoice.number}</td>
                 <td>{this.props.invoice.seller.name}</td>
                 <td>{this.props.invoice.buyer.name}</td>
-                <td><Pdf invoiceId={this.props.invoice.id} /></td>
+                <td><PdfButton invoiceId={this.props.invoice.id} /></td>
             </tr>
         )
     }
