@@ -96,6 +96,76 @@ class PdfButton extends React.Component{
     }
 }
 
+class ShowDetailsButton extends React.Component{
+    boom() {
+                document.getElementById('modal-text').innerHTML = "Hello!";
+    }
+
+    fetchInvoice(id) {
+        fetch('/invoices/' + id)
+        .then(response => {return response.json()})
+        .then(function(data) {
+            let output = "<table class=\"table table-bordered\" style=\"width:100%\"><thead><tr class=\"table-primary\"><th></th><th>Seller</th><th>Buyer</th></tr></thead><tbody>";
+            output += "<tr><th><b>Name:</b><br></th>";
+            output += "<td>" + data.seller.name + "</td>";
+            output += "<td>" + data.buyer.name + "</td></tr>";
+            output += "<tr><th><b>Address:</b><br></th>";
+            output += "<td>" + data.seller.address + "</td>";
+            output += "<td>" + data.buyer.address + "</td></tr>";
+            output += "<tr><th><b>Tax ID:</b><br></th>";
+            output += "<td>" + data.buyer.taxId + "</td>";
+            output += "<td>" + data.buyer.taxId + "</td></tr>";
+            output += "<tr><th><b>Account number:</b><br></th>";
+            output += "<td>" + data.buyer.taxId + "</td>";
+            output += "<td>" + data.buyer.taxId + "</td></tr>";
+            output += "<tr><th><b>Phone number:</b><br></th>";
+            output += "<td>" + data.buyer.phoneNumber + "</td>";
+            output += "<td>" + data.buyer.phoneNumber + "</td></tr>";
+            output += "<tr><th><b>E-mail address:</b><br></th>";
+            output += "<td>" + data.buyer.email + "</td>";
+            output += "<td>" + data.buyer.email + "</td></tr>";
+            output += "</tbody></table>";
+            output += "<table class=\"table table-bordered\" style=\"width:100%\"><thead><tr class=\"table-primary text-center\"><th></th><th class=\"align-middle\">Item</th><th class=\"align-middle\">Price [zł]</th><th class=\"align-middle\">Quantity</th><th class=\"align-middle\">Net value [zł]</th><th class=\"align-middle\">VAT rate [%]</th><th class=\"align-middle\">VAT value [zł]</th><th class=\"align-middle\">Gross value [zł]</th></tr></thead><tbody>";
+            var entries = data.entries;
+            for (var i = 0; i < entries.length; i++){
+              output += "<tr><th><b>" + (i+1) + "</b><br></th>";
+              var entry = entries[i];
+              output += "<td style=\"text-align:left\">" + entry.description + "</td>";
+              output += "<td style=\"text-align:right\">" + entry.price + "</td>";
+              output += "<td style=\"text-align:right\">" + entry.quantity + "</td>";
+              output += "<td style=\"text-align:right\">" + entry.netValue + "</td>";
+              switch(entry.vatRate) {
+                case 'VAT_0':
+                    output += "<td style=\"text-align:right\">0</td>";
+                    break;
+                case 'VAT_5':
+                    output += "<td style=\"text-align:right\">5</td>";
+                    break;
+                case 'VAT_8':
+                    output += "<td style=\"text-align:right\">8</td>";
+                    break;
+                case 'VAT_23':
+                    output += "<td style=\"text-align:right\">23</td>";
+                    break;
+              }
+              output += "<td style=\"text-align:right\">" + (entry.grossValue - entry.netValue) + "</td>";
+              output += "<td style=\"text-align:right\">" + entry.grossValue + "</td></tr>";
+            }
+            output += "</tbody></table>"
+            document.getElementById('modalTitle').innerHTML = "Invoice number: " + data.number;
+            document.getElementById('modalBody').innerHTML = output;
+        })
+    }
+
+    render() {
+        return (
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" onClick={() => this.fetchInvoice(this.props.id)}>
+                Show details
+            </button>
+        )
+    }
+}
+
 class Invoice extends React.Component{
     render() {
         return (
