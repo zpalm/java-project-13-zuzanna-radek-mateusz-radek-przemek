@@ -26,6 +26,25 @@ class App extends React.Component {
     render() {
         return [
             <div className="container-fluid">
+                 <div className="row">
+                    <div className="col-md-4">
+                        <InvoiceByIssuedDate update={this.updateInvoices}/>
+                    </div>
+                 </div>
+                 ,
+                 <div className="row">
+                    <div className="col-md-12">
+                        <InvoiceList invoices={this.state.invoices}/>
+                    </div>
+                 </div>
+            </div>
+        ]
+            <InvoiceByIssuedDate/>
+            <InvoiceList invoices={this.state.invoices}/>
+            <InvoiceList invoices={this.state.invoices} update={this.updateInvoices}/>
+        )
+        return [
+            <div className="container-fluid">
                 <div className="row">
                     <div className="col-md-4">
                         <SearchByNumber update={this.updateInvoices}/>
@@ -44,16 +63,17 @@ class App extends React.Component {
 class InvoiceList extends React.Component{
     render() {
         const invoices = this.props.invoices.map(i =>
-            <Invoice key={i.id} invoice={i} update={this.props.update}/>
+            <Invoice key={i.id} invoice={i} update={this.updateInvoices}/>
         );
         return (
             <table id="main" className="table table-bordered table-hover">
                 <tbody>
                 <tr className="table-info">
-                    <th scope="col-4">Number</th>
-                    <th scope="col-4">Seller</th>
-                    <th scope="col-4">Buyer</th>
-                    <th scope="col-4">Actions</th>
+                    <th scope="col">Number</th>
+                    <th scope="col">Issue date</th>
+                    <th scope="col">Seller</th>
+                    <th scope="col">Buyer</th>
+                    <th scope="col">Actions</th>
                 </tr>
                 {invoices}
                 </tbody>
@@ -291,11 +311,73 @@ class ShowDetailsButton extends React.Component{
     }
 }
 
+class InvoiceByIssuedDate extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state = {
+            startDate: '',
+            endDate: ''
+        };
+    }
+
+    updateStartDate(passedStartDate){
+        this.setState({
+            startDate: passedStartDate.target.value
+        });
+    }
+
+    updateEndDate(passedEndDate){
+        this.setState({
+            endDate: passedEndDate.target.value
+        });
+    }
+
+    searchByIssuedDate(startDate, endDate) {
+        if(startDate == '' || endDate == ''){
+            $.notify("Start date or end date cannot be empty", "error");
+        } else {
+            axios.get('/invoices/byIssuedDate?startDate='+startDate+'&endDate='+endDate, {
+            }).then(response => {
+                $.notify("Invoices filtered.", "success");
+                this.props.update(response.data);
+            }).catch(function (error) {
+                if(error.response.status == 400){
+                    $.notify("Incorrect issued dates", "error")
+                } else {
+                    $.notify("An error occurred during searching invoice by issued date.", "error")
+                }
+            });
+        }
+    }
+
+    clear() {
+        client({method: 'GET', path: '/invoices'}).done(response => {
+            this.props.update(response.entity);
+            $.notify("Search results cleared.", "success");
+        });
+    }
+
+    render() {
+
+            return(
+                <div className="input-group">
+                    <input type="text" className="form-control" placeholder="Start date" value={this.state.startDate} onChange={value => this.updateStartDate(value)}/>
+                    <input type="text" className="form-control" placeholder="End date" value={this.state.endDate} onChange={value => this.updateEndDate(value)}/>
+                    <div className="input-group-append" id="button-addon4">
+                        <button className="btn btn-success btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.searchByIssuedDate(this.state.startDate, this.state.endDate)}>Search</button>
+                        <button className="btn btn-error btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.clear()}>Clear</button>
+                    </div>
+                 </div>
+            )
+    }
+}
+
 class Invoice extends React.Component{
     render() {
         return (
             <tr>
                 <td>{this.props.invoice.number}</td>
+                <td>{this.props.invoice.issuedDate}</td>
                 <td>{this.props.invoice.seller.name}</td>
                 <td>{this.props.invoice.buyer.name}</td>
                 <td>
