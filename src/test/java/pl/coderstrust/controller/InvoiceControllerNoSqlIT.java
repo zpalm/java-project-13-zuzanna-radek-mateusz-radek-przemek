@@ -59,8 +59,8 @@ class InvoiceControllerNoSqlIT {
     private MockMvc mockMvc;
 
     private String testDirPath = "src/test/resources/rest-integration-test/";
-    private String expectedFilePath = String.format(testDirPath + "%s", "expected.pdf");
-    private String receivedFilePath = String.format(testDirPath + "%s", "received.pdf");
+    private String expectedFilePath = String.format("%sexpected.pdf", testDirPath);
+    private String receivedFilePath = String.format("%sreceived.pdf", testDirPath);
 
     @BeforeEach
     public void cleanDestinationDirectory() throws IOException {
