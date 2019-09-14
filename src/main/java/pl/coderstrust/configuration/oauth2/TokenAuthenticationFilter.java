@@ -1,7 +1,7 @@
 package pl.coderstrust.configuration.oauth2;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -28,24 +28,30 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String requestUri = request.getRequestURI();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         try {
             if (!requestUri.equals("/auth/login")) {
                 String jwt = getJwtFromRequest(request);
                 if (StringUtils.hasText(jwt) && tokenProvider.validateToken(jwt)) {
-                    UserPrincipal userPrincipal = new UserPrincipal(tokenProvider.getUserNameFromToken(jwt), "", Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER")));
+                    UserPrincipal userPrincipal = new UserPrincipal(tokenProvider.getUserNameFromToken(jwt), "", List.of(new SimpleGrantedAuthority("ROLE_USER"), new SimpleGrantedAuthority("API_PRIVILEGE")));
                     UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(userPrincipal, null, ((UserDetails) userPrincipal).getAuthorities());
                     usernamePasswordAuthenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
                 } else {
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                     if (authentication != null) {
                         if (authentication.getPrincipal() instanceof UserDetails && !isRequestFromBrowserUserAgent(request)) {
                             SecurityContextHolder.clearContext();
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         }
+                        if (isApiRequest(authentication) && isRequestUri(request, "/")) {
+                            SecurityContextHolder.clearContext();
+                        }
                     }
-                    if (isRequestWithTokenAuthorization(request) || !isRequestFromBrowserUserAgent(request)) {
+                    if (isRequestWithTokenAuthorization(request)) {
                         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    }
+                    if (isRequestFromReferer(request, "http://localhost:8080/swagger-ui.html")) {
+                        SecurityContextHolder.clearContext();
                     }
                 }
             }
@@ -55,6 +61,21 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         if (response.getStatus() != 401) {
             filterChain.doFilter(request, response);
         }
+    }
+
+    private boolean isRequestUri(HttpServletRequest request, String uri) {
+        return request.getRequestURI().equals(uri);
+    }
+
+    private boolean isApiRequest(Authentication authentication) {
+        return authentication.getAuthorities().contains(new SimpleGrantedAuthority("API_PRIVILEGE"));
+    }
+
+    private boolean isRequestFromReferer(HttpServletRequest request, String referer) {
+        if (request.getHeader("referer") == null) {
+            return false;
+        }
+        return request.getHeader("referer").equals(referer);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
