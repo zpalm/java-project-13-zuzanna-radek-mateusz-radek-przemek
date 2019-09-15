@@ -6,10 +6,9 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +30,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import pl.coderstrust.model.Invoice;
+import pl.coderstrust.model.validation.InvoiceValidator;
 import pl.coderstrust.service.InvoiceEmailService;
 import pl.coderstrust.service.InvoicePdfService;
 import pl.coderstrust.service.InvoiceService;
@@ -164,6 +164,11 @@ public class InvoiceController {
             log.error("Attempt to add invoice already existing in database.");
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Attempt to add invoice already existing in database.");
         }
+        List<String> validations = InvoiceValidator.validate(invoice);
+        if (validations.size() > 0) {
+            log.error("Attempt to add invalid invoice to database.");
+            return ResponseHelper.createJsonFailedValidationResponse(validations);
+        }
         Invoice addedInvoice = invoiceService.addInvoice(invoice);
         invoiceEmailService.sendMailWithInvoice(addedInvoice);
         log.debug("New invoice added with id: {}", addedInvoice.getId());
@@ -196,6 +201,11 @@ public class InvoiceController {
         if (!invoiceService.invoiceExists(id)) {
             log.error("Attempt to update not existing invoice.");
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Attempt to update not existing invoice.");
+        }
+        List<String> validations = InvoiceValidator.validate(invoice);
+        if (validations.size() > 0) {
+            log.error("Attempt to update invalid invoice.");
+            return ResponseHelper.createJsonFailedValidationResponse(validations);
         }
         log.debug("Updated invoice with id {}.", invoice.getId());
         return ResponseHelper.createJsonOkResponse(invoiceService.updateInvoice(invoice));

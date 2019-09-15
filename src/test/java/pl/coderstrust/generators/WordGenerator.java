@@ -13,4 +13,8 @@ public class WordGenerator {
         }
         return new String(word);
     }
+
+    public static String getRandomWord(String mustContain) {
+        return String.format("%s%s", getRandomWord(), mustContain);
+    }
 }

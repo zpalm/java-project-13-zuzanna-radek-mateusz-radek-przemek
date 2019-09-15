@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -24,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -306,6 +304,31 @@ class InvoiceControllerTest {
     }
 
     @Test
+    void addMethodShouldReturnBadRequestForInvalidInvoice() throws Exception {
+        Invoice invalidInvoice = Invoice.builder().withId(1L).withNumber("noDigit").build();
+        when(invoiceService.invoiceExists(invalidInvoice.getId())).thenReturn(false);
+
+        String url = "/invoices";
+
+        mockMvc.perform(post(url)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(invalidInvoice))
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(mapper.writeValueAsString(
+                List.of("Number must contain at least 1 digit",
+                    "Issued date cannot be null",
+                    "Due date cannot be null",
+                    "Company cannot be null",
+                    "Company cannot be null"))))
+            .andExpect(status().isBadRequest());
+
+        verify(invoiceService).invoiceExists(invalidInvoice.getId());
+        verify(invoiceService, never()).addInvoice(invalidInvoice);
+        verify(invoiceEmailService, never()).sendMailWithInvoice(invalidInvoice);
+    }
+
+    @Test
     void shouldReturnUnsupportedMediaTypeStatusDuringAddingInvoiceWithNotSupportedMediaType() throws Exception {
         Invoice invoiceToAdd = InvoiceGenerator.getRandomInvoice();
         String url = "/invoices";
@@ -392,6 +415,31 @@ class InvoiceControllerTest {
     }
 
     @Test
+    void updateMethodShouldReturnBadRequestForInvalidInvoice() throws Exception {
+        Invoice invalidInvoice = Invoice.builder().withId(1L).withNumber("noDigit").build();
+        when(invoiceService.invoiceExists(invalidInvoice.getId())).thenReturn(true);
+
+        String url = String.format("/invoices/%d", invalidInvoice.getId());
+
+        mockMvc.perform(put(url)
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(mapper.writeValueAsBytes(invalidInvoice))
+            .accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+            .andExpect(content().json(mapper.writeValueAsString(
+                List.of("Number must contain at least 1 digit",
+                    "Issued date cannot be null",
+                    "Due date cannot be null",
+                    "Company cannot be null",
+                    "Company cannot be null"))))
+            .andExpect(status().isBadRequest());
+
+        verify(invoiceService).invoiceExists(invalidInvoice.getId());
+        verify(invoiceService, never()).updateInvoice(invalidInvoice);
+        verify(invoiceEmailService, never()).sendMailWithInvoice(invalidInvoice);
+    }
+
+    @Test
     void shouldReturnUnsupportedMediaTypeStatusDuringUpdatingInvoiceWithNotSupportedMediaType() throws Exception {
         Invoice invoice = InvoiceGenerator.getRandomInvoice();
         String url = String.format("/invoices/%d", invoice.getId());
@@ -417,7 +465,7 @@ class InvoiceControllerTest {
             .andExpect(status().isBadRequest());
 
         verify(invoiceService, never()).invoiceExists(any());
-        verify(invoiceService, never()).invoiceExists(any());
+        verify(invoiceService, never()).updateInvoice(any());
     }
 
     @Test

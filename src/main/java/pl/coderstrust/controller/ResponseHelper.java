@@ -1,8 +1,8 @@
 package pl.coderstrust.controller;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Optional;
-
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -39,6 +39,15 @@ public class ResponseHelper {
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
         responseHeaders.setLocation(URI.create(location));
         return new ResponseEntity<>(body, responseHeaders, HttpStatus.CREATED);
+    }
+
+    public static ResponseEntity<?> createJsonFailedValidationResponse(List<String> validationResults) {
+        if (validationResults == null) {
+            throw new IllegalArgumentException("Validation results cannot be null");
+        }
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(validationResults, responseHeaders, HttpStatus.BAD_REQUEST);
     }
 
     public static boolean isPdfResponse(HttpHeaders httpHeaders) {

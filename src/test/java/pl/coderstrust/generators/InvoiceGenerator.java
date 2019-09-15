@@ -11,7 +11,7 @@ public class InvoiceGenerator {
 
     public static Invoice getRandomInvoice() {
         long id = IdGenerator.getNextId();
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate issuedDate = LocalDate.now();
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompany();
@@ -33,7 +33,7 @@ public class InvoiceGenerator {
     }
 
     public static Invoice getRandomInvoiceWithNullId() {
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate issuedDate = LocalDate.now();
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompany();
@@ -54,7 +54,7 @@ public class InvoiceGenerator {
     }
 
     public static Invoice getRandomInvoiceWithSpecificId(Long id) {
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate issuedDate = LocalDate.now();
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompany();
@@ -77,7 +77,7 @@ public class InvoiceGenerator {
 
     public static Invoice getRandomInvoiceWithSpecificIssuedDate(LocalDate issuedDate) {
         Long id = IdGenerator.getNextId();
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompany();
         Company buyer = CompanyGenerator.getRandomCompany();

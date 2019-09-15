@@ -9,7 +9,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -101,6 +100,30 @@ class ResponseHelperTest {
             Arguments.of(" in voi ce s/ 1 "),
             Arguments.of("invoices/ 1")
         );
+    }
+
+    @ParameterizedTest
+    @MethodSource("jsonBadRequestResponseArguments")
+    void shouldCreateJsonFailedValidationResponseWithBadRequestStatus(List<String> validationResults) {
+        ResponseEntity<?> expected = createExpectedResponse(validationResults, MediaType.APPLICATION_JSON, HttpStatus.BAD_REQUEST);
+        ResponseEntity<?> response = ResponseHelper.createJsonFailedValidationResponse(validationResults);
+        assertEquals(expected, response);
+    }
+
+    private static Stream<Arguments> jsonBadRequestResponseArguments() {
+        return Stream.of(
+            Arguments.of(
+                List.of("Number must contain at least 1 digit", "Issued date must be earlier than due date"),
+                List.of("Tax id does not match correct tax id pattern", "Account number does not match correct account number pattern"),
+                List.of("Email does not match correct email pattern")
+            )
+        );
+    }
+
+    @Test
+    void createJsonFailedValidationResponseMethodShouldThrowExceptionWhenNullIsPassed() {
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createJsonFailedValidationResponse(null));
+        assertEquals("Validation results cannot be null", exception.getMessage());
     }
 
     @Test
