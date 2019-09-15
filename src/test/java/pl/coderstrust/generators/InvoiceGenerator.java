@@ -98,7 +98,7 @@ public class InvoiceGenerator {
     }
 
     public static Invoice getRandomInvoiceWithFixedIdsAndIssuedDate(Long id, LocalDate issuedDate) {
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompanyWithIdEqualZero();
         Company buyer = CompanyGenerator.getRandomCompanyWithIdEqualZero();
@@ -119,7 +119,7 @@ public class InvoiceGenerator {
     }
 
     public static Invoice getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithIdsEqualZero(Long id) {
-        String number = WordGenerator.getRandomWord();
+        String number = WordGenerator.getRandomWord("1");
         LocalDate issuedDate = LocalDate.now();
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompanyWithIdEqualZero();

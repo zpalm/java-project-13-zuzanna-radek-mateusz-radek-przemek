@@ -29,10 +29,10 @@ public class CompanyGenerator {
     public static Company getRandomCompanyWithIdEqualZero() {
         String name = WordGenerator.getRandomWord();
         String address = WordGenerator.getRandomWord();
-        String taxId = WordGenerator.getRandomWord();
-        String accountNumber = WordGenerator.getRandomWord();
-        String phoneNumber = WordGenerator.getRandomWord();
-        String email = WordGenerator.getRandomWord();
+        String taxId = RegexWordGenerator.getRandomRegexWord("[0-9]{3}-?[0-9]{2}-?[0-9]{2}-?[0-9]{3}");
+        String accountNumber = Iban.random(CountryCode.PL).toString().substring(2);
+        String phoneNumber = RegexWordGenerator.getRandomRegexWord("(+48|48)?[4-8][0-9]{8}");
+        String email = RegexWordGenerator.getRandomRegexWord("[a-z]{3}\\@[a-z]{3}\\.[a-z]{3}");
 
         return Company.builder()
             .withId(0L)
