@@ -24,9 +24,21 @@ class App extends React.Component {
     }
 
     render() {
-        return (
-            <InvoiceList invoices={this.state.invoices} update={this.updateInvoices}/>
-        )
+        return [
+            <div className="container-fluid">
+                <div className="row">
+                    <div className="col-md-4">
+                        <SearchByNumber update={this.updateInvoices}/>
+                    </div>
+                </div>
+            ,
+                <div className="row">
+                    <div className="col-md-12">
+                        <InvoiceList invoices={this.state.invoices} update={this.updateInvoices}/>
+                    </div>
+                </div>
+            </div>
+        ]
     }
 }
 
@@ -92,6 +104,58 @@ class PdfButton extends React.Component{
     render() {
         return(
             <button type="button" class="btn btn-success" onClick={() => this.getPdf(this.props.invoiceId)}>Pdf</button>
+        )
+    }
+}
+
+class SearchByNumber extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+          inputValue: ''
+        };
+    }
+
+    updateInputValue(newValue) {
+        this.setState({
+          inputValue: newValue.target.value
+        });
+    }
+
+    search(number) {
+        if (number == '') {
+            $.notify("Invoice number cannot be empty.", "error");
+        } else {
+            axios.get('/invoices/byNumber?number=' + number, {
+                    }).then(response => {
+                        $.notify("Invoice found.", "success");
+                        this.props.update([response.data]);
+                    }).catch(function (error) {
+                        if(error.response.status == 404) {
+                            $.notify("No invoice found.", "error");
+                        } else {
+                            $.notify("An error occurred during search invoice.", "error");
+                        }
+                    });
+        }
+    }
+
+    clear() {
+        client({method: 'GET', path: '/invoices'}).done(response => {
+                   this.props.update(response.entity);
+                   $.notify("Search results cleared.", "success");
+              });
+    }
+
+    render() {
+        return(
+            <div className="input-group">
+              <input type="text" className="form-control" placeholder="Invoice number" value={this.state.inputValue} onChange={value => this.updateInputValue(value)}/>
+              <div className="input-group-append" id="button-addon4">
+                <button className="btn btn-success btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.search(this.state.inputValue)}>Search</button>
+                <button className="btn btn-error btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.clear()}>Clear</button>
+              </div>
+            </div>
         )
     }
 }
