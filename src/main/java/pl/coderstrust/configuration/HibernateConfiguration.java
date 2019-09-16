@@ -6,8 +6,10 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerA
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.PropertySource;
 
 @Configuration
+@PropertySource("classpath:hibernate.properties")
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "hibernate")
 @Import({DataSourceAutoConfiguration.class,
     DataSourceTransactionManagerAutoConfiguration.class,
