@@ -103,14 +103,14 @@ class ResponseHelperTest {
     }
 
     @ParameterizedTest
-    @MethodSource("jsonBadRequestResponseArguments")
-    void shouldCreateJsonFailedValidationResponseWithBadRequestStatus(List<String> validationResults) {
-        ResponseEntity<?> expected = createExpectedResponse(validationResults, MediaType.APPLICATION_JSON, HttpStatus.BAD_REQUEST);
-        ResponseEntity<?> response = ResponseHelper.createJsonFailedValidationResponse(validationResults);
+    @MethodSource("jsonValidationFailedArguments")
+    void shouldCreateJsonFailedValidationResponseWithBadRequestStatus(List<String> violations) {
+        ResponseEntity<?> expected = createExpectedResponse(violations, MediaType.APPLICATION_JSON, HttpStatus.BAD_REQUEST);
+        ResponseEntity<?> response = ResponseHelper.createJsonFailedValidationResponse(violations);
         assertEquals(expected, response);
     }
 
-    private static Stream<Arguments> jsonBadRequestResponseArguments() {
+    private static Stream<Arguments> jsonValidationFailedArguments() {
         return Stream.of(
             Arguments.of(
                 List.of("Number must contain at least 1 digit", "Issued date must be earlier than due date"),

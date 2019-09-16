@@ -41,13 +41,13 @@ public class ResponseHelper {
         return new ResponseEntity<>(body, responseHeaders, HttpStatus.CREATED);
     }
 
-    public static ResponseEntity<?> createJsonFailedValidationResponse(List<String> validationResults) {
-        if (validationResults == null) {
-            throw new IllegalArgumentException("Validation results cannot be null");
+    public static ResponseEntity<?> createJsonFailedValidationResponse(List<String> violations) {
+        if (violations == null) {
+            throw new IllegalArgumentException("Violations cannot be null");
         }
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
-        return new ResponseEntity<>(validationResults, responseHeaders, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(violations, responseHeaders, HttpStatus.BAD_REQUEST);
     }
 
     public static boolean isPdfResponse(HttpHeaders httpHeaders) {
