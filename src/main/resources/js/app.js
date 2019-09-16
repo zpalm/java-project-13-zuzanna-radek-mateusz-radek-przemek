@@ -236,6 +236,8 @@ class Invoice extends React.Component{
                     <DeleteButton invoiceId={this.props.invoice.id} update={this.props.update} />
                     {' '}
                     <PdfButton invoiceId={this.props.invoice.id} />
+                    {' '}
+                    <ShowDetailsButton invoice={this.props.invoice} />
                  </td>
             </tr>
         )
