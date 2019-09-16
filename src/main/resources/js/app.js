@@ -97,69 +97,130 @@ class PdfButton extends React.Component{
 }
 
 class ShowDetailsButton extends React.Component{
-    getInvoice(id) {
-        axios.get('/invoices/' + id)
-        .then(function(response) {
-            let output = "<table class=\"table table-bordered\" style=\"width:100%\"><thead><tr class=\"table-primary text-center\"><th></th><th>Seller</th><th>Buyer</th></tr></thead><tbody>";
-            output += "<tr><th class=\"align-middle\"><b>Name:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.seller.name + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.name + "</td></tr>";
-            output += "<tr><th class=\"align-middle\"><b>Address:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.seller.address + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.address + "</td></tr>";
-            output += "<tr><th class=\"align-middle\"><b>Tax ID:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.taxId + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.taxId + "</td></tr>";
-            output += "<tr><th class=\"align-middle\"><b>Account number:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.taxId + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.taxId + "</td></tr>";
-            output += "<tr><th class=\"align-middle\"><b>Phone number:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.phoneNumber + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.phoneNumber + "</td></tr>";
-            output += "<tr><th class=\"align-middle\"><b>E-mail address:</b><br></th>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.email + "</td>";
-            output += "<td class=\"align-middle\">" + response.data.buyer.email + "</td></tr>";
-            output += "</tbody></table>";
-            output += "<table class=\"table table-bordered\" style=\"width:100%\"><thead><tr class=\"table-primary text-center\"><th></th><th class=\"align-middle\">Item</th><th class=\"align-middle\">Price [zł]</th><th class=\"align-middle\">Quantity</th><th class=\"align-middle\">Net value [zł]</th><th class=\"align-middle\">VAT rate [%]</th><th class=\"align-middle\">VAT value [zł]</th><th class=\"align-middle\">Gross value [zł]</th></tr></thead><tbody>";
-            var entries = response.data.entries;
-            for (var i = 0; i < entries.length; i++){
-                output += "<tr><th><b>" + (i+1) + "</b><br></th>";
-                var entry = entries[i];
-                output += "<td style=\"text-align:left\">" + entry.description + "</td>";
-                output += "<td style=\"text-align:right\">" + entry.price + "</td>";
-                output += "<td style=\"text-align:right\">" + entry.quantity + "</td>";
-                output += "<td style=\"text-align:right\">" + entry.netValue + "</td>";
-                switch(entry.vatRate) {
-                    case 'VAT_0':
-                        output += "<td style=\"text-align:right\">0</td>";
-                        break;
-                    case 'VAT_5':
-                        output += "<td style=\"text-align:right\">5</td>";
-                        break;
-                    case 'VAT_8':
-                        output += "<td style=\"text-align:right\">8</td>";
-                        break;
-                    case 'VAT_23':
-                        output += "<td style=\"text-align:right\">23</td>";
-                        break;
-                }
-                output += "<td style=\"text-align:right\">" + (entry.grossValue - entry.netValue) + "</td>";
-                output += "<td style=\"text-align:right\">" + entry.grossValue + "</td></tr>";
-            }
-            output += "</tbody></table>"
-            document.getElementById('modalTitle').innerHTML = "Invoice number: " + response.data.number;
-            document.getElementById('modalBody').innerHTML = output;
-         })
-        .catch(function (error) {
-            $.notify("An error occurred during getting details of this invoice.", "error");
-        });
-    }
 
-    render() {
-        return (
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" onClick={() => this.getInvoice(this.props.id)}>
+     mapVatRate(vatRate){
+         switch(vatRate) {
+             case 'VAT_0':
+                 return 0;
+                 break;
+             case 'VAT_5':
+                 return 5;
+                 break;
+             case 'VAT_8':
+                 return 8;
+                 break;
+             case 'VAT_23':
+                 return 23;
+                 break;
+             default:
+                 return 0;
+                 break;
+         };
+     }
+
+     showEntries() {
+        let table = [];
+        var entries = this.props.invoice.entries;
+            for (var i = 0; i < entries.length; i++){
+                var entry = entries[i];
+                table.push(
+                    <tr>
+                        <th><b>{i + 1}</b></th>
+                        <td class="text-left">{entry.description}</td>
+                        <td class="text-right">{entry.price.toFixed(2)}</td>
+                        <td class="text-right">{entry.quantity}</td>
+                        <td class="text-right">{entry.netValue.toFixed(2)}</td>
+                        <td class="text-right">{this.mapVatRate(entry.vatRate)}</td>
+                        <td class="text-right">{(entry.grossValue - entry.netValue).toFixed(2)}</td>
+                        <td class="text-right">{entry.grossValue.toFixed(2)}</td>
+                    </tr>);
+            }
+        return table;
+     }
+
+    render()
+     {
+     return (
+        <React.Fragment>
+        <div class="modal fade" id={"showDetailsModal" + this.props.invoice.id} tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Invoice number: {this.props.invoice.number}</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                    </div>
+                <div class="modal-body" id="modalBody">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="table-primary text-center">
+                                <th></th>
+                                <th>Seller</th>
+                                <th>Buyer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <th class="align-middle"><b>Name:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.name}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.name}</td>
+                            </tr>
+                            <tr>
+                                <th class="align-middle"><b>Address:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.address}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.address}</td>
+                            </tr>
+                            <tr>
+                                <th class="align-middle"><b>Tax ID:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.taxId}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.taxId}</td>
+                            </tr>
+                            <tr>
+                                <th class="align-middle"><b>Account number:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.taxId}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.taxId}</td>
+                            </tr>
+                            <tr>
+                                <th class="align-middle"><b>Phone number:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.phoneNumber}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.phoneNumber}</td>
+                            </tr>
+                            <tr>
+                                <th class="align-middle"><b>E-mail address:</b></th>
+                                <td class="align-middle">{this.props.invoice.seller.email}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.email}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr class="table-primary text-center">
+                                <th></th>
+                                <th class="align-middle">Item</th>
+                                <th class="align-middle">Price [zł]</th>
+                                <th class="align-middle">Quantity</th>
+                                <th class="align-middle">Net value [zł]</th>
+                                <th class="align-middle">VAT rate [%]</th>
+                                <th class="align-middle">VAT value [zł]</th>
+                                <th class="align-middle">Gross value [zł]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {this.showEntries()}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+                </div>
+            </div>
+        </div>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target={"#showDetailsModal" + this.props.invoice.id}>
                 Show details
             </button>
+        </React.Fragment>
         )
     }
 }
