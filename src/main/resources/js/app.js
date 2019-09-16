@@ -152,8 +152,8 @@ class SearchByNumber extends React.Component {
             <div className="input-group">
               <input type="text" className="form-control" placeholder="Invoice number" value={this.state.inputValue} onChange={value => this.updateInputValue(value)}/>
               <div className="input-group-append" id="button-addon4">
-                <button className="btn btn-success btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.search(this.state.inputValue)}>Search</button>
-                <button className="btn btn-error btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.clear()}>Clear</button>
+                <button className="btn btn-success btn-outline-secondary" type="button" update={this.props.update} onClick={() => this.search(this.state.inputValue)}>Search</button>
+                <button className="btn btn-error btn-outline-secondary" type="button" update={this.props.update} onClick={() => this.clear()}>Clear</button>
               </div>
             </div>
         )
