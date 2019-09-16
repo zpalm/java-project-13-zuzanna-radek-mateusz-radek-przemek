@@ -134,9 +134,11 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            return getInvoices()
-                .filter(invoice -> invoice.getNumber().equals(number))
-                .findFirst();
+            try (Stream<Invoice> stream = getInvoices()) {
+                return stream
+                    .filter(invoice -> invoice.getNumber().equals(number))
+                    .findFirst();
+            }
         } catch (IOException e) {
             String message = "An error occurred during getting invoice by number.";
             log.error(message, e);
@@ -147,7 +149,9 @@ public class InFileDatabase implements Database {
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
         try {
-            return getInvoices().collect(Collectors.toList());
+            try (Stream<Invoice> stream = getInvoices()) {
+                return stream.collect(Collectors.toList());
+            }
         } catch (IOException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
@@ -184,7 +188,9 @@ public class InFileDatabase implements Database {
     @Override
     public long count() throws DatabaseOperationException {
         try {
-            return getInvoices().count();
+            try (Stream<Invoice> stream = getInvoices()) {
+                return stream.count();
+            }
         } catch (IOException e) {
             String message = "An error occurred during getting number of invoices.";
             log.error(message, e);
@@ -207,9 +213,11 @@ public class InFileDatabase implements Database {
             throw new IllegalArgumentException("Start date cannot be after end date");
         }
         try {
-            return getInvoices()
-                .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
-                .collect(Collectors.toList());
+            try (Stream<Invoice> stream = getInvoices()) {
+                return stream
+                    .filter(invoice -> invoice.getIssuedDate().compareTo(startDate) >= 0 && invoice.getIssuedDate().compareTo(endDate) <= 0)
+                    .collect(Collectors.toList());
+            }
         } catch (IOException e) {
             String message = "An error occurred during getting invoices filtered by issued date";
             log.error(message, e);
@@ -226,8 +234,10 @@ public class InFileDatabase implements Database {
     }
 
     private boolean isInvoiceExist(long id) throws IOException {
-        return getInvoices()
-            .anyMatch(invoice -> invoice.getId().equals(id));
+        try (Stream<Invoice> stream = getInvoices()) {
+            return stream
+                .anyMatch(invoice -> invoice.getId().equals(id));
+        }
     }
 
     private Stream<Invoice> getInvoices() throws IOException {
@@ -238,18 +248,20 @@ public class InFileDatabase implements Database {
 
     private int getPositionInDatabase(Long id) throws IOException, DatabaseOperationException {
         AtomicInteger index = new AtomicInteger();
-        Optional<Invoice> optionalInvoice = getInvoices()
-            .filter(i -> {
-                if (!i.getId().equals(id)) {
-                    index.getAndIncrement();
-                    return false;
-                }
-                return true;
-            })
-            .findFirst();
-        if (optionalInvoice.isEmpty()) {
-            log.error("Attempt to operate on a non existing invoice.");
-            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+        try (Stream<Invoice> stream = getInvoices()) {
+            Optional<Invoice> optionalInvoice = stream
+                .filter(i -> {
+                    if (!i.getId().equals(id)) {
+                        index.getAndIncrement();
+                        return false;
+                    }
+                    return true;
+                })
+                .findFirst();
+            if (optionalInvoice.isEmpty()) {
+                log.error("Attempt to operate on a non existing invoice.");
+                throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+            }
         }
         return index.incrementAndGet();
     }
