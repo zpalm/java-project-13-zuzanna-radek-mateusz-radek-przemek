@@ -123,7 +123,7 @@ class ResponseHelperTest {
     @Test
     void createJsonFailedValidationResponseMethodShouldThrowExceptionWhenNullIsPassed() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> ResponseHelper.createJsonFailedValidationResponse(null));
-        assertEquals("Validation results cannot be null", exception.getMessage());
+        assertEquals("Violations cannot be null", exception.getMessage());
     }
 
     @Test
