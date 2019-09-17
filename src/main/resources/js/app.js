@@ -30,8 +30,7 @@ class App extends React.Component {
                     <div className="col-md-4">
                         <SearchByNumber update={this.updateInvoices}/>
                     </div>
-                </div>
-            ,
+                </div><br />
                 <div className="row">
                     <div className="col-md-12">
                         <InvoiceList invoices={this.state.invoices} update={this.updateInvoices}/>
@@ -48,13 +47,13 @@ class InvoiceList extends React.Component{
             <Invoice key={i.id} invoice={i} update={this.props.update}/>
         );
         return (
-            <table className="table table-bordered table-hover">
+            <table id="main" className="table table-bordered table-hover">
                 <tbody>
                 <tr className="table-info">
-                    <th scope="col">Number</th>
-                    <th scope="col">Seller</th>
-                    <th scope="col">Buyer</th>
-                    <th scope="col">Actions</th>
+                    <th scope="col-4">Number</th>
+                    <th scope="col-4">Seller</th>
+                    <th scope="col-4">Buyer</th>
+                    <th scope="col-4">Actions</th>
                 </tr>
                 {invoices}
                 </tbody>

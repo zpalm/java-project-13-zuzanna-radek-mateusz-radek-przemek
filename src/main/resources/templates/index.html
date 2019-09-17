@@ -9,12 +9,30 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://rawgit.com/notifyjs/notifyjs/master/dist/notify.js"></script>
     <style>
+        table#main {
+            table-layout: fixed;
+        }
+        table#main th {
+            text-align: center;
+        }
+        table#main td {
+            vertical-align: middle;
+        }
+        .table-bordered > tbody > tr > td, .table-bordered > tbody > tr > th, .table-bordered > tfoot > tr > td, .table-bordered > tfoot > tr > th, .table-bordered > thead > tr > td, .table-bordered > thead > tr > th {
+	        border: 1px solid #94c9d1;
+        }
         #logo {
-        margin-left: 25px;
-        margin-top: 25px;
-        height: 110px;
-        display:in-line;
-        size:30px;
+            margin-left: 25px;
+            margin-top: 25px;
+            width: 300px;
+            height: 110px;
+            display: in-line;
+        }
+        #logo:hover .heavy {
+        transform: translate3d(-10px, 0px, 0px);
+        }
+        #logo:hover .small {
+        transform: translate3d(10px, 0px, 0px);
         }
     </style>
 </head>
@@ -22,12 +40,13 @@
 <div id="logo">
     <svg width="300" height="110">
         <style>
-            .heavy {font: normal 35px serif;}
-            .small {font: normal 17px sans-serif;}
+            .rect {fill: rgb(190, 229, 235); stroke-width: 1; stroke: rgb(48, 142, 156);}
+            .heavy {font: normal 40px serif; transition: transform .5s ease-in-out;}
+            .small {font: normal 22px sans-serif; fill: rgb(153, 153, 153); transition: transform .5s ease-in-out;}
         </style>
-        <rect width="30" height="75" style="fill:rgb(190, 229, 235);stroke-width:1;stroke:rgb(48, 142, 156)" />
-        <text x="17" y="55" class="heavy">Invoicing</text>
-        <text x="30" y="75" class="small">service</text>
+        <rect class="rect" width="35" height="80" />
+        <text x="20" y="60" class="heavy">Invoicing</text>
+        <text x="37" y="78" class="small">service</text>
     </svg>
 </div>
 
