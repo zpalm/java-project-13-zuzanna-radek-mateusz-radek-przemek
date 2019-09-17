@@ -16,8 +16,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 @Configuration
-@PropertySource("classpath:application.properties")
-@PropertySource("classpath:email.properties")
+@PropertySource(value = {"classpath:application.properties", "classpath:email.properties"})
 @EnableAutoConfiguration(exclude = {DataSourceAutoConfiguration.class,
     DataSourceTransactionManagerAutoConfiguration.class,
     HibernateJpaAutoConfiguration.class, MongoAutoConfiguration.class,
