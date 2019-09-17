@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import pl.coderstrust.database.sql.model.SqlModelMapper;
@@ -64,17 +63,21 @@ public class SQLDatabase implements Database {
 //        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> mapRow(rs, rowNum));
 //        return new ArrayList<>();
 //        return jdbcTemplate.query(sqlQuery, new BeanPropertyRowMapper(Invoice.class));
-        List<Object> results = jdbcTemplate.query(sqlQuery, (rs, numRow) -> new BeanPropertyRowMapper(Object.class));
-        ArrayList<InvoiceEntry> entries = new ArrayList<>();
+        List<Invoice> results = jdbcTemplate.query(sqlQuery, (rs, numRow) ->
+            Invoice.builder()
+                .withId(rs.getLong("id"))
+                .build());
+
+       /* ArrayList<InvoiceEntry> entries = new ArrayList<>();
         ArrayList<Invoice> invoices = new ArrayList<>();
-        results.stream().filter(o -> )
+        results.stream().filter(o -> )*/
 
         return new ArrayList<>();
     }
 
     public static String getAllInvoicesAndEntriesSQLQuery() {
         StringBuilder select = new StringBuilder();
-        select.append("SELECT * ")
+        select.append("SELECT id ")
             .append("FROM invoice i ")
             .append("JOIN invoice_entry ie ON ie.invoice_id = i.id");
         return select.toString();
