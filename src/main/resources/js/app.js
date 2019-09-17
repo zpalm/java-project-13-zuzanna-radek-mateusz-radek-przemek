@@ -116,9 +116,9 @@ class SearchByNumber extends React.Component {
         };
     }
 
-    updateInputValue(newValue) {
+    updateInputValue(event) {
         this.setState({
-          inputValue: newValue.target.value
+          inputValue: event.target.value
         });
     }
 
@@ -126,13 +126,15 @@ class SearchByNumber extends React.Component {
         if (number == '') {
             $.notify("Invoice number cannot be empty.", "error");
         } else {
+            let update = this.props.update;
             axios.get('/invoices/byNumber?number=' + number, {
                     }).then(response => {
                         $.notify("Invoice found.", "success");
-                        this.props.update([response.data]);
+                        update([response.data]);
                     }).catch(function (error) {
                         if(error.response.status == 404) {
                             $.notify("No invoice found.", "error");
+                            update([]);
                         } else {
                             $.notify("An error occurred during search invoice.", "error");
                         }
@@ -143,6 +145,7 @@ class SearchByNumber extends React.Component {
     clear() {
         client({method: 'GET', path: '/invoices'}).done(response => {
                    this.props.update(response.entity);
+                   this.setState({inputValue: ''});
                    $.notify("Search results cleared.", "success");
               });
     }
@@ -150,10 +153,10 @@ class SearchByNumber extends React.Component {
     render() {
         return(
             <div className="input-group">
-              <input type="text" className="form-control" placeholder="Invoice number" value={this.state.inputValue} onChange={value => this.updateInputValue(value)}/>
+              <input type="text" className="form-control" placeholder="Invoice number" value={this.state.inputValue} onChange={event => this.updateInputValue(event)}/>
               <div className="input-group-append" id="button-addon4">
-                <button className="btn btn-success btn-outline-secondary" type="button" update={this.props.update} onClick={() => this.search(this.state.inputValue)}>Search</button>
-                <button className="btn btn-error btn-outline-secondary" type="button" update={this.props.update} onClick={() => this.clear()}>Clear</button>
+                <button className="btn btn-success btn-outline-secondary" type="button" onClick={() => this.search(this.state.inputValue)}>Search</button>
+                <button className="btn btn-error btn-outline-secondary" type="button" onClick={() => this.clear()}>Clear</button>
               </div>
             </div>
         )
