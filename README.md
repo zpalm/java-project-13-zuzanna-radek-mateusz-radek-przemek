@@ -1,6 +1,6 @@
-# Invoices System #
+# Invoicing Service #
 
-Invoices System is a simple accounting application with possibility to manage invoices. 
+Invoicing Service is a simple accounting application with possibility to manage invoices. 
 There are multiple implementations of databases. 
 You can use REST,  SOAP or simple front-end to communicate with application. Application is licensed by [MIT](https://opensource.org/licenses/mit-license.php)
 
@@ -10,7 +10,7 @@ You can use REST,  SOAP or simple front-end to communicate with application. App
 
 ## Instalation ##
 
-* JDK 1.8
+* JDK 11
 * Apache Maven 3.x
 
 ## Build and Run ##
@@ -21,7 +21,7 @@ mvn exec:java
 ## API ##
 
 Application is available on localhost:8080. Use ```http://localhost:8080/swagger-ui.html```
-To test all possibilities of Invoice API. You have to log in, configure login and password in [application.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/application.properties):
+to test all possibilities of Invoice API. You have to log in and configure login and password in [application.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/application.properties):
 
 ```
 spring.security.user.name=user
@@ -41,7 +41,7 @@ To test SOAP, use [Postman](https://www.getpostman.com) or another tool. To crea
 
 ## Setup Database ##
 
-To change using database go to [application.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/application.properties). You can choose in-file, in-memory, mongo or hibernate database
+To change current database go to [application.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/application.properties). You can choose in-file, in-memory, mongo or hibernate database
 ```
    pl.coderstrust.database=in-file
    pl.coderstrust.database=in-memory
@@ -50,14 +50,14 @@ To change using database go to [application.properties](https://github.com/Coder
 ```
 Application works correctly without hibernate and mongo database.
 
-To use **hibernate** , first configure it on your computer, use PgAdmin ( or another tool) and [hibernate.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/hibernate.properties)
+To use **hibernate**, first configure it on your computer (using PgAdmin or another tool) and in [hibernate.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/hibernate.properties)
 ```
 spring.datasource.url=yourDatabase
 spring.datasource.username=yourUserName
 spring.datasource.password=yourPassword
 ```
 
-To use **mongo** , first  configure it on your computer,[mongo.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/mongodb.properties)
+To use **mongo**, first configure it on your computer and in [mongo.properties](https://github.com/CodersTrustPL/project-13-zuzanna-radek-mateusz-radek-przemek/blob/master/src/main/resources/mongodb.properties)
 ```
 spring.data.mongodb.database=invoicedb
 spring.data.mongodb.host=localhost
@@ -67,4 +67,4 @@ spring.data.mongodb.port=27017
 ## For an end User ##
 
 ```http://localhost:8080/```
-Allows you to view invoice data in the database, search invoce, download pdf, delete the invoice and view invoice details.
+Allows you to view invoice data in the database, search invoice, download pdf, delete the invoice and view invoice details.
