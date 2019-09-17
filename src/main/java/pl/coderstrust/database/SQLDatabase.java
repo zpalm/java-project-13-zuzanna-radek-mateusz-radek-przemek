@@ -16,8 +16,12 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import pl.coderstrust.database.sql.model.SqlModelMapper;
 import pl.coderstrust.model.Company;
 import pl.coderstrust.model.Invoice;
 import pl.coderstrust.model.InvoiceEntry;
@@ -28,6 +32,11 @@ import pl.coderstrust.model.Vat;
 public class SQLDatabase implements Database {
 
     private Logger log = LoggerFactory.getLogger(SQLDatabase.class);
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    private SqlModelMapper sqlModelMapper;
 
     @Override
     public Invoice save(Invoice invoice) throws DatabaseOperationException {
@@ -51,6 +60,32 @@ public class SQLDatabase implements Database {
 
     @Override
     public Collection<Invoice> getAll() throws DatabaseOperationException {
+        String sqlQuery = getAllInvoicesAndEntriesSQLQuery();
+//        return jdbcTemplate.query(sqlQuery, (rs, rowNum) -> mapRow(rs, rowNum));
+//        return new ArrayList<>();
+//        return jdbcTemplate.query(sqlQuery, new BeanPropertyRowMapper(Invoice.class));
+        List<Object> results = jdbcTemplate.query(sqlQuery, (rs, numRow) -> new BeanPropertyRowMapper(Object.class));
+        ArrayList<InvoiceEntry> entries = new ArrayList<>();
+        ArrayList<Invoice> invoices = new ArrayList<>();
+        results.stream().filter(o -> )
+
+        return new ArrayList<>();
+    }
+
+    public static String getAllInvoicesAndEntriesSQLQuery() {
+        StringBuilder select = new StringBuilder();
+        select.append("SELECT * ")
+            .append("FROM invoice i ")
+            .append("JOIN invoice_entry ie ON ie.invoice_id = i.id");
+        return select.toString();
+    }
+
+    public Invoice mapRow(ResultSet rs, int rowNum) throws SQLException {
+        Long id = rs.getLong(1);
+        return Invoice.builder().withId(id).build();
+    }
+
+    public Collection<Invoice> getAllOld() throws DatabaseOperationException {
         Map<Long, Invoice> storage = new HashMap<>();
         List<InvoiceEntry> entries = new ArrayList<>();
         Long id = null;
