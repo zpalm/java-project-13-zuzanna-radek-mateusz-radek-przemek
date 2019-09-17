@@ -244,8 +244,8 @@ class ShowDetailsButton extends React.Component{
                             </tr>
                             <tr>
                                 <th class="align-middle"><b>Account number:</b></th>
-                                <td class="align-middle">{this.props.invoice.seller.taxId}</td>
-                                <td class="align-middle">{this.props.invoice.buyer.taxId}</td>
+                                <td class="align-middle">{this.props.invoice.seller.accountNumber}</td>
+                                <td class="align-middle">{this.props.invoice.buyer.accountNumber}</td>
                             </tr>
                             <tr>
                                 <th class="align-middle"><b>Phone number:</b></th>
