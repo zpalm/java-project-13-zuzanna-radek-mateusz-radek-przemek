@@ -19,7 +19,7 @@ public final class Company {
     @ApiModelProperty(value = "Company address.", example = "ul. Bukowińska 24 d/7, 02-703 Warszawa")
     private final String address;
 
-    @ApiModelProperty(value = "Company tax id.", example = "701-041-63-84")
+    @ApiModelProperty(value = "Company tax id.", example = "7010416384")
     private final String taxId;
 
     @ApiModelProperty(value = "Company bank account number.", example = "27 1030 0019 0109 8503 0014 2668")

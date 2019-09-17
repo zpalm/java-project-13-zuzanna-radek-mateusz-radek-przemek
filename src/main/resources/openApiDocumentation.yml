@@ -285,7 +285,7 @@ components:
           description: Company phone number
         taxId:
           type: string
-          example: 701-041-63-84
+          example: 7010416384
           description: Company tax id
     Invoice:
       type: object
