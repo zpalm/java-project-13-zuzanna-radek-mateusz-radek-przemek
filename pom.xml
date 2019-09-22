@@ -113,6 +113,7 @@
                         <exclude>/pl/coderstrust/configuration/WebServiceConfiguration.class</exclude>
                         <exclude>pl/coderstrust/database/nosql/model/*.class</exclude>
                         <exclude>pl/coderstrust/database/sql/model/*.class</exclude>
+                        <exclude>pl/coderstrust/database/SqlDatabase.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -432,6 +433,10 @@
             <groupId>org.iban4j</groupId>
             <artifactId>iban4j</artifactId>
             <version>3.2.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
     </dependencies>
 </project>
