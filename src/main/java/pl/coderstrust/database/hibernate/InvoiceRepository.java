@@ -12,6 +12,6 @@ import pl.coderstrust.database.sql.model.Invoice;
 
 public interface InvoiceRepository extends JpaRepository<Invoice, Long>, JpaSpecificationExecutor<Invoice> {
 
-    @Query(value = "SELECT i FROM Invoice WHERE i.issuedDate>=:startDate AND i.issuedDate<=:endDate")
+    @Query(value = "SELECT i FROM Invoice i WHERE i.issuedDate>=:startDate AND i.issuedDate<=:endDate")
     Collection<Invoice> findAllByIssuedDate(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
