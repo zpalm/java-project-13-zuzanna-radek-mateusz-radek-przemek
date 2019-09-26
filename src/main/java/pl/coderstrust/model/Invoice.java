@@ -123,6 +123,17 @@ public final class Invoice {
         private Company buyer;
         private List<InvoiceEntry> entries;
 
+        public Builder withInvoice(Invoice invoice) {
+            this.id = invoice.getId();
+            this.number = invoice.getNumber();
+            this.issuedDate = invoice.getIssuedDate();
+            this.dueDate = invoice.getDueDate();
+            this.seller = invoice.getSeller();
+            this.buyer = invoice.getBuyer();
+            this.entries = invoice.getEntries() != null ? new ArrayList(invoice.getEntries()) : new ArrayList();
+            return this;
+        }
+
         public Builder withId(Long id) {
             this.id = id;
             return this;
