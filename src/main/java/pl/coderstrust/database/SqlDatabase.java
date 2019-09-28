@@ -3,10 +3,13 @@ package pl.coderstrust.database;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.apache.commons.collections.ListUtils;
@@ -17,11 +20,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.NonTransientDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+import pl.coderstrust.database.sql.model.Company;
+import pl.coderstrust.database.sql.model.InvoiceEntry;
 import pl.coderstrust.database.sql.model.SqlModelMapper;
-import pl.coderstrust.model.Company;
 import pl.coderstrust.model.Invoice;
-import pl.coderstrust.model.InvoiceEntry;
-import pl.coderstrust.model.Vat;
 
 @Repository
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "sql")
@@ -39,31 +42,303 @@ public class SqlDatabase implements Database {
     }
 
     @Override
-    public Invoice save(Invoice invoice) throws DatabaseOperationException {
-        return null;
+    public Invoice save(pl.coderstrust.model.Invoice invoice) throws DatabaseOperationException {
+        if (invoice == null) {
+            log.error("Attempt to save null invoice.");
+            throw new IllegalArgumentException("Invoice cannot be null.");
+        }
+        try {
+            pl.coderstrust.database.sql.model.Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
+            Long id = sqlInvoice.getId();
+            Boolean invoiceExists = true;
+            if (id != null) {
+                String sqlQuery = existsSqlQuery(id);
+                invoiceExists = template.queryForObject(sqlQuery,
+                    (rs, numRow) -> rs.getBoolean(1));
+            }
+            if (invoice.getId() == null || !invoiceExists) {
+                return insertInvoice(sqlInvoice);
+            }
+            return updateInvoice(sqlInvoice);
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occurred during saving invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
     }
 
+    @Transactional
+    pl.coderstrust.model.Invoice insertInvoice(pl.coderstrust.database.sql.model.Invoice invoice) {
+        Company insertedSeller = saveSeller(invoice);
+        Long sellerId = insertedSeller.getId();
+        Company insertedBuyer = saveBuyer(invoice);
+        Long buyerId = insertedBuyer.getId();
+        Long invoiceId = insertIntoInvoiceTable(invoice, sellerId, buyerId);
+        List<pl.coderstrust.database.sql.model.InvoiceEntry> insertedEntries = saveEntries(invoice, invoiceId);
+        pl.coderstrust.database.sql.model.Invoice insertedInvoice = pl.coderstrust.database.sql.model.Invoice.builder()
+            .withId(invoiceId)
+            .withNumber(invoice.getNumber())
+            .withIssuedDate(invoice.getIssuedDate())
+            .withDueDate(invoice.getDueDate())
+            .withSeller(insertedSeller)
+            .withBuyer(insertedBuyer)
+            .withEntries(insertedEntries)
+            .build();
+        return sqlModelMapper.toInvoice(insertedInvoice);
+    }
+
+    @Transactional
+    pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.database.sql.model.Invoice invoice) {
+        Company updatedSeller = saveSeller(invoice);
+        Long sellerId = updatedSeller.getId();
+        Company updatedBuyer = saveBuyer(invoice);
+        Long buyerId = updatedBuyer.getId();
+        Long invoiceId = invoice.getId();
+        updateIntoInvoiceTable(invoice, sellerId, buyerId);
+        deleteInvoiceEntriesByInvoiceId(invoiceId);
+        List<pl.coderstrust.database.sql.model.InvoiceEntry> updatedEntries = saveEntries(invoice, invoiceId);
+        pl.coderstrust.database.sql.model.Invoice updatedInvoice = pl.coderstrust.database.sql.model.Invoice.builder()
+            .withId(invoiceId)
+            .withNumber(invoice.getNumber())
+            .withIssuedDate(invoice.getIssuedDate())
+            .withDueDate(invoice.getDueDate())
+            .withSeller(updatedSeller)
+            .withBuyer(updatedBuyer)
+            .withEntries(updatedEntries)
+            .build();
+        return sqlModelMapper.toInvoice(updatedInvoice);
+    }
+
+    private pl.coderstrust.database.sql.model.Company saveSeller(pl.coderstrust.database.sql.model.Invoice invoice) {
+        Company seller = invoice.getSeller();
+        Long sellerId = insertIntoCompanyTable(seller);
+        Company insertedSeller = Company.builder()
+            .withId(sellerId)
+            .withName(seller.getName())
+            .withAddress(seller.getAddress())
+            .withTaxId(seller.getTaxId())
+            .withAccountNumber(seller.getAccountNumber())
+            .withPhoneNumber(seller.getPhoneNumber())
+            .withEmail(seller.getEmail())
+            .build();
+        return insertedSeller;
+    }
+
+    private pl.coderstrust.database.sql.model.Company saveBuyer(pl.coderstrust.database.sql.model.Invoice invoice) {
+        Company buyer = invoice.getBuyer();
+        Long buyerId = insertIntoCompanyTable(buyer);
+        Company insertedBuyer = Company.builder()
+            .withId(buyerId)
+            .withName(buyer.getName())
+            .withAddress(buyer.getAddress())
+            .withTaxId(buyer.getTaxId())
+            .withAccountNumber(buyer.getAccountNumber())
+            .withPhoneNumber(buyer.getPhoneNumber())
+            .withEmail(buyer.getEmail())
+            .build();
+        return insertedBuyer;
+    }
+
+    private List<pl.coderstrust.database.sql.model.InvoiceEntry> saveEntries(pl.coderstrust.database.sql.model.Invoice invoice, Long invoiceId) {
+        List<pl.coderstrust.database.sql.model.InvoiceEntry> entries = invoice.getEntries();
+        List<pl.coderstrust.database.sql.model.InvoiceEntry> insertedEntries = new ArrayList<>();
+        for (InvoiceEntry entry : entries) {
+            Long invoiceEntryId = insertIntoInvoiceEntryTable(entry);
+            pl.coderstrust.database.sql.model.InvoiceEntry insertedEntry = InvoiceEntry.builder()
+                .withId(invoiceEntryId)
+                .withDescription(entry.getDescription())
+                .withQuantity(entry.getQuantity())
+                .withPrice(entry.getPrice())
+                .withNetValue(entry.getNetValue())
+                .withGrossValue(entry.getGrossValue())
+                .withVatRate(entry.getVatRate())
+                .build();
+            insertedEntries.add(insertedEntry);
+            insertIntoInvoiceEntriesTable(invoiceId, invoiceEntryId);
+        }
+        return insertedEntries;
+    }
+
+    private Long insertIntoCompanyTable(pl.coderstrust.database.sql.model.Company company) {
+        String sqlQuery = insertIntoCompanySqlQuery(company);
+        Long companyId = template.queryForObject(sqlQuery, (rs, numRow) -> rs.getLong("id"));
+        return companyId;
+    }
+
+    private Long insertIntoInvoiceTable(pl.coderstrust.database.sql.model.Invoice invoice, Long sellerId, Long buyerId) {
+        String sqlQuery = insertIntoInvoiceSqlQuery(invoice, sellerId, buyerId);
+        Long invoiceId = template.queryForObject(sqlQuery, (rs, numRow) -> rs.getLong("id"));
+        return invoiceId;
+    }
+
+    private Long insertIntoInvoiceEntryTable(pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry) {
+        pl.coderstrust.database.sql.model.Vat vatRate = invoiceEntry.getVatRate();
+        int encodedVatRate = encodeVatRate(vatRate);
+        String sqlQuery = insertIntoInvoiceEntrySqlQuery(invoiceEntry, encodedVatRate);
+        Long invoiceEntryId = template.queryForObject(sqlQuery, (rs, numRow) -> rs.getLong("id"));
+        return invoiceEntryId;
+    }
+
+    private void insertIntoInvoiceEntriesTable(Long invoiceId, Long invoiceEntryId) {
+        String sqlQuery = insertIntoInvoiceEntriesSqlQuery(invoiceId, invoiceEntryId);
+        template.execute(sqlQuery);
+    }
+
+    private int encodeVatRate(pl.coderstrust.database.sql.model.Vat vatRate) {
+        switch (vatRate) {
+            case VAT_0:
+                return 0;
+            case VAT_5:
+                return 1;
+            case VAT_8:
+                return 2;
+            case VAT_23:
+                return 3;
+            default:
+                String message = "An error occurred during encoding VAT rate.";
+                log.error(message);
+                throw new IllegalArgumentException(message);
+        }
+    }
+
+    private void updateIntoInvoiceTable(pl.coderstrust.database.sql.model.Invoice invoice, Long sellerId, Long buyerId) {
+        String sqlQuery = updateIntoInvoiceSqlQuery(invoice, sellerId, buyerId);
+        template.execute(sqlQuery);
+    }
+
+    private void deleteInvoiceEntriesByInvoiceId(Long invoiceId) {
+        String sqlQuery = deleteInvoiceEntriesSqlQuery(invoiceId);
+        template.execute(sqlQuery);
+    }
+
+    private static String insertIntoCompanySqlQuery(pl.coderstrust.database.sql.model.Company company) {
+        StringBuilder select = new StringBuilder();
+        select.append("INSERT INTO company(name, address, tax_id, account_number, phone_number, email) ")
+            .append("VALUES ")
+            .append("('").append(company.getName()).append("', ")
+            .append("'").append(company.getAddress()).append("', ")
+            .append("'").append(company.getTaxId()).append("', ")
+            .append("'").append(company.getAccountNumber()).append("', ")
+            .append("'").append(company.getPhoneNumber()).append("', ")
+            .append("'").append(company.getEmail()).append("') ")
+            .append("RETURNING id");
+        return select.toString();
+    }
+
+    private static String insertIntoInvoiceSqlQuery(pl.coderstrust.database.sql.model.Invoice invoice, Long sellerId, Long buyerId) {
+        StringBuilder select = new StringBuilder();
+        select.append("INSERT INTO invoice(number, issued_date, due_date, seller_id, buyer_id) ")
+            .append("VALUES ")
+            .append("('").append(invoice.getNumber()).append("', ")
+            .append("'").append(invoice.getIssuedDate()).append("', ")
+            .append("'").append(invoice.getDueDate()).append("', ")
+            .append(sellerId).append(", ")
+            .append(buyerId).append(") ")
+            .append("RETURNING id");
+        return select.toString();
+    }
+
+    private static String insertIntoInvoiceEntrySqlQuery(pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry, int encodedVatRate) {
+        String description = invoiceEntry.getDescription();
+        Long quantity = invoiceEntry.getQuantity();
+        String price = invoiceEntry.getPrice().toString();
+        String netValue = invoiceEntry.getNetValue().toString();
+        String grossValue = invoiceEntry.getGrossValue().toString();
+        StringBuilder select = new StringBuilder();
+        select.append("INSERT INTO invoice_entry(description, quantity, price, net_value, gross_value, vat_rate) ")
+            .append("VALUES ")
+            .append("('").append(description).append("', ")
+            .append(quantity).append(", ")
+            .append(price).append(", ")
+            .append(netValue).append(", ")
+            .append(grossValue).append(", ")
+            .append(encodedVatRate).append(") ")
+            .append("RETURNING id");
+        return select.toString();
+    }
+
+    private static String insertIntoInvoiceEntriesSqlQuery(Long invoiceId, Long invoiceEntryId) {
+        StringBuilder select = new StringBuilder();
+        select.append("INSERT INTO invoice_entries(invoice_id, entries_id) ")
+            .append("VALUES ")
+            .append("(").append(invoiceId).append(", ")
+            .append(invoiceEntryId).append(")");
+        return select.toString();
+    }
+
+    private static String updateIntoInvoiceSqlQuery(pl.coderstrust.database.sql.model.Invoice invoice, Long sellerId, Long buyerId) {
+        StringBuilder select = new StringBuilder();
+        select.append("UPDATE invoice ")
+            .append("SET number = '").append(invoice.getNumber()).append("', ")
+            .append("issued_date = '").append(invoice.getIssuedDate()).append("', ")
+            .append("due_date = '").append(invoice.getDueDate()).append("', ")
+            .append("seller_id = ").append(sellerId).append(", ")
+            .append("buyer_id = ").append(buyerId).append(" ")
+            .append("WHERE id = ").append(invoice.getId());
+        return select.toString();
+    }
+
+    private static String deleteInvoiceEntriesSqlQuery(Long invoiceId) {
+        StringBuilder select = new StringBuilder();
+        select.append("DELETE FROM invoice_entries WHERE ")
+            .append("invoice_id = ").append(invoiceId);
+        return select.toString();
+    }
+
+    @Transactional
     @Override
     public void delete(Long id) throws DatabaseOperationException {
+        if (id == null) {
+            log.error("Attempt to delete invoice providing null id.");
+            throw new IllegalArgumentException("Id cannot be null.");
+        }
+        String existsSqlQuery = existsSqlQuery(id);
+        Boolean invoiceExists = template.queryForObject(existsSqlQuery, (rs, numRow) -> rs.getBoolean(1));
+        if (!invoiceExists) {
+            log.error("Attempt to delete not existing invoice.");
+            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+        }
+        try {
+            deleteInvoiceEntriesByInvoiceId(id);
+            String deleteInvoiceSqlQuery = deleteInvoiceSqlQuery(id);
+            template.execute(deleteInvoiceSqlQuery);
+        } catch (NonTransientDataAccessException | NoSuchElementException e) {
+            String message = "An error occurred during deleting invoice.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
+    }
 
+    private static String deleteInvoiceSqlQuery(Long invoiceId) {
+        StringBuilder select = new StringBuilder();
+        select.append("DELETE FROM invoice WHERE ")
+            .append("id = ").append(invoiceId);
+        return select.toString();
     }
 
     @Override
-    public Optional<Invoice> getById(Long id) {
+    public Optional<pl.coderstrust.model.Invoice> getById(Long id) throws DatabaseOperationException {
         if (id == null) {
             log.error("Attempt to get invoice by id providing null id.");
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
-        String sqlQuery = getInvoiceByIdSqlQuery(id);
-        Map<Long, Invoice> invoices = createMapOfInvoices(sqlQuery);
-        Optional<Invoice> foundInvoice = Optional.of(invoices.values().stream().findFirst().get());
-        if (foundInvoice.isPresent()) {
-            return foundInvoice;
+        try {
+            String sqlQuery = getInvoiceByIdSqlQuery(id);
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
+                .stream().findFirst().get()));
+            if (foundInvoice.isPresent()) {
+                return foundInvoice;
+            }
+            return Optional.empty();
+        } catch (NoSuchElementException e) {
+            String message = "An error occurred during getting invoice by id.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return Optional.empty();
     }
 
-    public static String getInvoiceByIdSqlQuery(Long invoiceId) {
+    private static String getInvoiceByIdSqlQuery(Long invoiceId) {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
@@ -75,23 +350,29 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-
     @Override
-    public Optional<Invoice> getByNumber(String number) {
+    public Optional<pl.coderstrust.model.Invoice> getByNumber(String number) throws DatabaseOperationException {
         if (number == null) {
             log.error("Attempt to get invoice by number providing null number.");
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
-        String sqlQuery = getInvoiceByNumberSqlQuery(number);
-        Map<Long, Invoice> invoices = createMapOfInvoices(sqlQuery);
-        Optional<Invoice> foundInvoice = Optional.of(invoices.values().stream().findFirst().get());
-        if (foundInvoice.isPresent()) {
-            return foundInvoice;
+        try {
+            String sqlQuery = getInvoiceByNumberSqlQuery(number);
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
+                .stream().findFirst().get()));
+            if (foundInvoice.isPresent()) {
+                return foundInvoice;
+            }
+            return Optional.empty();
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occurred during getting invoice by number.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
         }
-        return Optional.empty();
     }
 
-    public static String getInvoiceByNumberSqlQuery(String invoiceNumber) {
+    private static String getInvoiceByNumberSqlQuery(String invoiceNumber) {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
@@ -104,11 +385,12 @@ public class SqlDatabase implements Database {
     }
 
     @Override
-    public Collection<Invoice> getAll() throws DatabaseOperationException {
+    public Collection<pl.coderstrust.model.Invoice> getAll() throws DatabaseOperationException {
         try {
             String sqlQuery = getAllInvoicesAndEntriesSqlQuery();
-            Map<Long, Invoice> invoices = createMapOfInvoices(sqlQuery);
-            return invoices.values();
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            List<pl.coderstrust.database.sql.model.Invoice> invoiceList = new ArrayList<>(invoices.values());
+            return sqlModelMapper.mapToInvoices(invoiceList);
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during getting all invoices.";
             log.error(message, e);
@@ -116,13 +398,13 @@ public class SqlDatabase implements Database {
         }
     }
 
-    private Map<Long, Invoice> createMapOfInvoices(String sqlQuery) {
-        Map<Long, Invoice> invoices = new HashMap<>();
+    private Map<Long, pl.coderstrust.database.sql.model.Invoice> createMapOfInvoices(String sqlQuery) {
+        Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = new HashMap<>();
         template.query(sqlQuery, rs -> {
             long invoiceId = rs.getLong("id");
             if (invoices.containsKey(invoiceId)) {
-                Invoice existingInvoice = invoices.get(invoiceId);
-                Invoice newInvoice = Invoice.builder()
+                pl.coderstrust.database.sql.model.Invoice existingInvoice = invoices.get(invoiceId);
+                pl.coderstrust.database.sql.model.Invoice newInvoice = pl.coderstrust.database.sql.model.Invoice.builder()
                     .withInvoice(existingInvoice)
                     .withEntries(ListUtils.union(existingInvoice.getEntries(), Arrays.asList(createInvoiceEntry(rs))))
                     .build();
@@ -134,8 +416,8 @@ public class SqlDatabase implements Database {
         return invoices;
     }
 
-    private Invoice createInvoice(ResultSet rs) throws SQLException {
-        return Invoice.builder()
+    private pl.coderstrust.database.sql.model.Invoice createInvoice(ResultSet rs) throws SQLException {
+        return pl.coderstrust.database.sql.model.Invoice.builder()
             .withId(rs.getLong("id"))
             .withNumber(rs.getString("number"))
             .withIssuedDate(rs.getDate("issued_date").toLocalDate())
@@ -148,7 +430,7 @@ public class SqlDatabase implements Database {
             .build();
     }
 
-    private Company createCompany(ResultSet rs) throws SQLException {
+    private pl.coderstrust.database.sql.model.Company createCompany(ResultSet rs) throws SQLException {
         return Company.builder()
             .withId(rs.getLong("id"))
             .withName(rs.getString("name"))
@@ -160,7 +442,7 @@ public class SqlDatabase implements Database {
             .build();
     }
 
-    private InvoiceEntry createInvoiceEntry(ResultSet rs) throws SQLException {
+    private pl.coderstrust.database.sql.model.InvoiceEntry createInvoiceEntry(ResultSet rs) throws SQLException {
         return InvoiceEntry.builder()
             .withId(rs.getLong("entries_id"))
             .withDescription(rs.getString("description"))
@@ -172,20 +454,20 @@ public class SqlDatabase implements Database {
             .build();
     }
 
-    private Vat createVatRate(int index) {
-        Vat vatRate;
+    private pl.coderstrust.database.sql.model.Vat createVatRate(int index) {
+        pl.coderstrust.database.sql.model.Vat vatRate;
         switch (index) {
           case 0:
-              vatRate = Vat.VAT_0;
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_0;
               break;
           case 1:
-              vatRate = Vat.VAT_5;
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_5;
               break;
           case 2:
-              vatRate = Vat.VAT_8;
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_8;
               break;
           case 3:
-              vatRate = Vat.VAT_23;
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_23;
               break;
           default:
               String message = "An error occurred during getting VAT rate.";
@@ -195,7 +477,7 @@ public class SqlDatabase implements Database {
         return vatRate;
     }
 
-    public static String getAllInvoicesAndEntriesSqlQuery() {
+    private static String getAllInvoicesAndEntriesSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
@@ -206,7 +488,7 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-    public static String getCompanySqlQuery(Long id) {
+    private static String getCompanySqlQuery(Long id) {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM company WHERE id = ")
@@ -214,31 +496,72 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-
+    @Transactional
     @Override
     public void deleteAll() throws DatabaseOperationException {
-
+        try {
+            String sqlQueryDeleteFromInvoiceEntries = "DELETE FROM invoice_entries";
+            String sqlQueryDeleteFromInvoiceEntry = "DELETE FROM invoice_entry";
+            String sqlQueryDeleteFromInvoice = "DELETE FROM invoice";
+            String sqlQueryDeleteFromCompany = "DELETE FROM company";
+            template.execute(sqlQueryDeleteFromInvoiceEntries);
+            template.execute(sqlQueryDeleteFromInvoiceEntry);
+            template.execute(sqlQueryDeleteFromInvoice);
+            template.execute(sqlQueryDeleteFromCompany);
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occurred during deleting all invoices.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
     }
 
     @Override
     public boolean exists(Long id) throws DatabaseOperationException {
-        return false;
+        if (id == null) {
+            log.error("Attempt to check if invoice exists providing null id.");
+            throw new IllegalArgumentException("Passed id cannot be null.");
+        }
+        try {
+            String sqlQuery = existsSqlQuery(id);
+            return template.queryForObject(sqlQuery, (rs, numRow) -> rs.getBoolean(1));
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occurred during checking if invoice exists.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
+    }
+
+    private static String existsSqlQuery(Long id) {
+        StringBuilder select = new StringBuilder();
+        select.append("SELECT CASE ")
+            .append("WHEN EXISTS (SELECT 1 FROM invoice WHERE id = ")
+            .append(id).append(") ")
+            .append("THEN true ")
+            .append("ELSE false ")
+            .append("END");
+        return select.toString();
     }
 
     @Override
     public long count() throws DatabaseOperationException {
-        return template.queryForObject(countNumberOfInvoicesSqlQuery(),
-            (rs, numRow) -> rs.getLong("count"));
+        try {
+            return template.queryForObject(countNumberOfInvoicesSqlQuery(),
+                (rs, numRow) -> rs.getLong("count"));
+        } catch (NonTransientDataAccessException e) {
+            String message = "An error occurred during getting number of invoices.";
+            log.error(message, e);
+            throw new DatabaseOperationException(message, e);
+        }
     }
 
-    public static String countNumberOfInvoicesSqlQuery() {
+    private static String countNumberOfInvoicesSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT COUNT (*) FROM invoice");
         return select.toString();
     }
 
     @Override
-    public Collection<Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
+    public Collection<pl.coderstrust.model.Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
         if (startDate == null) {
             log.error("Attempt to get invoices from date interval without providing start date");
             throw new IllegalArgumentException("Start date cannot be null");
@@ -253,16 +576,17 @@ public class SqlDatabase implements Database {
         }
         try {
             String sqlQuery = getInvoicesAndEntriesByIssueDateSqlQuery(startDate, endDate);
-            Map<Long, Invoice> invoices = createMapOfInvoices(sqlQuery);
-            return invoices.values();
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            List<pl.coderstrust.database.sql.model.Invoice> invoiceList = new ArrayList<>(invoices.values());
+            return sqlModelMapper.mapToInvoices(invoiceList);
         } catch (NonTransientDataAccessException e) {
-            String message = "An error occurred during getting all invoices.";
+            String message = "An error occurred during getting invoices filtered by issue date";
             log.error(message, e);
             throw new DatabaseOperationException(message, e);
         }
     }
 
-    public static String getInvoicesAndEntriesByIssueDateSqlQuery(LocalDate startDate, LocalDate endDate) {
+    private static String getInvoicesAndEntriesByIssueDateSqlQuery(LocalDate startDate, LocalDate endDate) {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
@@ -276,78 +600,4 @@ public class SqlDatabase implements Database {
             .append("ON ies.entries_id = ie.id");
         return select.toString();
     }
-
-    /*    @Override
-    public Collection<Invoice> getAll() throws DatabaseOperationException {
-        try {
-            String sqlQuery = getAllInvoicesSqlQuery();
-            List<Invoice> results = template.query(sqlQuery, (rs, numRow) ->
-                Invoice.builder()
-                    .withId(rs.getLong("id"))
-                    .withNumber(rs.getString("number"))
-                    .withIssuedDate(rs.getDate("issued_date").toLocalDate())
-                    .withDueDate(rs.getDate("due_date").toLocalDate())
-                    .withSeller(createCompany(rs.getLong("seller_id")))
-                    .withBuyer(createCompany(rs.getLong("buyer_id")))
-                    .withEntries(createInvoiceEntries(rs.getLong("id")))
-                    .build());
-            return results;
-        } catch (NonTransientDataAccessException e) {
-            String message = "An error occurred during getting all invoices.";
-            log.error(message, e);
-            throw new DatabaseOperationException(message, e);
-        }
-    }
-
-    private Company createCompany(Long id) {
-        return template.queryForObject(getCompanySqlQuery(id), (rs, cNumRow) ->
-            Company.builder()
-                .withId(rs.getLong("id"))
-                .withName(rs.getString("name"))
-                .withAddress(rs.getString("address"))
-                .withTaxId(rs.getString("tax_id"))
-                .withAccountNumber(rs.getString("account_number"))
-                .withPhoneNumber(rs.getString("phone_number"))
-                .withEmail(rs.getString("email"))
-                .build());
-    }
-
-    private List<InvoiceEntry> createInvoiceEntries(Long invoiceId) {
-        return template.query(getAllInvoiceEntrySqlQuery(invoiceId), (rs, numRow) ->
-            InvoiceEntry.builder()
-                .withId(rs.getLong("entries_id"))
-                .withDescription(rs.getString("description"))
-                .withQuantity(rs.getLong("quantity"))
-                .withPrice(rs.getBigDecimal("price"))
-                .withNetValue(rs.getBigDecimal("net_value"))
-                .withGrossValue(rs.getBigDecimal("gross_value"))
-                .withVatRate(createVatRate(rs.getInt("vat_rate")))
-                .build());
-    }
-
-    public static String getAllInvoicesSqlQuery() {
-        StringBuilder select = new StringBuilder();
-        select.append("SELECT * ")
-            .append("FROM invoice");
-        return select.toString();
-    }
-
-    public static String getCompanySqlQuery(Long id) {
-        StringBuilder select = new StringBuilder();
-        select.append("SELECT * ")
-            .append("FROM company WHERE id = ")
-            .append(id);
-        return select.toString();
-    }
-
-    public static String getAllInvoiceEntrySqlQuery(Long invoiceId) {
-        StringBuilder select = new StringBuilder();
-        select.append("SELECT * ")
-            .append("FROM invoice_entry AS ie ")
-            .append("JOIN invoice_entries AS ies ")
-            .append("ON ies.invoice_id = ")
-            .append(invoiceId)
-            .append("AND ies.entries_id = ie.id");
-        return select.toString();
-    }*/
 }
