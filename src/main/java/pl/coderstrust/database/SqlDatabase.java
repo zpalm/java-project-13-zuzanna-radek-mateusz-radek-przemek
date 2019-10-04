@@ -50,16 +50,13 @@ public class SqlDatabase implements Database {
         try {
             pl.coderstrust.database.sql.model.Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
             Long id = sqlInvoice.getId();
-            Boolean invoiceExists = true;
-            if (id != null) {
-                String sqlQuery = existsSqlQuery(id);
-                invoiceExists = template.queryForObject(sqlQuery,
-                    (rs, numRow) -> rs.getBoolean(1));
-            }
-            if (invoice.getId() == null || !invoiceExists) {
+            String sqlQuery = getInvoiceByIdSqlQuery(id);
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            if (id == null || invoices.isEmpty()) {
                 return insertInvoice(sqlInvoice);
             }
-            return updateInvoice(sqlInvoice);
+            pl.coderstrust.database.sql.model.Invoice foundInvoice = invoices.values().stream().findFirst().get();
+            return updateInvoice(sqlInvoice, foundInvoice);
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during saving invoice.";
             log.error(message, e);
@@ -107,19 +104,28 @@ public class SqlDatabase implements Database {
     }
 
     @Transactional
-    pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.database.sql.model.Invoice invoice) {
-        Long invoiceId = invoice.getId();
-        List<Long> companyIdsForDelete = readCompanyIdsForDelete(invoiceId);
+    pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.database.sql.model.Invoice invoice, pl.coderstrust.database.sql.model.Invoice foundInvoice) {
+
+        Long invoiceId = foundInvoice.getId();
+        List<Long> companyIdsForDelete = Arrays.asList(foundInvoice.getSeller().getId(), foundInvoice.getBuyer().getId());
+        List<Long> invoiceEntryIdsForDelete = new ArrayList<>();
+        for (InvoiceEntry invoiceEntry : foundInvoice.getEntries()) {
+            invoiceEntryIdsForDelete.add(invoiceEntry.getId());
+        }
+
         Company updatedSeller = saveSeller(invoice);
         Long sellerId = updatedSeller.getId();
         Company updatedBuyer = saveBuyer(invoice);
         Long buyerId = updatedBuyer.getId();
+
         updateIntoInvoiceTable(invoice, sellerId, buyerId);
+
         deleteFromCompanyTable(companyIdsForDelete);
-        List<Long> invoiceEntryIdsForDelete = readInvoiceEntryIdsForDelete(invoiceId);
         deleteFromInvoiceEntriesTable(invoiceId);
         deleteFromInvoiceEntryTable(invoiceEntryIdsForDelete);
+
         List<pl.coderstrust.database.sql.model.InvoiceEntry> updatedEntries = saveEntries(invoice, invoiceId);
+
         pl.coderstrust.database.sql.model.Invoice updatedInvoice = pl.coderstrust.database.sql.model.Invoice.builder()
             .withId(invoiceId)
             .withNumber(invoice.getNumber())
@@ -185,61 +191,60 @@ public class SqlDatabase implements Database {
     private List<pl.coderstrust.database.sql.model.InvoiceEntry> saveEntries(pl.coderstrust.database.sql.model.Invoice invoice, Long invoiceId) {
         List<pl.coderstrust.database.sql.model.InvoiceEntry> entries = invoice.getEntries();
         List<pl.coderstrust.database.sql.model.InvoiceEntry> insertedEntries = new ArrayList<>();
-        for (InvoiceEntry entry : entries) {
-            Long invoiceEntryId = insertIntoInvoiceEntryTable(entry);
+        List<Long> insertedEntryIds = insertIntoInvoiceEntryTable(entries);
+        for (int i = 0; i <  entries.size(); i++) {
             pl.coderstrust.database.sql.model.InvoiceEntry insertedEntry = InvoiceEntry.builder()
-                .withId(invoiceEntryId)
-                .withDescription(entry.getDescription())
-                .withQuantity(entry.getQuantity())
-                .withPrice(entry.getPrice())
-                .withNetValue(entry.getNetValue())
-                .withGrossValue(entry.getGrossValue())
-                .withVatRate(entry.getVatRate())
+                .withId(insertedEntryIds.get(i))
+                .withDescription(entries.get(i).getDescription())
+                .withQuantity(entries.get(i).getQuantity())
+                .withPrice(entries.get(i).getPrice())
+                .withNetValue(entries.get(i).getNetValue())
+                .withGrossValue(entries.get(i).getGrossValue())
+                .withVatRate(entries.get(i).getVatRate())
                 .build();
             insertedEntries.add(insertedEntry);
-            insertIntoInvoiceEntriesTable(invoiceId, invoiceEntryId);
         }
+        insertIntoInvoiceEntriesTable(invoiceId, insertedEntryIds);
         return insertedEntries;
     }
 
-    private Long insertIntoInvoiceEntryTable(pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry) {
-        pl.coderstrust.database.sql.model.Vat vatRate = invoiceEntry.getVatRate();
-        int encodedVatRate = encodeVatRate(vatRate);
-        String sqlQuery = insertIntoInvoiceEntrySqlQuery(invoiceEntry, encodedVatRate);
-        Long invoiceEntryId = template.queryForObject(sqlQuery, (rs, numRow) -> rs.getLong("id"));
-        return invoiceEntryId;
+    private List<Long> insertIntoInvoiceEntryTable(List<pl.coderstrust.database.sql.model.InvoiceEntry> entries) {
+        String sqlQuery = insertIntoInvoiceEntrySqlQuery(entries);
+        List<Long> invoiceEntryIds = template.query(sqlQuery, (rs, numRow) -> rs.getLong("id"));
+        return invoiceEntryIds;
     }
 
-    private static String insertIntoInvoiceEntrySqlQuery(pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry, int encodedVatRate) {
-        String description = invoiceEntry.getDescription();
-        Long quantity = invoiceEntry.getQuantity();
-        String price = invoiceEntry.getPrice().toString();
-        String netValue = invoiceEntry.getNetValue().toString();
-        String grossValue = invoiceEntry.getGrossValue().toString();
+    private String insertIntoInvoiceEntrySqlQuery(List<pl.coderstrust.database.sql.model.InvoiceEntry> entries) {
         StringBuilder select = new StringBuilder();
         select.append("INSERT INTO invoice_entry(description, quantity, price, net_value, gross_value, vat_rate) ")
-            .append("VALUES ")
-            .append("('").append(description).append("', ")
-            .append(quantity).append(", ")
-            .append(price).append(", ")
-            .append(netValue).append(", ")
-            .append(grossValue).append(", ")
-            .append(encodedVatRate).append(") ")
+            .append("VALUES ");
+        for (pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry : entries) {
+            select.append("('").append(invoiceEntry.getDescription()).append("', ")
+                .append(invoiceEntry.getQuantity()).append(", ")
+                .append(invoiceEntry.getPrice()).append(", ")
+                .append(invoiceEntry.getNetValue()).append(", ")
+                .append(invoiceEntry.getGrossValue()).append(", ")
+                .append(encodeVatRate(invoiceEntry.getVatRate())).append(")")
+                .append(", ");
+        }
+        select.deleteCharAt(select.lastIndexOf(","))
+            .append(" ")
             .append("RETURNING id");
         return select.toString();
     }
 
-    private void insertIntoInvoiceEntriesTable(Long invoiceId, Long invoiceEntryId) {
-        String sqlQuery = insertIntoInvoiceEntriesSqlQuery(invoiceId, invoiceEntryId);
+    private void insertIntoInvoiceEntriesTable(Long invoiceId, List<Long> invoiceEntryIds) {
+        String sqlQuery = insertIntoInvoiceEntriesSqlQuery(invoiceId, invoiceEntryIds);
         template.execute(sqlQuery);
     }
 
-    private static String insertIntoInvoiceEntriesSqlQuery(Long invoiceId, Long invoiceEntryId) {
+    private static String insertIntoInvoiceEntriesSqlQuery(Long invoiceId, List<Long> invoiceEntryIds) {
         StringBuilder select = new StringBuilder();
-        select.append("INSERT INTO invoice_entries(invoice_id, entries_id) ")
-            .append("VALUES ")
-            .append("(").append(invoiceId).append(", ")
-            .append(invoiceEntryId).append(")");
+        select.append("INSERT INTO invoice_entries(invoice_id, entries_id) ").append("VALUES ");
+        for (Long invoiceEntryId : invoiceEntryIds) {
+            select.append("(").append(invoiceId).append(", ").append(invoiceEntryId).append(")").append(", ");
+        }
+        select.deleteCharAt(select.lastIndexOf(","));
         return select.toString();
     }
 
@@ -289,20 +294,6 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-    private List<Long> readCompanyIdsForDelete(Long invoiceId) {
-        String sqlQuery = selectFromInvoiceSqlQuery(invoiceId);
-        List<Long> companyIds = template.queryForObject(sqlQuery,
-            (rs, numRow) -> Arrays.asList(rs.getLong("seller_id"), rs.getLong("buyer_id")));
-        return companyIds;
-    }
-
-    private static String selectFromInvoiceSqlQuery(Long invoiceId) {
-        StringBuilder select = new StringBuilder();
-        select.append("SELECT * FROM invoice WHERE id = ")
-            .append(invoiceId);
-        return select.toString();
-    }
-
     private void deleteFromCompanyTable(List<Long> companyIds) {
         if (companyIds.size() == 2) {
             String sqlQuery = deleteFromCompanySqlQuery(companyIds.get(0), companyIds.get(1));
@@ -320,34 +311,19 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-    private List<Long> readInvoiceEntryIdsForDelete(Long invoiceId) {
-        String sqlQuery = selectFromInvoiceEntriesSqlQuery(invoiceId);
-        List<Long> invoiceEntryIds = template.query(sqlQuery,
-            (rs, numRow) -> rs.getLong("entries_id"));
-        return invoiceEntryIds;
-    }
-
-    private static String selectFromInvoiceEntriesSqlQuery(Long invoiceId) {
-        StringBuilder select = new StringBuilder();
-        select.append("SELECT * FROM invoice_entries WHERE invoice_id = ")
-            .append(invoiceId);
-        return select.toString();
-    }
-
     private void deleteFromInvoiceEntryTable(List<Long> invoiceEntryIds) {
         if (invoiceEntryIds.size() > 0) {
-            for (int i = 0; i < invoiceEntryIds.size(); i++) {
-                String sqlQuery = deleteFromInvoiceEntrySqlQuery(invoiceEntryIds.get(i));
-                template.execute(sqlQuery);
-            }
+            String sqlQuery = deleteFromInvoiceEntrySqlQuery(invoiceEntryIds);
+            template.execute(sqlQuery);
         }
     }
 
-    private static String deleteFromInvoiceEntrySqlQuery(Long invoiceEntryId) {
+    private static String deleteFromInvoiceEntrySqlQuery(List<Long> invoiceEntryIds) {
+        String ids = invoiceEntryIds.stream().map(String::valueOf).reduce((result, element) -> String.format("%s, %s", result, element)).get();
         StringBuilder select = new StringBuilder();
-        select.append("DELETE FROM invoice_entry ")
-            .append("WHERE id = ")
-            .append(invoiceEntryId);
+        select.append("DELETE FROM invoice_entry WHERE id IN (")
+            .append(ids)
+            .append(")");
         return select.toString();
     }
 
@@ -358,15 +334,19 @@ public class SqlDatabase implements Database {
             log.error("Attempt to delete invoice providing null id.");
             throw new IllegalArgumentException("Id cannot be null.");
         }
-        String existsSqlQuery = existsSqlQuery(id);
-        Boolean invoiceExists = template.queryForObject(existsSqlQuery, (rs, numRow) -> rs.getBoolean(1));
-        if (!invoiceExists) {
-            log.error("Attempt to delete not existing invoice.");
-            throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
-        }
         try {
-            List<Long> companyIdsForDelete = readCompanyIdsForDelete(id);
-            List<Long> invoiceEntryIdsForDelete = readInvoiceEntryIdsForDelete(id);
+            String sqlQuery = getInvoiceByIdSqlQuery(id);
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            if (invoices == null) {
+                log.error("Attempt to delete not existing invoice.");
+                throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
+            }
+            pl.coderstrust.database.sql.model.Invoice foundInvoice = invoices.values().stream().findFirst().get();
+            List<Long> companyIdsForDelete = Arrays.asList(foundInvoice.getSeller().getId(), foundInvoice.getBuyer().getId());
+            List<Long> invoiceEntryIdsForDelete = new ArrayList<>();
+            for (InvoiceEntry invoiceEntry : foundInvoice.getEntries()) {
+                invoiceEntryIdsForDelete.add(invoiceEntry.getId());
+            }
             deleteFromInvoiceEntriesTable(id);
             deleteFromInvoiceEntryTable(invoiceEntryIdsForDelete);
             template.execute(deleteInvoiceSqlQuery(id));
@@ -394,9 +374,9 @@ public class SqlDatabase implements Database {
         try {
             String sqlQuery = getInvoiceByIdSqlQuery(id);
             Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
-            Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
-                .stream().findFirst().get()));
-            if (foundInvoice.isPresent()) {
+            if (invoices != null) {
+                Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
+                    .stream().findFirst().get()));
                 return foundInvoice;
             }
             return Optional.empty();
@@ -413,7 +393,7 @@ public class SqlDatabase implements Database {
             .append("FROM invoice AS i ")
             .append("JOIN invoice_entries AS ies ")
             .append("ON i.id= ies.invoice_id AND i.id = ")
-            .append(invoiceId + " ")
+            .append(invoiceId).append(" ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();
@@ -428,9 +408,9 @@ public class SqlDatabase implements Database {
         try {
             String sqlQuery = getInvoiceByNumberSqlQuery(number);
             Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
-            Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
-                .stream().findFirst().get()));
-            if (foundInvoice.isPresent()) {
+            if (invoices != null) {
+                Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
+                    .stream().findFirst().get()));
                 return foundInvoice;
             }
             return Optional.empty();
@@ -447,7 +427,7 @@ public class SqlDatabase implements Database {
             .append("FROM invoice AS i ")
             .append("JOIN invoice_entries AS ies ")
             .append("ON i.id= ies.invoice_id AND i.number = ")
-            .append("'" + invoiceNumber + "' ")
+            .append("'").append(invoiceNumber).append("' ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();
@@ -662,9 +642,9 @@ public class SqlDatabase implements Database {
             .append("JOIN invoice_entries AS ies ")
             .append("ON i.id = ies.invoice_id ")
             .append("AND i.issued_date >= ")
-            .append("'" + startDate + "' ")
+            .append("'").append(startDate).append("' ")
             .append("AND i.issued_date <= ")
-            .append("'" + endDate + "' ")
+            .append("'").append(endDate).append("' ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();
