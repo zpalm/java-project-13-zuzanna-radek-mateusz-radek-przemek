@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -30,7 +31,7 @@ import pl.coderstrust.model.Invoice;
 @ConditionalOnProperty(name = "pl.coderstrust.database", havingValue = "sql")
 public class SqlDatabase implements Database {
 
-    private Logger log = LoggerFactory.getLogger(SqlDatabase.class);
+    private static Logger log = LoggerFactory.getLogger(SqlDatabase.class);
 
     private final JdbcTemplate template;
     private final SqlModelMapper sqlModelMapper;
@@ -106,12 +107,13 @@ public class SqlDatabase implements Database {
     @Transactional
     pl.coderstrust.model.Invoice updateInvoice(pl.coderstrust.database.sql.model.Invoice invoice, pl.coderstrust.database.sql.model.Invoice foundInvoice) {
 
-        Long invoiceId = foundInvoice.getId();
         List<Long> companyIdsForDelete = Arrays.asList(foundInvoice.getSeller().getId(), foundInvoice.getBuyer().getId());
         List<Long> invoiceEntryIdsForDelete = new ArrayList<>();
         for (InvoiceEntry invoiceEntry : foundInvoice.getEntries()) {
             invoiceEntryIdsForDelete.add(invoiceEntry.getId());
         }
+
+        Long invoiceId = foundInvoice.getId();
 
         Company updatedSeller = saveSeller(invoice);
         Long sellerId = updatedSeller.getId();
@@ -214,23 +216,31 @@ public class SqlDatabase implements Database {
         return invoiceEntryIds;
     }
 
-    private String insertIntoInvoiceEntrySqlQuery(List<pl.coderstrust.database.sql.model.InvoiceEntry> entries) {
+    private static String insertIntoInvoiceEntrySqlQuery(List<pl.coderstrust.database.sql.model.InvoiceEntry> entries) {
         StringBuilder select = new StringBuilder();
         select.append("INSERT INTO invoice_entry(description, quantity, price, net_value, gross_value, vat_rate) ")
             .append("VALUES ");
-        for (pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry : entries) {
-            select.append("('").append(invoiceEntry.getDescription()).append("', ")
-                .append(invoiceEntry.getQuantity()).append(", ")
-                .append(invoiceEntry.getPrice()).append(", ")
-                .append(invoiceEntry.getNetValue()).append(", ")
-                .append(invoiceEntry.getGrossValue()).append(", ")
-                .append(encodeVatRate(invoiceEntry.getVatRate())).append(")")
-                .append(", ");
+        Iterator<InvoiceEntry> entriesIterator = entries.iterator();
+        while (entriesIterator.hasNext()) {
+            select.append(extractedBuildQuery(entriesIterator.next()));
+            if (entriesIterator.hasNext()) {
+                select.append(",");
+            }
         }
-        select.deleteCharAt(select.lastIndexOf(","))
-            .append(" ")
+        select.append(" ")
             .append("RETURNING id");
         return select.toString();
+    }
+
+    private static String extractedBuildQuery(pl.coderstrust.database.sql.model.InvoiceEntry invoiceEntry) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("('").append(invoiceEntry.getDescription()).append("', ")
+            .append(invoiceEntry.getQuantity()).append(", ")
+            .append(invoiceEntry.getPrice()).append(", ")
+            .append(invoiceEntry.getNetValue()).append(", ")
+            .append(invoiceEntry.getGrossValue()).append(", ")
+            .append(encodeVatRate(invoiceEntry.getVatRate())).append(") ");
+        return sb.toString();
     }
 
     private void insertIntoInvoiceEntriesTable(Long invoiceId, List<Long> invoiceEntryIds) {
@@ -248,20 +258,20 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-    private int encodeVatRate(pl.coderstrust.database.sql.model.Vat vatRate) {
+    private static int encodeVatRate(pl.coderstrust.database.sql.model.Vat vatRate) {
         switch (vatRate) {
-            case VAT_0:
-                return 0;
-            case VAT_5:
-                return 1;
-            case VAT_8:
-                return 2;
-            case VAT_23:
-                return 3;
-            default:
-                String message = "An error occurred during encoding VAT rate.";
-                log.error(message);
-                throw new IllegalArgumentException(message);
+          case VAT_0:
+              return 0;
+          case VAT_5:
+              return 1;
+          case VAT_8:
+              return 2;
+          case VAT_23:
+              return 3;
+          default:
+              String message = "An error occurred during encoding VAT rate.";
+              log.error(message);
+              throw new IllegalArgumentException(message);
         }
     }
 
@@ -342,7 +352,6 @@ public class SqlDatabase implements Database {
                 throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
             }
             pl.coderstrust.database.sql.model.Invoice foundInvoice = invoices.values().stream().findFirst().get();
-            List<Long> companyIdsForDelete = Arrays.asList(foundInvoice.getSeller().getId(), foundInvoice.getBuyer().getId());
             List<Long> invoiceEntryIdsForDelete = new ArrayList<>();
             for (InvoiceEntry invoiceEntry : foundInvoice.getEntries()) {
                 invoiceEntryIdsForDelete.add(invoiceEntry.getId());
@@ -350,6 +359,7 @@ public class SqlDatabase implements Database {
             deleteFromInvoiceEntriesTable(id);
             deleteFromInvoiceEntryTable(invoiceEntryIdsForDelete);
             template.execute(deleteInvoiceSqlQuery(id));
+            List<Long> companyIdsForDelete = Arrays.asList(foundInvoice.getSeller().getId(), foundInvoice.getBuyer().getId());
             deleteFromCompanyTable(companyIdsForDelete);
         } catch (NonTransientDataAccessException | NoSuchElementException e) {
             String message = "An error occurred during deleting invoice.";
@@ -491,22 +501,22 @@ public class SqlDatabase implements Database {
     private pl.coderstrust.database.sql.model.Vat createVatRate(int index) {
         pl.coderstrust.database.sql.model.Vat vatRate;
         switch (index) {
-            case 0:
-                vatRate = pl.coderstrust.database.sql.model.Vat.VAT_0;
-                break;
-            case 1:
-                vatRate = pl.coderstrust.database.sql.model.Vat.VAT_5;
-                break;
-            case 2:
-                vatRate = pl.coderstrust.database.sql.model.Vat.VAT_8;
-                break;
-            case 3:
-                vatRate = pl.coderstrust.database.sql.model.Vat.VAT_23;
-                break;
-            default:
-                String message = "An error occurred during getting VAT rate.";
-                log.error(message);
-                throw new IllegalArgumentException(message);
+          case 0:
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_0;
+              break;
+          case 1:
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_5;
+              break;
+          case 2:
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_8;
+              break;
+          case 3:
+              vatRate = pl.coderstrust.database.sql.model.Vat.VAT_23;
+              break;
+          default:
+              String message = "An error occurred during getting VAT rate.";
+              log.error(message);
+              throw new IllegalArgumentException(message);
         }
         return vatRate;
     }
