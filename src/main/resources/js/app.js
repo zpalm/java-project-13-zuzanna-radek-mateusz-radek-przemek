@@ -28,6 +28,11 @@ class App extends React.Component {
             <div className="container-fluid">
                  <div className="row">
                     <div className="col-md-4">
+                        <SearchByNumber update={this.updateInvoices}/>
+                    </div>
+                 </div><br/>
+                 <div className="row">
+                    <div className="col-md-4">
                         <InvoiceByIssuedDate update={this.updateInvoices}/>
                     </div>
                  </div>
@@ -39,10 +44,7 @@ class App extends React.Component {
                  </div>
             </div>
         ]
-            <InvoiceByIssuedDate/>
-            <InvoiceList invoices={this.state.invoices}/>
-            <InvoiceList invoices={this.state.invoices} update={this.updateInvoices}/>
-        )
+
         return [
             <div className="container-fluid">
                 <div className="row">
@@ -182,6 +184,69 @@ class SearchByNumber extends React.Component {
     }
 }
 
+class InvoiceByIssuedDate extends React.Component{
+    constructor(props) {
+        super(props);
+        this.state = {
+            startDate: '',
+            endDate: ''
+        };
+    }
+
+    updateStartDate(passedStartDate){
+        this.setState({
+            startDate: passedStartDate.target.value
+        });
+    }
+
+    updateEndDate(passedEndDate){
+        this.setState({
+            endDate: passedEndDate.target.value
+        });
+    }
+
+    searchByIssuedDate(startDate, endDate) {
+        if(startDate == '' || endDate == ''){
+            $.notify("Start date or end date cannot be empty", "error");
+        } else {
+            axios.get('/invoices/byIssuedDate?startDate='+startDate+'&endDate='+endDate, {
+            }).then(response => {
+                $.notify("Invoices filtered.", "success");
+                this.props.update(response.data);
+            }).catch(function (error) {
+                if(error.response.status == 400){
+                    $.notify("Incorrect issued dates", "error")
+                } else {
+                    $.notify("An error occurred during searching invoice by issued date.", "error")
+                }
+            });
+        }
+    }
+
+    clear() {
+        client({method: 'GET', path: '/invoices'}).done(response => {
+            this.props.update(response.entity);
+            this.setState({startDate: ''});
+            this.setState({endDate: ''});
+            $.notify("Search results cleared.", "success");
+        });
+    }
+
+    render() {
+
+            return(
+                <div className="input-group">
+                    <input type="text" className="form-control" placeholder="Start date" value={this.state.startDate} onChange={value => this.updateStartDate(value)}/>
+                    <input type="text" className="form-control" placeholder="End date" value={this.state.endDate} onChange={value => this.updateEndDate(value)}/>
+                    <div className="input-group-append" id="button-addon4">
+                        <button className="btn btn-success btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.searchByIssuedDate(this.state.startDate, this.state.endDate)}>Search</button>
+                        <button className="btn btn-error btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.clear()}>Clear</button>
+                    </div>
+                 </div>
+            )
+    }
+}
+
 class ShowDetailsButton extends React.Component{
 
      mapVatRate(vatRate){
@@ -308,67 +373,6 @@ class ShowDetailsButton extends React.Component{
             </button>
         </React.Fragment>
         )
-    }
-}
-
-class InvoiceByIssuedDate extends React.Component{
-    constructor(props) {
-        super(props);
-        this.state = {
-            startDate: '',
-            endDate: ''
-        };
-    }
-
-    updateStartDate(passedStartDate){
-        this.setState({
-            startDate: passedStartDate.target.value
-        });
-    }
-
-    updateEndDate(passedEndDate){
-        this.setState({
-            endDate: passedEndDate.target.value
-        });
-    }
-
-    searchByIssuedDate(startDate, endDate) {
-        if(startDate == '' || endDate == ''){
-            $.notify("Start date or end date cannot be empty", "error");
-        } else {
-            axios.get('/invoices/byIssuedDate?startDate='+startDate+'&endDate='+endDate, {
-            }).then(response => {
-                $.notify("Invoices filtered.", "success");
-                this.props.update(response.data);
-            }).catch(function (error) {
-                if(error.response.status == 400){
-                    $.notify("Incorrect issued dates", "error")
-                } else {
-                    $.notify("An error occurred during searching invoice by issued date.", "error")
-                }
-            });
-        }
-    }
-
-    clear() {
-        client({method: 'GET', path: '/invoices'}).done(response => {
-            this.props.update(response.entity);
-            $.notify("Search results cleared.", "success");
-        });
-    }
-
-    render() {
-
-            return(
-                <div className="input-group">
-                    <input type="text" className="form-control" placeholder="Start date" value={this.state.startDate} onChange={value => this.updateStartDate(value)}/>
-                    <input type="text" className="form-control" placeholder="End date" value={this.state.endDate} onChange={value => this.updateEndDate(value)}/>
-                    <div className="input-group-append" id="button-addon4">
-                        <button className="btn btn-success btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.searchByIssuedDate(this.state.startDate, this.state.endDate)}>Search</button>
-                        <button className="btn btn-error btn-outline-secondary" type="button" update={this.updateInvoices} onClick={() => this.clear()}>Clear</button>
-                    </div>
-                 </div>
-            )
     }
 }
 
