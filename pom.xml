@@ -113,7 +113,6 @@
                         <exclude>/pl/coderstrust/configuration/WebServiceConfiguration.class</exclude>
                         <exclude>pl/coderstrust/database/nosql/model/*.class</exclude>
                         <exclude>pl/coderstrust/database/sql/model/*.class</exclude>
-<!--                        <exclude>pl/coderstrust/database/SqlDatabase.class</exclude>-->
                     </excludes>
                 </configuration>
                 <executions>
