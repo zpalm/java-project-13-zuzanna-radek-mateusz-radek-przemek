@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring", injectionStrategy = InjectionStrategy.CONSTRUCTOR)
 public interface NoSqlModelMapper {
 
-    @Mapping(target = "withMongoId", constant = "")
     @Mapping(target = "withId", source = "id")
     @Mapping(target = "withNumber", source = "number")
     @Mapping(target = "withIssuedDate", source = "issuedDate")
