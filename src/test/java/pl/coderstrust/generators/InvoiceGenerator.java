@@ -140,9 +140,30 @@ public class InvoiceGenerator {
             .build();
     }
 
-    public static Invoice getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(Long id, Long startingCompanyId, Long startingEntryId) {
+    public static Invoice getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(Long id, Long companyIdStartingFrom, Long entryIdStartingFrom) {
         String number = WordGenerator.getRandomWord("1");
         LocalDate issuedDate = LocalDate.now();
+        LocalDate dueDate = issuedDate.plusDays(2);
+        Company seller = CompanyGenerator.getRandomCompanyWithSpecificId(companyIdStartingFrom);
+        Company buyer = CompanyGenerator.getRandomCompanyWithSpecificId(companyIdStartingFrom + 1L);
+        List<InvoiceEntry> entries = new ArrayList<>();
+        for (long i = 0; i < 5; i++) {
+            entries.add(InvoiceEntryGenerator.getRandomEntryWithSpecificId(i + entryIdStartingFrom));
+        }
+
+        return Invoice.builder()
+            .withId(id)
+            .withNumber(number)
+            .withIssuedDate(issuedDate)
+            .withDueDate(dueDate)
+            .withSeller(seller)
+            .withBuyer(buyer)
+            .withEntries(entries)
+            .build();
+    }
+
+    public static Invoice getRandomInvoiceWithSpecificIdFixedIssuedDateCompaniesAndEntriesWithSubsequentIdsStartingFrom(Long id, LocalDate issuedDate, Long startingCompanyId, Long startingEntryId) {
+        String number = WordGenerator.getRandomWord("1");
         LocalDate dueDate = issuedDate.plusDays(2);
         Company seller = CompanyGenerator.getRandomCompanyWithSpecificId(startingCompanyId);
         Company buyer = CompanyGenerator.getRandomCompanyWithSpecificId(startingCompanyId + 1L);

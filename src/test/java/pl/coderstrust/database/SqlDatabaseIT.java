@@ -53,7 +53,8 @@ class SqlDatabaseIT {
     }
 
     private static String dropAllTables() {
-        return "DROP TABLE IF EXISTS company, invoice, invoice_entry, invoice_entries CASCADE";
+//        return "DROP TABLE IF EXISTS company, invoice, invoice_entry, invoice_entries CASCADE";
+        return SqlQueries.dropAllTables;
     }
 
 //    private static String dropDatabaseIfExists() {
@@ -61,81 +62,86 @@ class SqlDatabaseIT {
 //    }
 
     private static String createDatabase() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-            .append("SELECT 'CREATE DATABASE invoices1' ")
-            .append("WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'invoices1')");
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder
+//            .append("SELECT 'CREATE DATABASE invoices1' ")
+//            .append("WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'invoices1')");
+//        return stringBuilder.toString();
+        return SqlQueries.createDatabase;
     }
 
     private static String createTableCompany() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-            .append("CREATE TABLE IF NOT EXISTS company ")
-            .append("(")
-            .append("id BIGSERIAL, ")
-            .append("name VARCHAR(255), ")
-            .append("address VARCHAR(255), ")
-            .append("tax_id VARCHAR(255), ")
-            .append("account_number VARCHAR(255), ")
-            .append("phone_number VARCHAR(255), ")
-            .append("email VARCHAR(255), ")
-            .append("CONSTRAINT company_pkey PRIMARY KEY (id)")
-            .append(")");
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder
+//            .append("CREATE TABLE IF NOT EXISTS company ")
+//            .append("(")
+//            .append("id BIGSERIAL, ")
+//            .append("name VARCHAR(255), ")
+//            .append("address VARCHAR(255), ")
+//            .append("tax_id VARCHAR(255), ")
+//            .append("account_number VARCHAR(255), ")
+//            .append("phone_number VARCHAR(255), ")
+//            .append("email VARCHAR(255), ")
+//            .append("CONSTRAINT company_pkey PRIMARY KEY (id)")
+//            .append(")");
+//        return stringBuilder.toString();
+        return SqlQueries.createTableCompany;
     }
 
     private static String createTableInvoice () {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-            .append("CREATE TABLE IF NOT EXISTS invoice ")
-            .append("(")
-            .append("id BIGSERIAL, ")
-            .append("number VARCHAR(255), ")
-            .append("issued_date DATE, ")
-            .append("due_date DATE, ")
-            .append("seller_id bigint, ")
-            .append("buyer_id bigint, ")
-            .append("CONSTRAINT invoice_pkey PRIMARY KEY (id), ")
-            .append("FOREIGN KEY (seller_id) REFERENCES company(id), ")
-            .append("FOREIGN KEY (buyer_id) REFERENCES company(id)")
-            .append(")");
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder
+//            .append("CREATE TABLE IF NOT EXISTS invoice ")
+//            .append("(")
+//            .append("id BIGSERIAL, ")
+//            .append("number VARCHAR(255), ")
+//            .append("issued_date DATE, ")
+//            .append("due_date DATE, ")
+//            .append("seller_id bigint, ")
+//            .append("buyer_id bigint, ")
+//            .append("CONSTRAINT invoice_pkey PRIMARY KEY (id), ")
+//            .append("FOREIGN KEY (seller_id) REFERENCES company(id), ")
+//            .append("FOREIGN KEY (buyer_id) REFERENCES company(id)")
+//            .append(")");
+//        return stringBuilder.toString();
+        return SqlQueries.createTableInvoice;
     }
 
     private static String alterTableInvoice() {
-        return "ALTER TABLE invoice OWNER TO postgres";
+//        return "ALTER TABLE invoice OWNER TO postgres";
+        return SqlQueries.alterTableInvoice;
     }
 
     private static String createTableInvoiceEntry() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-            .append("CREATE TABLE IF NOT EXISTS invoice_entry ")
-            .append("(")
-            .append("id BIGSERIAL, ")
-            .append("description VARCHAR(255), ")
-            .append("quantity bigint, ")
-            .append("price numeric(19, 2), ")
-            .append("net_value numeric(19, 2), ")
-            .append("gross_value numeric(19, 2), ")
-            .append("vat_rate int, ")
-            .append("CONSTRAINT invoice_entry_pkey PRIMARY KEY (id)")
-            .append(")");
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder
+//            .append("CREATE TABLE IF NOT EXISTS invoice_entry ")
+//            .append("(")
+//            .append("id BIGSERIAL, ")
+//            .append("description VARCHAR(255), ")
+//            .append("quantity bigint, ")
+//            .append("price numeric(19, 2), ")
+//            .append("net_value numeric(19, 2), ")
+//            .append("gross_value numeric(19, 2), ")
+//            .append("vat_rate int, ")
+//            .append("CONSTRAINT invoice_entry_pkey PRIMARY KEY (id)")
+//            .append(")");
+//        return stringBuilder.toString();
+        return SqlQueries.createTableInvoiceEntry;
     }
 
     private static String createTableInvoiceEntries() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-//            .append("CREATE TABLE invoice_entries ")
-            .append("CREATE TABLE IF NOT EXISTS invoice_entries ")
-            .append("(")
-            .append("invoice_id bigint, ")
-            .append("entries_id bigint, ")
-            .append("FOREIGN KEY (invoice_id) REFERENCES invoice(id) ON DELETE CASCADE ON UPDATE CASCADE, ")
-            .append("FOREIGN KEY (entries_id) REFERENCES invoice_entry(id) ON DELETE CASCADE ON UPDATE CASCADE")
-            .append(")");
-        return stringBuilder.toString();
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder
+//            .append("CREATE TABLE IF NOT EXISTS invoice_entries ")
+//            .append("(")
+//            .append("invoice_id bigint, ")
+//            .append("entries_id bigint, ")
+//            .append("FOREIGN KEY (invoice_id) REFERENCES invoice(id) ON DELETE CASCADE ON UPDATE CASCADE, ")
+//            .append("FOREIGN KEY (entries_id) REFERENCES invoice_entry(id) ON DELETE CASCADE ON UPDATE CASCADE")
+//            .append(")");
+//        return stringBuilder.toString();
+        return SqlQueries.createTableInvoiceEntries;
     }
 
 //    @BeforeEach
@@ -200,12 +206,12 @@ class SqlDatabaseIT {
         assertEquals(invoiceToUpdate, updatedInvoice);
     }
 
-    @Test //ok
+    @Test // ok
     void saveMethodShouldThrowExceptionForNullInvoice() {
         assertThrows(IllegalArgumentException.class, () -> database.save(null));
     }
 
-    @Test //ok
+    @Test // ok
     void shouldDeleteInvoice() throws DatabaseOperationException {
         //given
         pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
@@ -220,32 +226,32 @@ class SqlDatabaseIT {
         assertFalse(result);
     }
 
-    @Test //ok
+    @Test // ok
     void deleteMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.delete(null));
     }
 
-    @Test //ok
+    @Test // ok
     void deleteMethodShouldThrowExceptionDuringDeletingNotExistingInvoice() {
         assertThrows(DatabaseOperationException.class, () -> database.delete(100L));
     }
 
-    @Test // prawdopodobnie problem z ZERAMI po kropce dziesiętnej ?????????????????????????????????????????????????????
+    @Test //
+    // problem z ZERAMI po kropce dziesiętnej ##########################################################################
     void shouldReturnInvoiceById() throws DatabaseOperationException {
         //given
         pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
         pl.coderstrust.model.Invoice savedInvoice = database.save(invoiceToSave);
-//        Long savedInvoiceId = savedInvoice.getId();
 
         //when
         Optional<pl.coderstrust.model.Invoice> result = database.getById(savedInvoice.getId());
 
         //then
         assertTrue(result.isPresent());
-        assertEquals(savedInvoice, result.get());
+        assertEquals(Optional.of(savedInvoice), result);
     }
 
-    @Test //ok
+    @Test // ok
     void shouldReturnEmptyOptionalWhileGettingNonExistingInvoiceById() throws DatabaseOperationException {
         //when
         Optional<pl.coderstrust.model.Invoice> result = database.getById(100L);
@@ -254,15 +260,16 @@ class SqlDatabaseIT {
         assertTrue(result.isEmpty());
     }
 
-    @Test //ok
+    @Test // ok
     void getByIdMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.getById(null));
     }
 
-    @Test //konieczne porównywanie wpisów bez id-ków, lub budowanie (WSZYSTKIEGO) z pobranymi id-kami...
+    @Test //
+    // problem z ZERAMI po kropce dziesiętnej ##########################################################################
     void shouldReturnInvoiceByNumber() throws DatabaseOperationException {
         //given
-        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
+        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
         pl.coderstrust.model.Invoice savedInvoice = database.save(invoiceToSave);
         String savedInvoiceNumber = savedInvoice.getNumber();
 
@@ -274,27 +281,28 @@ class SqlDatabaseIT {
         assertEquals(savedInvoice, result.get());
     }
 
-    @Test //ok
+    @Test // ok
     void shouldReturnEmptyOptionalWhileGettingNonExistingInvoiceByNumber() throws DatabaseOperationException {
         //when
         Optional<pl.coderstrust.model.Invoice> result = database.getByNumber("1");
 
         //then
         assertTrue(result.isEmpty());
-//        verify(database).getByNumber("1");
     }
 
-    @Test //ok
+    @Test // ok
     void getByNumberMethodShouldThrowExceptionForNullNumber() {
         assertThrows(IllegalArgumentException.class, () -> database.getByNumber(null));
     }
 
-    @Test //konieczne porównywanie wpisów bez id-ków, lub budowanie (WSZYSTKIEGO) z pobranymi id-kami...
+    @Test //
+    // może zdarzyć się problem z kolejnością wpisów w kolekcjach
+    // A NA PEWNO JEST PROBLEM Z ZERAMI PO KROPCE DZIESIĘTNEJ ##########################################################
     void shouldReturnAllInvoices() throws DatabaseOperationException {
         //given
-        pl.coderstrust.model.Invoice invoice1 = InvoiceGenerator.getRandomInvoice();
+        pl.coderstrust.model.Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
         pl.coderstrust.model.Invoice savedInvoice1 = database.save(invoice1);
-        pl.coderstrust.model.Invoice invoice2 = InvoiceGenerator.getRandomInvoice();
+        pl.coderstrust.model.Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(2L, 3L, 6L);
         pl.coderstrust.model.Invoice savedInvoice2 = database.save(invoice2);
         List<pl.coderstrust.model.Invoice> invoices = List.of(savedInvoice1, savedInvoice2);
 
@@ -305,7 +313,7 @@ class SqlDatabaseIT {
         assertEquals(invoices, result);
     }
 
-    @Test //ok
+    @Test // ok
     void shouldReturnTrueForExistingInvoice() throws DatabaseOperationException {
         //given
         pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
@@ -319,7 +327,7 @@ class SqlDatabaseIT {
         assertTrue(result);
     }
 
-    @Test //ok
+    @Test // ok
     void shouldReturnFalseForNonExistingInvoice() throws DatabaseOperationException {
         //when
         boolean result = database.exists(1L);
@@ -328,12 +336,12 @@ class SqlDatabaseIT {
         assertFalse(result);
     }
 
-    @Test //ok
+    @Test // ok
     void existsMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.exists(null));
     }
 
-    @Test //ok
+    @Test // ok
     void shouldReturnNumberOfInvoices() throws DatabaseOperationException {
         //given
         database.save(InvoiceGenerator.getRandomInvoice());
@@ -346,7 +354,7 @@ class SqlDatabaseIT {
         assertEquals(2L, result);
     }
 
-    @Test //ok
+    @Test // ok
     void shouldDeleteAllInvoices() throws DatabaseOperationException {
         //given
         database.save(InvoiceGenerator.getRandomInvoice());
@@ -359,14 +367,16 @@ class SqlDatabaseIT {
         assertEquals(0L, database.count());
     }
 
-    @Test //TUTAJ w wynikach są zera po kropce dziesiętnej ORAZ POMIESZANA KOLEJNOSC
+    @Test //
+    // może zdarzyć się problem z kolejnością wpisów w kolekcjach
+    // A NA PEWNO JEST PROBLEM Z ZERAMI PO KROPCE DZIESIĘTNEJ ##########################################################
     void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
         //given
         LocalDate startDate = LocalDate.of(2019, 8, 24);
-        pl.coderstrust.model.Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate);
-        pl.coderstrust.model.Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(1L));
-        pl.coderstrust.model.Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(2L));
-        pl.coderstrust.model.Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIssuedDate(startDate.plusDays(4L));
+        pl.coderstrust.model.Invoice invoice1 = InvoiceGenerator.getRandomInvoiceWithSpecificIdFixedIssuedDateCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, startDate, 1L, 1L);
+        pl.coderstrust.model.Invoice invoice2 = InvoiceGenerator.getRandomInvoiceWithSpecificIdFixedIssuedDateCompaniesAndEntriesWithSubsequentIdsStartingFrom(2L, startDate.plusDays(1L), 3L, 6L);
+        pl.coderstrust.model.Invoice invoice3 = InvoiceGenerator.getRandomInvoiceWithSpecificIdFixedIssuedDateCompaniesAndEntriesWithSubsequentIdsStartingFrom(3L, startDate.plusDays(2L), 5L, 11L);
+        pl.coderstrust.model.Invoice invoice4 = InvoiceGenerator.getRandomInvoiceWithSpecificIdFixedIssuedDateCompaniesAndEntriesWithSubsequentIdsStartingFrom(4L, startDate.plusDays(4L), 7L, 16L);
         pl.coderstrust.model.Invoice savedInvoice1 = database.save(invoice1);
         pl.coderstrust.model.Invoice savedInvoice2 = database.save(invoice2);
         pl.coderstrust.model.Invoice savedInvoice3 = database.save(invoice3);
@@ -380,7 +390,7 @@ class SqlDatabaseIT {
         assertEquals(filteredInvoices, filteredInvoicesResult);
     }
 
-    @ParameterizedTest //ok
+    @ParameterizedTest // ok
     @MethodSource("invalidIssuedDateArgumentsAndExceptionMessages")
     void getByIssuedDateMethodShouldThrowExceptionWhenInvalidArgumentsArePassed(LocalDate startDate, LocalDate endDate, String message) {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> database.getByIssueDate(startDate, endDate));
