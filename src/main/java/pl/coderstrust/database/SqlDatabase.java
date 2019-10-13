@@ -42,6 +42,9 @@ public class SqlDatabase implements Database {
         this.sqlModelMapper = sqlModelMapper;
     }
 
+    // tutaj wywołanie przeciążonej metody createMapOfInvoices, z id dodanym do Object[] parameters
+    // ZROBIONE, ok
+
     @Override
     public Invoice save(pl.coderstrust.model.Invoice invoice) throws DatabaseOperationException {
         if (invoice == null) {
@@ -51,8 +54,9 @@ public class SqlDatabase implements Database {
         try {
             pl.coderstrust.database.sql.model.Invoice sqlInvoice = sqlModelMapper.toSqlInvoice(invoice);
             Long id = sqlInvoice.getId();
-            String sqlQuery = getInvoiceByIdSqlQuery(id);
-            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            String sqlQuery = getInvoiceByIdSqlQuery();
+            Object[] parameters = new Object[] {id};
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery, parameters);
             if (id == null || invoices.isEmpty()) {
                 return insertInvoice(sqlInvoice);
             }
@@ -247,12 +251,17 @@ public class SqlDatabase implements Database {
             parametersList.add(new Object[] {entry.getDescription(), entry.getQuantity(), entry.getPrice(),
                 entry.getNetValue(), entry.getGrossValue(), encodeVatRate(entry.getVatRate())});
         }
-        Object[] parameters = new Object[parametersList.size() * 6];
-        for (int i = 0; i < parametersList.size(); i++) {
-            for (int j = 0; j < 6; j++) {
-                parameters[i * 6 + j] = parametersList.get(i)[j];
-            }
-        }
+
+        Object[] parameters = parametersList.stream().flatMap(x -> Arrays.stream(x)).toArray();
+
+//        Object[] parameters = new Object[parametersList.size() * 6];
+//        for (int i = 0; i < parametersList.size(); i++) {
+//            for (int j = 0; j < 6; j++) {
+//                parameters[i * 6 + j] = parametersList.get(i)[j];
+//            }
+//        }
+
+
         List<Long> invoiceEntryIds = template.query(sqlQuery, parameters, (rs, numRow) -> rs.getLong("id"));
         return invoiceEntryIds;
 
@@ -441,11 +450,11 @@ public class SqlDatabase implements Database {
     // ?????????????????????????????????????????????????????????????????????????????????????????????????????????????????
 
     private void deleteFromInvoiceEntriesTable(Long invoiceId) {
-        String sqlQuery = deleteInvoiceEntriesSqlQuery(invoiceId);
+        String sqlQuery = deleteInvoiceEntriesSqlQuery();
         template.update(sqlQuery, invoiceId);
     }
 
-    private static String deleteInvoiceEntriesSqlQuery(Long invoiceId) {
+    private static String deleteInvoiceEntriesSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("DELETE FROM invoice_entries WHERE invoice_id = ?");
         return select.toString();
@@ -500,9 +509,33 @@ public class SqlDatabase implements Database {
 */
 
 //    poniżej znowu trzeba będzie użyć iteratora żeby utworzyć zapytanie ze znakami "?"
-//    w samej metodzie listę Longów trzeba zamienić na listę obiektów - lub spróbować, czy zapytanie pójdzie z listą Longów
-//    i oczywiście batchUpdate
+//    w samej metodzie listę Longów trzeba zamienić na Array obiektów - lub spróbować, czy zapytanie pójdzie z listą Longów
+//    i oczywiście update, A NIE batchUpdate
 
+    private void deleteFromInvoiceEntryTable(List<Long> invoiceEntryIds) {
+        if (invoiceEntryIds.size() > 0) {
+            Object[] parameters = invoiceEntryIds.toArray();
+            String sqlQuery = deleteFromInvoiceEntrySqlQuery(invoiceEntryIds);
+            template.update(sqlQuery, parameters);
+        }
+    }
+
+    private static String deleteFromInvoiceEntrySqlQuery(List<Long> invoiceEntryIds) {
+        StringBuilder select = new StringBuilder();
+        select.append("DELETE FROM invoice_entry WHERE id IN (");
+        Iterator<Long> idsIterator = invoiceEntryIds.iterator();
+        while (idsIterator.hasNext()) {
+            select.append("?");
+            idsIterator.next();
+            if (idsIterator.hasNext()) {
+                select.append(", ");
+            }
+        }
+        select.append(")");
+        return select.toString();
+    }
+
+/*
     private void deleteFromInvoiceEntryTable(List<Long> invoiceEntryIds) {
         if (invoiceEntryIds.size() > 0) {
             String sqlQuery = deleteFromInvoiceEntrySqlQuery(invoiceEntryIds);
@@ -518,6 +551,17 @@ public class SqlDatabase implements Database {
             .append(")");
         return select.toString();
     }
+*/
+
+// tutaj wywołuję PRZECIĄŻONĄ metodę createMapOfInvoices z dodatkowym argumentem parameters, w którym jest tylko id
+    // ZROBIONE, ok
+
+    // BTW całą poniższą metodę można teoretycznie przerobić na wywołanie dość skomplikowanego JEDNEGO zapytania do bazy danych
+    // które sprawdzi, czy faktura istnieje w bazie i od razu ją usunie wraz z odpowiednimi wpisami w pozostałych tabelach
+
+    // jak dla mnie, na ten moment, nierealne
+
+    // ale ZAPYTAC PAWŁA
 
     @Transactional
     @Override
@@ -527,8 +571,9 @@ public class SqlDatabase implements Database {
             throw new IllegalArgumentException("Id cannot be null.");
         }
         try {
-            String sqlQuery = getInvoiceByIdSqlQuery(id);
-            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            String sqlQuery = getInvoiceByIdSqlQuery();
+            Object[] parameters = new Object[] {id};
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery, parameters);
             if (invoices == null) {
                 log.error("Attempt to delete not existing invoice.");
                 throw new DatabaseOperationException(String.format("There was no invoice in database with id: %s", id));
@@ -553,9 +598,12 @@ public class SqlDatabase implements Database {
 
     private static String deleteInvoiceSqlQuery() {
         StringBuilder select = new StringBuilder();
-        select.append("DELETE FROM invoice WHERE ").append("id = ?");
+        select.append("DELETE FROM invoice WHERE id = ?");
         return select.toString();
     }
+
+    // tutaj będzie wywołanie przeciążonej metody createMapOfInvoices - drugim argumentem będzie Object[] = new ... {invoiceId)
+    // ZROBIONE, ok
 
     @Override
     public Optional<pl.coderstrust.model.Invoice> getById(Long id) throws DatabaseOperationException {
@@ -564,8 +612,9 @@ public class SqlDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            String sqlQuery = getInvoiceByIdSqlQuery(id);
-            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            String sqlQuery = getInvoiceByIdSqlQuery();
+            Object[] parameters = new Object[] {id};
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery, parameters);
             if (!invoices.isEmpty()) {
                 Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
                     .stream().findFirst().get()));
@@ -579,20 +628,22 @@ public class SqlDatabase implements Database {
         }
     }
 
-    // poprawić na wersję z binderem i zmienić odpowienie wywołania
-    // BARDZO UWAŻAĆ, BO MOGĄ BY RÓŻNIE UŻYWANE
+    // DO PRZERÓBKI !!!!!!!!!!!!!!!!!!!!!!!! ----------------- ok
 
-    private static String getInvoiceByIdSqlQuery(Long invoiceId) {
+    private static String getInvoiceByIdSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
             .append("JOIN invoice_entries AS ies ")
-            .append("ON i.id= ies.invoice_id AND i.id = ")
-            .append(invoiceId).append(" ")
+            .append("ON i.id = ies.invoice_id AND i.id = ? ")
+//            .append(invoiceId).append(" ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();
     }
+
+    // tutaj będzie wywołanie przeciążonej metody createMapOfInvoices - drugim argumentem będzie Object[] = new ... {invoiceId)
+    // ZROBIONE - ok
 
     @Override
     public Optional<pl.coderstrust.model.Invoice> getByNumber(String number) throws DatabaseOperationException {
@@ -601,8 +652,9 @@ public class SqlDatabase implements Database {
             throw new IllegalArgumentException("Passed number cannot be null.");
         }
         try {
-            String sqlQuery = getInvoiceByNumberSqlQuery(number);
-            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            String sqlQuery = getInvoiceByNumberSqlQuery();
+            Object[] parameters = new Object[] {number};
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery, parameters);
             if (!invoices.isEmpty()) {
                 Optional<pl.coderstrust.model.Invoice> foundInvoice = Optional.of(sqlModelMapper.toInvoice(invoices.values()
                     .stream().findFirst().get()));
@@ -616,13 +668,15 @@ public class SqlDatabase implements Database {
         }
     }
 
-    private static String getInvoiceByNumberSqlQuery(String invoiceNumber) {
+// DO PRZERÓBKI !!!!!!!!!!!!!!!!!!!!!!!! --------- ok
+
+    private static String getInvoiceByNumberSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
             .append("JOIN invoice_entries AS ies ")
-            .append("ON i.id= ies.invoice_id AND i.number = ")
-            .append("'").append(invoiceNumber).append("' ")
+            .append("ON i.id = ies.invoice_id AND i.number = ? ")
+//            .append("'").append(invoiceNumber).append("' ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();
@@ -653,12 +707,34 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-    // poniżej: przekazać nowy sqlQuery oraz id faktury, które tutaj trzeba zaszyć jako jeden obiekt do Object[]
-    // a ten array będzie drugim argumentem dla query
+    // poniżej: przekazać nowy sqlQuery oraz id faktury lub jej numer lub daty wyszukiwania, które tutaj trzeba zaszyć
+    // jako jeden lub dwa obiekty do Object[]
+    // a ten array będzie drugim argumentem dla query (to dla getById(), dla getByNumber - number)
+    // I PRZECIĄŻAM TĘ METODĘ - w drugiej jej wersji argumentami będą sqlQuery oraz Object[]...
 
     private Map<Long, pl.coderstrust.database.sql.model.Invoice> createMapOfInvoices(String sqlQuery) {
         Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = new HashMap<>();
         template.query(sqlQuery, rs -> {
+            long invoiceId = rs.getLong("id");
+            if (invoices.containsKey(invoiceId)) {
+                pl.coderstrust.database.sql.model.Invoice existingInvoice = invoices.get(invoiceId);
+                pl.coderstrust.database.sql.model.Invoice newInvoice = pl.coderstrust.database.sql.model.Invoice.builder()
+                    .withInvoice(existingInvoice)
+                    .withEntries(ListUtils.union(existingInvoice.getEntries(), Arrays.asList(createInvoiceEntry(rs))))
+                    .build();
+                invoices.put(invoiceId, newInvoice);
+            } else {
+                invoices.put(invoiceId, createInvoice(rs));
+            }
+        });
+        return invoices;
+    }
+
+    // poniżej przeciążona metoda createMapOfInvoices - ZROBIONE, ok
+
+    private Map<Long, pl.coderstrust.database.sql.model.Invoice> createMapOfInvoices(String sqlQuery, Object[] parameters) {
+        Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = new HashMap<>();
+        template.query(sqlQuery, parameters, rs -> {
             long invoiceId = rs.getLong("id");
             if (invoices.containsKey(invoiceId)) {
                 pl.coderstrust.database.sql.model.Invoice existingInvoice = invoices.get(invoiceId);
@@ -710,28 +786,33 @@ public class SqlDatabase implements Database {
     }
 
     // tutaj w queryForObject za każdym razem drugim parametrem ma być Object[] z odpowiednim id-kiem w środku (tylko jednym)
+    // ZROBIONE, ok
 
     private pl.coderstrust.database.sql.model.Invoice createInvoice(ResultSet rs) throws SQLException {
+        Object[] sellerParameters = new Object[] {rs.getLong("seller_id")};
+        Object[] buyerParameters = new Object[] {rs.getLong("buyer_id")};
         return pl.coderstrust.database.sql.model.Invoice.builder()
             .withId(rs.getLong("id"))
             .withNumber(rs.getString("number"))
             .withIssuedDate(rs.getDate("issued_date").toLocalDate())
             .withDueDate(rs.getDate("due_date").toLocalDate())
-            .withSeller(template.queryForObject(getCompanySqlQuery(rs.getLong("seller_id")),
-                (cRs, cNumRow) -> createCompany(cRs)))
-            .withBuyer(template.queryForObject(getCompanySqlQuery(rs.getLong("buyer_id")),
-                (cRs, cNumRow) -> createCompany(cRs)))
+//            .withSeller(template.queryForObject(getCompanySqlQuery(rs.getLong("seller_id")),
+//                (cRs, cNumRow) -> createCompany(cRs)))
+//            .withBuyer(template.queryForObject(getCompanySqlQuery(rs.getLong("buyer_id")),
+//                (cRs, cNumRow) -> createCompany(cRs)))
+            .withSeller(template.queryForObject(getCompanySqlQuery(), sellerParameters, (cRs, cNumRow) -> createCompany(cRs)))
+            .withBuyer(template.queryForObject(getCompanySqlQuery(), buyerParameters, (cRs, cNumRow) -> createCompany(cRs)))
             .withEntries(Arrays.asList(createInvoiceEntry(rs)))
             .build();
     }
 
-    // DO PRZERÓBKI !!!!!!!!!!!!!!!!!!!!!
+    // DO PRZERÓBKI !!!!!!!!!!!!!!!!!!!!! - ZROBIONE, ok
 
-    private static String getCompanySqlQuery(Long id) {
+    private static String getCompanySqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
-            .append("FROM company WHERE id = ")
-            .append(id);
+            .append("FROM company WHERE id = ?");
+//            .append(id);
         return select.toString();
     }
 
@@ -766,8 +847,10 @@ public class SqlDatabase implements Database {
         }
     }
 
-//    tutaj użyć template.update z id jako drugim argumentem; NIE, po prostu wywołać queryForObject z drugim parametrem
-    // w postaci Object[] = {id}
+//    tutaj użyć template.update z id jako drugim argumentem;     NNNNNIIIIIIIEEEEEEEEEEEEEEEEEEEE
+//    NIE, po prostu wywołać queryForObject z drugim parametrem w postaci Object[] = {id}
+
+    // ZROBIONE, ok
 
     @Override
     public boolean exists(Long id) throws DatabaseOperationException {
@@ -776,8 +859,9 @@ public class SqlDatabase implements Database {
             throw new IllegalArgumentException("Passed id cannot be null.");
         }
         try {
-            String sqlQuery = existsSqlQuery(id);
-            return template.queryForObject(sqlQuery, (rs, numRow) -> rs.getBoolean(1));
+            String sqlQuery = existsSqlQuery();
+            Object[] parameters = new Object[] {id};
+            return template.queryForObject(sqlQuery, parameters, (rs, numRow) -> rs.getBoolean(1));
         } catch (NonTransientDataAccessException e) {
             String message = "An error occurred during checking if invoice exists.";
             log.error(message, e);
@@ -785,13 +869,13 @@ public class SqlDatabase implements Database {
         }
     }
 
-// przerobić na wersję z binderem
+// przerobić na wersję z binderem - ZROBIONE, ok
 
-    private static String existsSqlQuery(Long id) {
+    private static String existsSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT CASE ")
-            .append("WHEN EXISTS (SELECT 1 FROM invoice WHERE id = ")
-            .append(id).append(") ")
+            .append("WHEN EXISTS (SELECT 1 FROM invoice WHERE id = ?) ")
+//            .append(id).append(") ")
             .append("THEN true ")
             .append("ELSE false ")
             .append("END");
@@ -816,8 +900,8 @@ public class SqlDatabase implements Database {
         return select.toString();
     }
 
-// ttuaj do metody createMapOfInvoices trzeba będzie przekazać sqlQuery oraz dwie daty - najpewniej w postaci Object[]
-    // wtedy nie trzeba będzie przeciążyć metody createMapOfInvoices :-)
+// tutaj do metody createMapOfInvoices trzeba będzie przekazać sqlQuery oraz dwie daty - najpewniej w postaci Object[]
+    // do przeciążonej metody createMapOfInvoices :-)
 
     @Override
     public Collection<pl.coderstrust.model.Invoice> getByIssueDate(LocalDate startDate, LocalDate endDate) throws DatabaseOperationException {
@@ -834,8 +918,9 @@ public class SqlDatabase implements Database {
             throw new IllegalArgumentException("Start date cannot be after end date");
         }
         try {
-            String sqlQuery = getInvoicesAndEntriesByIssueDateSqlQuery(startDate, endDate);
-            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery);
+            String sqlQuery = getInvoicesAndEntriesByIssueDateSqlQuery();
+            Object[] parameters = new Object[] {startDate, endDate};
+            Map<Long, pl.coderstrust.database.sql.model.Invoice> invoices = createMapOfInvoices(sqlQuery, parameters);
             List<pl.coderstrust.database.sql.model.Invoice> invoiceList = new ArrayList<>(invoices.values());
             return sqlModelMapper.mapToInvoices(invoiceList);
         } catch (NonTransientDataAccessException e) {
@@ -845,18 +930,18 @@ public class SqlDatabase implements Database {
         }
     }
 
-    // do przeróbki !!!!!!!!!!!!!!!!!!
+    // do przeróbki !!!!!!!!!!!!!!!!!! - ZROBIONE, ok
 
-    private static String getInvoicesAndEntriesByIssueDateSqlQuery(LocalDate startDate, LocalDate endDate) {
+    private static String getInvoicesAndEntriesByIssueDateSqlQuery() {
         StringBuilder select = new StringBuilder();
         select.append("SELECT * ")
             .append("FROM invoice AS i ")
             .append("JOIN invoice_entries AS ies ")
             .append("ON i.id = ies.invoice_id ")
-            .append("AND i.issued_date >= ")
-            .append("'").append(startDate).append("' ")
-            .append("AND i.issued_date <= ")
-            .append("'").append(endDate).append("' ")
+            .append("AND i.issued_date >= ? ")
+//            .append("'").append(startDate).append("' ")
+            .append("AND i.issued_date <= ? ")
+//            .append("'").append(endDate).append("' ")
             .append("JOIN invoice_entry AS ie ")
             .append("ON ies.entries_id = ie.id");
         return select.toString();

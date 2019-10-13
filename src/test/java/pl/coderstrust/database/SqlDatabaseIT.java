@@ -20,7 +20,6 @@ import org.springframework.test.context.TestPropertySource;
 import pl.coderstrust.database.sql.model.SqlModelMapper;
 import pl.coderstrust.database.sql.model.SqlModelMapperImpl;
 import pl.coderstrust.generators.InvoiceGenerator;
-import pl.coderstrust.model.Invoice;
 
 @SpringBootTest
 @TestPropertySource(locations = "classpath:application-sql-test.properties")
@@ -41,6 +40,11 @@ class SqlDatabaseIT {
     void createSqlDatabase() {
 //        jdbcTemplate.execute(dropDatabaseIfExists());
         jdbcTemplate.execute(createDatabase());
+        jdbcTemplate.execute(dropAllTables());
+//        jdbcTemplate.execute("DROP TABLE IF EXISTS company CASCADE");
+//        jdbcTemplate.execute("DROP TABLE IF EXISTS invoice CASCADE");
+//        jdbcTemplate.execute("DROP TABLE IF EXISTS invoice_entry CASCADE");
+//        jdbcTemplate.execute("DROP TABLE IF EXISTS invoice_entries CASCADE");
         jdbcTemplate.execute(createTableCompany());
         jdbcTemplate.execute(createTableInvoice());
         jdbcTemplate.execute(alterTableInvoice());
@@ -48,23 +52,18 @@ class SqlDatabaseIT {
         jdbcTemplate.execute(createTableInvoiceEntries());
     }
 
-    private static String dropDatabaseIfExists() {
-        return "DROP DATABASE IF EXISTS invoices1";
+    private static String dropAllTables() {
+        return "DROP TABLE IF EXISTS company, invoice, invoice_entry, invoice_entries CASCADE";
     }
+
+//    private static String dropDatabaseIfExists() {
+//        return "DROP DATABASE IF EXISTS invoices1";
+//    }
 
     private static String createDatabase() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
             .append("SELECT 'CREATE DATABASE invoices1' ")
-//            .append("CREATE DATABASE invoices1 ")
-//            .append("WITH ")
-//            .append("OWNER = postgres ")
-//            .append("ENCODING = 'UTF8' ")
-//            .append("LC_COLLATE = 'Polish_Poland.1250' ")
-//            .append("LC_CTYPE = 'Polish_Poland.1250' ")
-//            .append("TABLESPACE = pg_default ")
-//            .append("CONNECTION LIMIT = -1")
-//            .append("WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'invoices1')\\gexec");
             .append("WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'invoices1')");
         return stringBuilder.toString();
     }
@@ -72,7 +71,6 @@ class SqlDatabaseIT {
     private static String createTableCompany() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
-//            .append("CREATE TABLE company ")
             .append("CREATE TABLE IF NOT EXISTS company ")
             .append("(")
             .append("id BIGSERIAL, ")
@@ -90,7 +88,6 @@ class SqlDatabaseIT {
     private static String createTableInvoice () {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
-//            .append("CREATE TABLE invoice ")
             .append("CREATE TABLE IF NOT EXISTS invoice ")
             .append("(")
             .append("id BIGSERIAL, ")
@@ -113,7 +110,6 @@ class SqlDatabaseIT {
     private static String createTableInvoiceEntry() {
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
-//            .append("CREATE TABLE invoice_entry ")
             .append("CREATE TABLE IF NOT EXISTS invoice_entry ")
             .append("(")
             .append("id BIGSERIAL, ")
@@ -142,52 +138,60 @@ class SqlDatabaseIT {
         return stringBuilder.toString();
     }
 
-    @BeforeEach
-    void deleteAllDataFromDatabase() {
-        jdbcTemplate.execute("DELETE FROM invoice_entries");
-        jdbcTemplate.execute("DELETE FROM invoice_entry");
-        jdbcTemplate.execute("DELETE FROM invoice");
-        jdbcTemplate.execute("DELETE FROM company");
-    }
+//    @BeforeEach
+//    void deleteAllDataFromDatabase() {
+//        jdbcTemplate.execute("DELETE FROM invoice_entries");
+//        jdbcTemplate.execute("DELETE FROM invoice_entry");
+//        jdbcTemplate.execute("DELETE FROM invoice");
+//        jdbcTemplate.execute("DELETE FROM company");
+//    }
 
-    @Test // ok, ale porównanie entriesów to jakiś potworek
+    @Test // ok
     void shouldSaveInvoice() throws DatabaseOperationException {
         //given
-        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithNullId();
+        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
 
         //when
         pl.coderstrust.model.Invoice savedInvoice = database.save(invoiceToSave);
 
         //then
-        assertEquals(1L, savedInvoice.getId());
-        assertEquals(invoiceToSave.getNumber(), savedInvoice.getNumber());
-        assertEquals(invoiceToSave.getIssuedDate(), savedInvoice.getIssuedDate());
-        assertEquals(invoiceToSave.getDueDate(), savedInvoice.getDueDate());
-        assertEquals(invoiceToSave.getSeller().getName(), savedInvoice.getSeller().getName());
-        assertEquals(invoiceToSave.getBuyer().getAccountNumber(), savedInvoice.getBuyer().getAccountNumber());
-        long j =1;
-        for (int i = 0; i < invoiceToSave.getEntries().size(); i++) {
-            assertEquals(j++, savedInvoice.getEntries().get(i).getId());
-            assertEquals(invoiceToSave.getEntries().get(i).getNetValue(), savedInvoice.getEntries().get(i).getNetValue());
-        }
+        assertEquals(invoiceToSave, savedInvoice);
+//        assertEquals(1L, savedInvoice.getId());
+//        assertEquals(invoiceToSave.getNumber(), savedInvoice.getNumber());
+//        assertEquals(invoiceToSave.getIssuedDate(), savedInvoice.getIssuedDate());
+//        assertEquals(invoiceToSave.getDueDate(), savedInvoice.getDueDate());
+//        assertEquals(1L, savedInvoice.getSeller().getId());
+//        assertEquals(invoiceToSave.getSeller().getName(), savedInvoice.getSeller().getName());
+//        assertEquals(invoiceToSave.getSeller().getAddress(), savedInvoice.getSeller().getAddress());
+//        assertEquals(invoiceToSave.getSeller().getTaxId(), savedInvoice.getSeller().getTaxId());
+//        assertEquals(invoiceToSave.getSeller().getAccountNumber(), savedInvoice.getSeller().getAccountNumber());
+//        assertEquals(invoiceToSave.getSeller().getPhoneNumber(), savedInvoice.getSeller().getPhoneNumber());
+//        assertEquals(invoiceToSave.getSeller().getEmail(), savedInvoice.getSeller().getEmail());
+//        assertEquals(2L, savedInvoice.getBuyer().getId());
+//        assertEquals(invoiceToSave.getBuyer().getName(), savedInvoice.getBuyer().getName());
+//        assertEquals(invoiceToSave.getBuyer().getAddress(), savedInvoice.getBuyer().getAddress());
+//        assertEquals(invoiceToSave.getBuyer().getTaxId(), savedInvoice.getBuyer().getTaxId());
+//        assertEquals(invoiceToSave.getBuyer().getAccountNumber(), savedInvoice.getBuyer().getAccountNumber());
+//        assertEquals(invoiceToSave.getBuyer().getPhoneNumber(), savedInvoice.getBuyer().getPhoneNumber());
+//        assertEquals(invoiceToSave.getBuyer().getEmail(), savedInvoice.getBuyer().getEmail());
+//        long j =1;
+//        for (int i = 0; i < invoiceToSave.getEntries().size(); i++) {
+//            assertEquals(j++, savedInvoice.getEntries().get(i).getId());
+//            assertEquals(invoiceToSave.getEntries().get(i).getDescription(), savedInvoice.getEntries().get(i).getDescription());
+//            assertEquals(invoiceToSave.getEntries().get(i).getQuantity(), savedInvoice.getEntries().get(i).getQuantity());
+//            assertEquals(invoiceToSave.getEntries().get(i).getPrice(), savedInvoice.getEntries().get(i).getPrice());
+//            assertEquals(invoiceToSave.getEntries().get(i).getNetValue(), savedInvoice.getEntries().get(i).getNetValue());
+//            assertEquals(invoiceToSave.getEntries().get(i).getGrossValue(), savedInvoice.getEntries().get(i).getGrossValue());
+//            assertEquals(invoiceToSave.getEntries().get(i).getVatRate(), savedInvoice.getEntries().get(i).getVatRate());
+//        }
     }
 
-    @Test // tutaj też trzeba będzie porównywać wpisy BEZ id-ków lub zbudować fakturę do porównania z pobdanymi id-kami
+    @Test // ok
     void shouldUpdateInvoice() throws DatabaseOperationException {
         //given
-        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
-        pl.coderstrust.model.Invoice savedInvoice = database.save(invoiceToSave);
-        Long savedInvoiceId = savedInvoice.getId();
-        pl.coderstrust.model.Invoice temporaryInvoice = InvoiceGenerator.getRandomInvoice();
-        pl.coderstrust.model.Invoice invoiceToUpdate = Invoice.builder()
-            .withId(savedInvoiceId)
-            .withNumber(temporaryInvoice.getNumber())
-            .withIssuedDate(temporaryInvoice.getIssuedDate())
-            .withDueDate(temporaryInvoice.getDueDate())
-            .withSeller(temporaryInvoice.getSeller())
-            .withBuyer(temporaryInvoice.getBuyer())
-            .withEntries(temporaryInvoice.getEntries())
-            .build();
+        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
+        database.save(invoiceToSave);
+        pl.coderstrust.model.Invoice invoiceToUpdate = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 3L, 6L);
 
         //when
         pl.coderstrust.model.Invoice updatedInvoice = database.save(invoiceToUpdate);
@@ -200,17 +204,6 @@ class SqlDatabaseIT {
     void saveMethodShouldThrowExceptionForNullInvoice() {
         assertThrows(IllegalArgumentException.class, () -> database.save(null));
     }
-
-//    @Test
-//    void saveMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringSavingInvoice() throws DatabaseOperationException {
-//        //given
-//        pl.coderstrust.model.Invoice invoice = InvoiceGenerator.getRandomInvoice();
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).save(invoice);
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.save(invoice));
-//        verify(database).save(invoice);
-//    }
 
     @Test //ok
     void shouldDeleteInvoice() throws DatabaseOperationException {
@@ -237,35 +230,15 @@ class SqlDatabaseIT {
         assertThrows(DatabaseOperationException.class, () -> database.delete(100L));
     }
 
-//    @Test
-//    void deleteMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringDeletingInvoice() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).delete(1L);
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.delete(1L));
-//        verify(database).delete(1L);
-//    }
-
-//    @Test
-//    void deleteMethodShouldThrowDatabaseOperationExceptionWhenNoSuchElementExceptionOccurDuringDeletingInvoice() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NoSuchElementException()).when(database).delete(1L);
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.delete(1L));
-//        verify(database).delete(1L);
-//    }
-
-    @Test //konieczne porównywanie wpisów bez id-ków, lub budowanie (WSZYSTKIEGO) z pobranymi id-kami...
+    @Test // prawdopodobnie problem z ZERAMI po kropce dziesiętnej ?????????????????????????????????????????????????????
     void shouldReturnInvoiceById() throws DatabaseOperationException {
         //given
-        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoice();
+        pl.coderstrust.model.Invoice invoiceToSave = InvoiceGenerator.getRandomInvoiceWithSpecificIdCompaniesAndEntriesWithSubsequentIdsStartingFrom(1L, 1L, 1L);
         pl.coderstrust.model.Invoice savedInvoice = database.save(invoiceToSave);
-        Long savedInvoiceId = savedInvoice.getId();
+//        Long savedInvoiceId = savedInvoice.getId();
 
         //when
-        Optional<pl.coderstrust.model.Invoice> result = database.getById(savedInvoiceId);
+        Optional<pl.coderstrust.model.Invoice> result = database.getById(savedInvoice.getId());
 
         //then
         assertTrue(result.isPresent());
@@ -279,23 +252,12 @@ class SqlDatabaseIT {
 
         //then
         assertTrue(result.isEmpty());
-//        verify(database).getById(100L);
     }
 
     @Test //ok
     void getByIdMethodShouldThrowExceptionForNullId() {
         assertThrows(IllegalArgumentException.class, () -> database.getById(null));
     }
-
-//    @Test
-//    void getByIdMethodShouldThrowDatabaseOperationExceptionWhenNoSuchElementExceptionOccursDuringGettingInvoiceById() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NoSuchElementException()).when(database).getById(1L);
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.getById(1L));
-//        verify(database).getById(1L);
-//    }
 
     @Test //konieczne porównywanie wpisów bez id-ków, lub budowanie (WSZYSTKIEGO) z pobranymi id-kami...
     void shouldReturnInvoiceByNumber() throws DatabaseOperationException {
@@ -327,16 +289,6 @@ class SqlDatabaseIT {
         assertThrows(IllegalArgumentException.class, () -> database.getByNumber(null));
     }
 
-//    @Test
-//    void getByNumberMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringGettingInvoiceByNumber() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).getByNumber("1");
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.getByNumber("1"));
-//        verify(database).getByNumber("1");
-//    }
-
     @Test //konieczne porównywanie wpisów bez id-ków, lub budowanie (WSZYSTKIEGO) z pobranymi id-kami...
     void shouldReturnAllInvoices() throws DatabaseOperationException {
         //given
@@ -352,15 +304,6 @@ class SqlDatabaseIT {
         //then
         assertEquals(invoices, result);
     }
-
-//    @Test
-//    void getAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringGettingAllInvoices() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).getAll();
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.getAll());
-//    }
 
     @Test //ok
     void shouldReturnTrueForExistingInvoice() throws DatabaseOperationException {
@@ -390,15 +333,6 @@ class SqlDatabaseIT {
         assertThrows(IllegalArgumentException.class, () -> database.exists(null));
     }
 
-//    @Test
-//    void existsMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringCheckingInvoiceExists() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).exists(1L);
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.exists(1L));
-//    }
-
     @Test //ok
     void shouldReturnNumberOfInvoices() throws DatabaseOperationException {
         //given
@@ -412,15 +346,6 @@ class SqlDatabaseIT {
         assertEquals(2L, result);
     }
 
-//    @Test
-//    void countMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringGettingNumberOfInvoices() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).count();
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.count());
-//    }
-
     @Test //ok
     void shouldDeleteAllInvoices() throws DatabaseOperationException {
         //given
@@ -433,15 +358,6 @@ class SqlDatabaseIT {
         //then
         assertEquals(0L, database.count());
     }
-
-//    @Test
-//    void deleteAllMethodShouldThrowDatabaseOperationExceptionWhenNonTransientDataAccessExceptionOccursDuringDeletingAllInvoices() throws DatabaseOperationException {
-//        //given
-//        doThrow(new NonTransientDataAccessException("") {}).when(database).deleteAll();
-//
-//        //then
-//        assertThrows(DatabaseOperationException.class, () -> database.deleteAll());
-//    }
 
     @Test //TUTAJ w wynikach są zera po kropce dziesiętnej ORAZ POMIESZANA KOLEJNOSC
     void shouldReturnInvoicesFilteredByIssueDate() throws DatabaseOperationException {
@@ -481,13 +397,4 @@ class SqlDatabaseIT {
             Arguments.of(LocalDate.of(2019, 2, 28), LocalDate.of(2009, 3, 31), "Start date cannot be after end date")
         );
     }
-
-//    @Test
-//    void getByIssuedDateShouldThrowExceptionWhenNonTransientDataAccessExceptionOccursDuringFilteringInvoicesByIssuedDate() throws DatabaseOperationException {
-//        LocalDate startDate = LocalDate.now();
-//        doThrow(new NonTransientDataAccessException(" ") {}).when(database).getByIssueDate(startDate, startDate.plusDays(2L));
-//
-//        DatabaseOperationException exception = assertThrows(DatabaseOperationException.class, () -> database.getByIssueDate(startDate, startDate.plusDays(2L)));
-//        assertEquals("An error occurred during getting invoices filtered by issue date", exception.getMessage());
-//    }
 }
